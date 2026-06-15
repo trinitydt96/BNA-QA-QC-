@@ -265,16 +265,20 @@ function filterScan(){
   const q=document.getElementById('scan-search').value.toLowerCase().trim();
   const L=document.getElementById('scan-list');
   if(!q){L.style.display='none';return;}
-  const m=FRAMES.filter(f=>f.id.toLowerCase().includes(q)||f.sys.toLowerCase().includes(q)).slice(0,12);
+  const m=FRAMES.filter(function(f){
+    return f.id.toLowerCase().includes(q)||f.sys.toLowerCase().includes(q);
+  }).slice(0,14);
   if(!m.length){L.style.display='none';return;}
-  L.innerHTML=m.map(f=>{
+  L.innerHTML='';
+  m.forEach(function(f){
     const div=document.createElement('div');
     div.className='fpi';
-    div.innerHTML='<div class="fpi-id">'+f.id+'</div><div class="fpi-sub">'+f.sys+(f.lv?' &middot; '+f.lv:'')
-      +' &middot; W:'+f.mdw+'" H:'+f.mdh+'" &middot; '+f.jamb+'</div>';
-    div.onclick=function(){lookupFrame(f);};
-    return div.outerHTML;
-  }).join('');
+    div.innerHTML='<div class="fpi-id">'+f.id+'</div>'
+      +'<div class="fpi-sub">'+f.sys+(f.lv?' · '+f.lv:'')
+      +' · W:'+f.mdw+'" H:'+f.mdh+'" · '+f.jamb+'</div>';
+    div.addEventListener('click',function(){lookupFrame(f);});
+    L.appendChild(div);
+  });
   L.style.display='block';
 }
 
