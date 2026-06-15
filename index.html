@@ -157,7 +157,7 @@ select.fi option{background:var(--s2)}
       <div id="specs" class="specs" style="display:none"></div>
     </div>
     <div class="g2">
-      <div class="fg"><div class="fl">Inspector Name</div><input class="fi" id="f-insp" placeholder="Your name"></div>
+      <div class="fg"><div class="fl">Inspector Name <span style="color:var(--rd);font-size:10px">★ required</span></div><input class="fi" id="f-insp" placeholder="Full name — required" oninput="updBtns()"></div>
       <div class="fg"><div class="fl">Date</div><input class="fi" type="date" id="f-date"></div>
       <div class="fg"><div class="fl">Stage</div>
         <select class="fi" id="f-stage">
@@ -328,12 +328,39 @@ function updOvr(){
 function updBtns(){
   const done=ALL.filter(i=>checks[i.id]).length;
   const fail=ALL.filter(i=>checks[i.id]==='fail').length;
+  const insp=document.getElementById('f-insp').value.trim();
+  const fid=document.getElementById('fsearch').value.trim();
   document.getElementById('save-btn').disabled=done===0;
   const sb=document.getElementById('sub-btn');
-  sb.disabled=done<ALL.length;
-  if(done===ALL.length){
+  const inspEl=document.getElementById('f-insp');
+
+  // Show warning border if inspector is empty and something is filled
+  if(done>0&&!insp){
+    inspEl.style.borderColor='var(--rd)';
+    inspEl.style.boxShadow='0 0 0 2px rgba(255,77,106,0.25)';
+  } else if(insp){
+    inspEl.style.borderColor='var(--gn)';
+    inspEl.style.boxShadow='0 0 0 2px rgba(0,208,132,0.15)';
+  } else {
+    inspEl.style.borderColor='var(--bd2)';
+    inspEl.style.boxShadow='none';
+  }
+
+  // Disable submit if inspector is blank or checklist not complete
+  const allDone = done===ALL.length;
+  sb.disabled = !allDone || !insp || !fid;
+
+  if(allDone && insp && fid){
     sb.className=fail>0?'bbtn bbtn-sub fail-r':'bbtn bbtn-sub';
     sb.textContent=fail>0?'✕ Submit — FAIL':'✓ Submit — PASS';
+  } else if(allDone && !insp){
+    sb.className='bbtn bbtn-sub';
+    sb.style.background='linear-gradient(135deg,#5a7090,#3a4f6a)';
+    sb.textContent='✍ Enter inspector name first';
+  } else if(allDone && !fid){
+    sb.className='bbtn bbtn-sub';
+    sb.style.background='linear-gradient(135deg,#5a7090,#3a4f6a)';
+    sb.textContent='✍ Select a frame first';
   }
 }
 
@@ -384,6 +411,7 @@ function selectFrame(f){
   }
   document.getElementById('frame-det').style.display='block';
   toast(f.id+' loaded');
+  updBtns();
 }
 
 function buildRec(){
@@ -416,8 +444,20 @@ function saveLocal(){
 async function submitResult(){
   const fid=selF?selF.id:document.getElementById('fsearch').value;
   const insp=document.getElementById('f-insp').value;
-  if(!fid){toast('Select a frame first');return;}
-  if(!insp){toast('Enter inspector name');return;}
+  if(!fid){
+    toast('Select a frame first');
+    document.getElementById('fsearch').focus();
+    return;
+  }
+  if(!insp){
+    toast('⚠ Inspector name is required');
+    const el=document.getElementById('f-insp');
+    el.focus();
+    el.style.borderColor='var(--rd)';
+    el.style.boxShadow='0 0 0 3px rgba(255,77,106,0.3)';
+    setTimeout(()=>{el.style.borderColor='var(--bd2)';el.style.boxShadow='none';},3000);
+    return;
+  }
   const rec=buildRec();
   hist.unshift(rec);
   try{localStorage.setItem('bna-h4',JSON.stringify(hist.slice(0,80)));}catch(e){}
