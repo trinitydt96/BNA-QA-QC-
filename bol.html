@@ -363,68 +363,96 @@ function genBolNum(){
 // PALLETS
 function loadPallets(){
   var el=document.getElementById("plt-select-list");
-  el.innerHTML="";
+  el.innerHTML="<div class='ld'><div class='spin'></div>Loading pallets from Google Sheets...</div>";
 
-  // Try ALL possible storage keys the QA/QC app might use
+  // Fetch FRAME STATUS from Google Sheets live
+  // This works on ANY device - coordinator computer, phone, tablet
+  fetch(WH+"?action=pallets")
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data.pallets&&data.pallets.length){
+        renderPalletCards(el, data.pallets);
+      }else{
+        // No data from sheets yet - fall back to local + manual
+        loadPalletsLocal(el);
+      }
+    })
+    .catch(function(){
+      // Network error - fall back to local storage
+      loadPalletsLocal(el);
+    });
+}
+
+function loadPalletsLocal(el){
   var pkgHist=[];
-  var keys=["bna-h7","bna-h8","bna-h6","bna-h5","bna-pkg"];
-  keys.forEach(function(k){
+  ["bna-h7","bna-h8","bna-h6","bna-h5"].forEach(function(k){
     try{var h=localStorage.getItem(k);if(h){var a=JSON.parse(h);if(Array.isArray(a))pkgHist=pkgHist.concat(a);}}catch(e){}
   });
-
-  // Also check for manually saved pallets
   var manualPallets=[];
   try{var mp=localStorage.getItem("ega-pallets");if(mp)manualPallets=JSON.parse(mp);}catch(e){}
 
-  // Build pallet map from packaging history
   var pallets={};
   pkgHist.filter(function(r){return r.action==="packaging"&&r.palletNum;}).forEach(function(r){
-    if(!pallets[r.palletNum])pallets[r.palletNum]={num:r.palletNum,frames:[],by:r.packedBy||"-",date:r.packDate||"-",source:"auto"};
+    if(!pallets[r.palletNum])pallets[r.palletNum]={num:r.palletNum,frames:[],by:r.packedBy||"-",date:r.packDate||"-"};
     if(r.frameId&&pallets[r.palletNum].frames.indexOf(r.frameId)<0)pallets[r.palletNum].frames.push(r.frameId);
   });
+  manualPallets.forEach(function(p){if(!pallets[p.num])pallets[p.num]=p;});
 
-  // Add manually saved pallets
-  manualPallets.forEach(function(p){
-    if(!pallets[p.num])pallets[p.num]=p;
-  });
+  var pltList=Object.keys(pallets).sort().map(function(k){return pallets[k];});
 
-  var pltKeys=Object.keys(pallets).sort();
-
-  if(pltKeys.length){
-    // Show found pallets
-    var found=document.createElement("div");
-    found.style.cssText="font-family:var(--mono);font-size:9px;color:var(--gn);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px";
-    found.textContent=pltKeys.length+" pallets found - tap to select";
-    el.appendChild(found);
-    pltKeys.forEach(function(k){
-      var p=pallets[k];
-      var card=document.createElement("div");
-      card.className="plt-card";card.id="plt-"+k;
-      var num=document.createElement("div");num.className="plt-num";num.textContent=p.num;
-      var info=document.createElement("div");info.className="plt-info";
-      info.textContent=(p.frames&&p.frames.length?p.frames.length+" frames":"Custom")+(p.by&&p.by!=="-"?" / "+p.by:"")+(p.date&&p.date!=="-"?" / "+p.date:"");
-      if(p.frames&&p.frames.length){
-        var fr=document.createElement("div");
-        fr.style.cssText="font-size:11px;color:var(--tx);margin-top:3px;line-height:1.6";
-        fr.textContent=p.frames.join(", ");
-        card.appendChild(num);card.appendChild(info);card.appendChild(fr);
-      }else{
-        card.appendChild(num);card.appendChild(info);
-      }
-      (function(plt,key){card.addEventListener("click",function(){togglePallet(plt,key);});})(p,k);
-      el.appendChild(card);
-    });
+  el.innerHTML="";
+  if(pltList.length){
+    renderPalletCards(el, pltList);
   }else{
-    // No auto data - show helpful manual add UI
     var msg=document.createElement("div");
-    msg.style.cssText="background:var(--s3);border:1px solid var(--bd2);border-radius:8px;padding:14px;margin-bottom:10px";
-    msg.innerHTML="<div style='font-family:var(--mono);font-size:10px;color:var(--am);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px'>No packing data found on this device</div>"
-      +"<div style='font-size:12px;color:var(--mu);line-height:1.7;margin-bottom:10px'>"
-      +"Packing data is saved on the device where the QA/QC app was used.<br>"
-      +"Add pallets manually below - enter the pallet number and list the frame IDs on it.</div>"
-      +"<div style='font-family:var(--mono);font-size:9px;color:var(--dm);letter-spacing:.08em'>Use the + Add Pallet button below to add each pallet going on this truck.</div>";
+    msg.style.cssText="background:var(--s3);border:1px solid var(--bd2);border-radius:8px;padding:16px;margin-bottom:10px;line-height:1.8";
+    msg.innerHTML="<div style='font-family:var(--mono);font-size:10px;color:var(--am);letter-spacing:.08em;margin-bottom:8px'>NO PALLET DATA FOUND</div>"
+      +"<div style='font-size:12px;color:var(--mu);margin-bottom:10px'>"
+      +"Pallets are read from Google Sheets automatically.<br>"
+      +"If nothing shows, the packaging team has not scanned any frames yet, "
+      +"or the Google Sheet has no packing data.<br><br>"
+      +"<strong style='color:var(--tx)'>Add pallets manually</strong> using the button below - "
+      +"enter the pallet number and frame IDs going on this truck.</div>";
     el.appendChild(msg);
   }
+}
+
+function renderPalletCards(el, pltList){
+  el.innerHTML="";
+  var hdr=document.createElement("div");
+  hdr.style.cssText="font-family:var(--mono);font-size:9px;color:var(--gn);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center";
+  hdr.innerHTML="<span>"+pltList.length+" pallets available — tap to select</span>"
+    +"<span style='color:var(--bl)'>From Google Sheets</span>";
+  el.appendChild(hdr);
+
+  pltList.forEach(function(p){
+    var key=p.num;
+    var card=document.createElement("div");
+    card.className="plt-card";card.id="plt-"+key.replace(/[^a-z0-9]/gi,"-");
+    var num=document.createElement("div");num.className="plt-num";num.textContent=p.num;
+    var info=document.createElement("div");info.className="plt-info";
+    var frameCount=p.frames&&p.frames.length?p.frames.length+" frames":"Custom pallet";
+    var packer=p.by&&p.by!=="-"?" / "+p.by:"";
+    var dt=p.date&&p.date!=="-"?" / "+p.date:"";
+    info.textContent=frameCount+packer+dt;
+    card.appendChild(num);card.appendChild(info);
+    if(p.frames&&p.frames.length){
+      var fr=document.createElement("div");
+      fr.style.cssText="font-size:11px;color:var(--tx);margin-top:4px;line-height:1.7";
+      fr.textContent=p.frames.join(", ");
+      card.appendChild(fr);
+    }
+    if(p.desc){
+      var ds=document.createElement("div");
+      ds.style.cssText="font-size:11px;color:var(--mu);margin-top:2px";
+      ds.textContent=p.desc;
+      card.appendChild(ds);
+    }
+    (function(plt,k){
+      card.addEventListener("click",function(){togglePallet(plt,k);});
+    })(p,key);
+    el.appendChild(card);
+  });
 }
 
 function savePallet(p){
