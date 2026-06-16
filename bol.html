@@ -5,6 +5,182 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>EGA — Bill of Lading</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+// ── DOWNLOAD PDF ───────────────────────────────────────────────
+function downloadPDF(){
+  var entry=bolHistory[0];
+  if(!entry){showToast("No BOL to download");return;}
+  showToast("Generating PDF...");
+
+  try{
+    var doc=new window.jspdf.jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+    var pw=doc.internal.pageSize.getWidth();
+    var margin=14;
+    var y=14;
+
+    // Header
+    doc.setFontSize(14);doc.setFont("helvetica","bold");
+    doc.text("BILL OF LADING - SHORT FORM - NOT NEGOTIABLE",pw/2,y,{align:"center"});
+    y+=5;
+    doc.setFontSize(9);doc.setFont("helvetica","normal");
+    doc.text("Page 1 of 1",pw/2,y,{align:"center"});
+    y+=6;
+
+    // BOL Number + Date bar
+    doc.setFillColor(200,200,200);doc.rect(margin,y,pw-margin*2,6,"F");
+    doc.setFontSize(10);doc.setFont("helvetica","bold");
+    doc.text("BOL Number: "+entry.bolNum,margin+2,y+4);
+    doc.text("Date: "+entry.date,pw-margin-2,y+4,{align:"right"});
+    y+=9;
+
+    // Ship From / To
+    doc.setFontSize(8);doc.setFont("helvetica","normal");
+    var col=pw/2-margin/2;
+
+    // Left col - Ship From
+    doc.setFillColor(220,220,220);doc.rect(margin,y,col,5,"F");
+    doc.setFont("helvetica","bold");doc.text("SHIP FROM",margin+col/2,y+3.5,{align:"center"});
+    y+=5;
+    doc.setFont("helvetica","normal");
+    doc.text("Eastern Glass & Aluminum",margin+2,y+3.5);
+    y+=4;doc.text("4274 Shackleford Rd., Norcross, GA 30093",margin+2,y+3.5);
+    y+=4;doc.text("678-355-9010",margin+2,y+3.5);
+    y+=7;
+
+    // Ship To
+    doc.setFillColor(220,220,220);doc.rect(margin,y,pw-margin*2,5,"F");
+    doc.setFont("helvetica","bold");doc.text("SHIP TO",(pw)/2,y+3.5,{align:"center"});
+    y+=5;
+    doc.setFont("helvetica","normal");
+    doc.text(entry.shipTo||"—",margin+2,y+3.5);
+    y+=8;
+
+    // Carrier info
+    doc.setFillColor(220,220,220);doc.rect(margin,y,pw-margin*2,5,"F");
+    doc.setFont("helvetica","bold");doc.text("CARRIER INFORMATION",(pw)/2,y+3.5,{align:"center"});
+    y+=5;
+    doc.setFont("helvetica","normal");
+    doc.text("Carrier: "+(entry.carrier||"—")+"   Driver: "+(entry.driver||"—"),margin+2,y+3.5);
+    y+=4;
+    doc.text("Truck: "+(bolState.truckNum||"—")+"   Trailer: "+(bolState.trailerNum||"—")+"   Freight: "+(bolState.freightTerms||"PREPAID").toUpperCase(),margin+2,y+3.5);
+    y+=4;
+    if(bolState.specialInst){doc.text("Special: "+bolState.specialInst,margin+2,y+3.5);y+=4;}
+    y+=4;
+
+    // Customer order info
+    doc.setFillColor(220,220,220);doc.rect(margin,y,pw-margin*2,5,"F");
+    doc.setFont("helvetica","bold");doc.text("CUSTOMER ORDER INFORMATION",(pw)/2,y+3.5,{align:"center"});
+    y+=6;
+    var totalFrames=entry.pallets.reduce(function(s,p){return s+(p.frames?p.frames.length:0);},0);
+    doc.setFont("helvetica","normal");
+    doc.text("Job #20230013 — BNA Concourse A   |   "+entry.palletCount+" pallets   |   "+totalFrames+" CW Frames   |   "+entry.itemCount+" accessory items",margin+2,y+3);
+    y+=8;
+
+    // Build commodity rows for table
+    var rows=[];
+    var itemNum=1;
+
+    // Pallets
+    entry.pallets.forEach(function(p){
+      var desc=p.num+" — ";
+      if(p.frames&&p.frames.length>0){
+        desc+="CW FRAMES: "+p.frames.join(", ");
+      }else{
+        desc+=p.desc||"ACCESSORIES PALLET";
+      }
+      rows.push([itemNum++,"",1,"Pallet","","",desc,"",""]);
+    });
+
+    // Group items by category
+    var cats={};
+    entry.items.forEach(function(item){
+      var c=item.cat||"Other";
+      if(!cats[c])cats[c]=[];
+      cats[c].push(item);
+    });
+    Object.keys(cats).forEach(function(cat){
+      cats[cat].forEach(function(item){
+        rows.push([itemNum++,"",item.qty,item.unit,"","",item.pn+" — "+item.desc,"",""]);
+      });
+    });
+
+    // Pad to 12 rows
+    while(rows.length<12){rows.push([rows.length+1,"","","Pallet","","","","",""]);}
+
+    // Carrier table
+    doc.autoTable({
+      startY:y,
+      head:[[
+        {content:"Item",styles:{halign:"center"}},
+        {content:"Type",styles:{halign:"center"}},
+        {content:"Qty",styles:{halign:"center"}},
+        {content:"Type",styles:{halign:"center"}},
+        {content:"Weight",styles:{halign:"center"}},
+        {content:"HM(X)",styles:{halign:"center"}},
+        {content:"Commodity Description",styles:{halign:"left"}},
+        {content:"NMFC No.",styles:{halign:"center"}},
+        {content:"Class",styles:{halign:"center"}}
+      ]],
+      body:rows,
+      theme:"grid",
+      headStyles:{fillColor:[200,200,200],textColor:[0,0,0],fontStyle:"bold",fontSize:7},
+      bodyStyles:{fontSize:7,cellPadding:2},
+      columnStyles:{
+        0:{cellWidth:8,halign:"center"},
+        1:{cellWidth:12,halign:"center"},
+        2:{cellWidth:8,halign:"center"},
+        3:{cellWidth:12,halign:"center"},
+        4:{cellWidth:14,halign:"center"},
+        5:{cellWidth:12,halign:"center"},
+        6:{cellWidth:"auto",halign:"left"},
+        7:{cellWidth:16,halign:"center"},
+        8:{cellWidth:12,halign:"center"}
+      },
+      margin:{left:margin,right:margin}
+    });
+
+    y=doc.lastAutoTable.finalY+8;
+
+    // Signature section
+    if(y>240){doc.addPage();y=14;}
+    doc.setFontSize(8);
+    doc.rect(margin,y,col-2,30);
+    doc.setFont("helvetica","bold");
+    doc.text("SHIPPER SIGNATURE",margin+2,y+4);
+    doc.setFont("helvetica","normal");
+    doc.text("Eastern Glass & Aluminum",margin+2,y+9);
+    doc.line(margin+2,y+22,margin+col-6,y+22);
+    doc.text("Signature",margin+2,y+26);
+    doc.text("Date: "+entry.date,margin+2,y+29);
+
+    doc.rect(margin+col,y,col-2,30);
+    doc.setFont("helvetica","bold");
+    doc.text("DRIVER SIGNATURE & RECEIPT",margin+col+2,y+4);
+    doc.setFont("helvetica","normal");
+    doc.text("Carrier acknowledges receipt in apparent good order.",margin+col+2,y+9);
+    doc.line(margin+col+2,y+22,pw-margin-2,y+22);
+    doc.text("Driver Signature",margin+col+2,y+26);
+    doc.text("Date Received: _______________",margin+col+2,y+29);
+
+    // Footer note
+    y+=34;
+    doc.setFontSize(7);doc.setFont("helvetica","italic");
+    doc.text("Note: Liability limitation for loss or damage may be applicable. See 49 USC 14706(c)(1)(A) and (B).",margin,y);
+
+    // Save
+    var filename=entry.bolNum+"-"+entry.date+".pdf";
+    doc.save(filename);
+    showToast("Downloaded: "+filename);
+
+  }catch(err){
+    console.error("PDF error:",err);
+    showToast("PDF error - use Print instead");
+    window.print();
+  }
+}
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <style>
 :root{
   --bg:#0a0e14;--s1:#0f1520;--s2:#161e2e;--s3:#1e2a3e;--bd2:#2a3a52;
@@ -1001,7 +1177,7 @@ function generateBOL(){
     document.getElementById("print-bol").style.display="block";
     document.querySelector(".pg.on").style.display="none";
     document.getElementById("bbar").innerHTML="<button class=\"btn btn-back\" onclick=\"resetBOL()\">New BOL</button>"
-      +"<button class=\"btn btn-gen\" onclick=\"window.print()\">Print BOL</button>";
+      +"<button class=\"btn btn-gen\" onclick=\"downloadPDF()\">Download PDF</button>"    +"<button class=\"btn\" style=\"background:var(--s2);color:var(--mu);border:1px solid var(--bd2)\" onclick=\"window.print()\">Print</button>";
     window.scrollTo(0,0);
     showToast("BOL "+bolState.bolNum+" generated");
   },200);
@@ -1218,7 +1394,7 @@ function reprintBOL(bolNum){
   goPg("new");
   document.getElementById("p-new").style.display="none";
   document.getElementById("bbar").innerHTML="<button class=\"btn btn-back\" onclick=\"resetBOL()\">Back</button>"
-    +"<button class=\"btn btn-gen\" onclick=\"window.print()\">Print BOL</button>";
+    +"<button class=\"btn btn-gen\" onclick=\"downloadPDF()\">Download PDF</button>"    +"<button class=\"btn\" style=\"background:var(--s2);color:var(--mu);border:1px solid var(--bd2)\" onclick=\"window.print()\">Print</button>";
 }
 
 function resetBOL(){
