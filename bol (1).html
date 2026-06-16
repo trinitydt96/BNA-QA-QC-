@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>EGA Bill of Lading</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{--bg:#0a0e14;--s1:#0f1520;--s2:#161e2e;--s3:#1e2a3e;--bd2:#2a3a52;--tx:#d4e0f0;--mu:#5a7090;--dm:#3a4f6a;--gn:#00d084;--rd:#ff4d6a;--am:#f5a623;--bl:#3b82f6;--or:#f97316;--mono:"Share Tech Mono",monospace;--head:"Rajdhani",sans-serif;--body:"Inter",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--tx);font-family:var(--body);min-height:100vh}
+.top{background:var(--s1);border-bottom:1px solid var(--bd2);padding:10px 14px;position:sticky;top:0;z-index:100}
+.top-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.top h1{font-family:var(--head);font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.top p{font-family:var(--mono);font-size:9px;color:var(--mu);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.bol-badge{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid var(--bd2);padding:4px 10px;border-radius:6px;color:var(--am)}
+.tabs{display:flex;gap:5px;padding:8px 14px;background:var(--s1);border-bottom:1px solid var(--s3);overflow-x:auto}
+.tab{padding:6px 12px;border-radius:5px;font-family:var(--mono);font-size:10px;cursor:pointer;border:1px solid var(--bd2);background:var(--s2);color:var(--mu);white-space:nowrap;user-select:none}
+.tab.on{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.4);color:var(--bl)}
+.pg{display:none;padding:12px 14px}.pg.on{display:block}
+.box{background:var(--s1);border:1px solid var(--bd2);border-radius:12px;padding:14px;margin-bottom:10px}
+.box-t{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:10px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fg{display:flex;flex-direction:column;gap:3px}
+.lbl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--dm);margin-bottom:2px}
+.inp{background:var(--s2);border:1px solid var(--bd2);border-radius:6px;padding:8px 10px;font-size:13px;font-family:var(--body);color:var(--tx);width:100%;outline:none;-webkit-appearance:none}
+.inp::placeholder{color:var(--dm)}
+.inp:focus{border-color:var(--bl)}
+select.inp option{background:var(--s2)}
+.steps{display:flex;margin-bottom:12px;border-radius:8px;border:1px solid var(--bd2);overflow:hidden}
+.step{flex:1;padding:8px 4px;text-align:center;font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);background:var(--s2);border-right:1px solid var(--bd2);cursor:pointer}
+.step:last-child{border-right:none}
+.step.on{background:rgba(59,130,246,.15);color:var(--bl);font-weight:700}
+.step.done{background:rgba(0,208,132,.08);color:var(--gn)}
+.plt-card{background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;position:relative}
+.plt-card.sel{border-color:var(--gn);background:rgba(0,208,132,.06)}
+.plt-num{font-family:var(--head);font-size:15px;font-weight:700;color:var(--bl);margin-bottom:3px}
+.plt-info{font-family:var(--mono);font-size:10px;color:var(--mu);line-height:1.7}
+.scan-btn{width:100%;padding:16px;background:var(--s2);border:2px dashed var(--bd2);border-radius:10px;color:var(--mu);font-family:var(--mono);font-size:11px;cursor:pointer;text-align:center;margin-bottom:10px;display:block}
+.scan-btn:hover{border-color:var(--bl);color:var(--bl)}
+.srch{background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--body);color:var(--tx);width:100%;outline:none;margin-bottom:8px}
+.srch::placeholder{color:var(--dm)}
+.srch:focus{border-color:var(--bl)}
+.cat-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.cat-btn{padding:4px 10px;border-radius:20px;font-family:var(--mono);font-size:10px;cursor:pointer;border:1px solid var(--bd2);background:var(--s2);color:var(--mu);white-space:nowrap;user-select:none}
+.cat-btn.on{font-weight:700;border-color:var(--bl);color:var(--bl);background:rgba(59,130,246,.1)}
+.irow{display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--s2);border:1px solid var(--bd2);border-radius:7px;margin-bottom:5px}
+.ipn{font-family:var(--mono);font-size:11px;font-weight:700;min-width:100px;flex-shrink:0}
+.idesc{flex:1;font-size:12px;min-width:0}
+.iunit{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:10px;flex-shrink:0}
+.iadd{background:rgba(59,130,246,.15);color:var(--bl);border:1px solid rgba(59,130,246,.3);border-radius:5px;padding:4px 10px;font-family:var(--mono);font-size:10px;cursor:pointer;white-space:nowrap}
+.bol-item{display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--s2);border:1px solid var(--bd2);border-radius:7px;margin-bottom:5px}
+.bi-info{flex:1;min-width:0}
+.bi-pn{font-family:var(--mono);font-size:9px;color:var(--mu);margin-bottom:1px}
+.bi-desc{font-size:12px;font-weight:500}
+.qty-ctrl{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.qbtn{width:24px;height:24px;border-radius:4px;border:1px solid var(--bd2);background:var(--s3);color:var(--tx);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qinp{width:40px;text-align:center;background:var(--s3);border:1px solid var(--bd2);border-radius:4px;color:var(--tx);font-family:var(--mono);font-size:12px;padding:3px;outline:none}
+.qunit{font-family:var(--mono);font-size:9px;color:var(--mu);min-width:24px}
+.qdel{color:var(--rd);background:none;border:none;cursor:pointer;font-size:15px;padding:2px;flex-shrink:0}
+.ftrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.ftbtn{padding:6px 14px;border-radius:6px;font-family:var(--mono);font-size:10px;cursor:pointer;border:1px solid var(--bd2);background:var(--s2);color:var(--mu);user-select:none}
+.ftbtn.on{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.4);color:var(--bl);font-weight:700}
+.sum-hdr{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);padding:5px 0;border-bottom:1px solid var(--bd2);margin-bottom:6px;margin-top:10px}
+.sum-hdr:first-child{margin-top:0}
+.sum-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,.04)}
+.sum-key{color:var(--mu);font-family:var(--mono);font-size:10px}
+.nif{background:var(--s3);border:1px solid var(--bd2);border-radius:8px;padding:12px;margin-bottom:10px;display:none}
+.nif.open{display:block}
+.bbar{position:sticky;bottom:0;background:var(--s1);border-top:1px solid var(--bd2);padding:10px 14px;display:flex;gap:8px}
+.btn{flex:1;padding:11px;border-radius:8px;font-family:var(--head);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border:none}
+.btn-back{background:var(--s2);color:var(--mu);border:1px solid var(--bd2)}
+.btn-next{background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff}
+.btn-pdf{background:linear-gradient(135deg,#00c47a,#00965d);color:#fff}
+.btn-print{background:var(--s2);color:var(--mu);border:1px solid var(--bd2)}
+.cnt{display:inline-block;background:var(--bl);color:#fff;border-radius:10px;font-family:var(--mono);font-size:10px;font-weight:700;padding:1px 7px;margin-left:6px}
+.bol-hist-card{background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:12px;margin-bottom:8px}
+.bh-num{font-family:var(--head);font-size:15px;font-weight:700;color:var(--bl);margin-bottom:3px}
+.bh-info{font-family:var(--mono);font-size:10px;color:var(--mu);line-height:1.7}
+.sbadge{display:inline-block;padding:2px 8px;border-radius:20px;font-family:var(--mono);font-size:10px;font-weight:600}
+.s-p{background:rgba(245,166,35,.12);color:var(--am)}
+.s-t{background:rgba(59,130,246,.12);color:var(--bl)}
+.s-d{background:rgba(0,208,132,.12);color:var(--gn)}
+.action-btn{padding:5px 12px;border-radius:5px;font-family:var(--mono);font-size:10px;cursor:pointer;border:1px solid var(--bd2);background:var(--s3);color:var(--mu)}
+.toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--bd2);color:var(--tx);padding:7px 16px;border-radius:20px;font-family:var(--mono);font-size:11px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9999;white-space:nowrap}
+.toast.show{opacity:1}
+#cam-view{width:100%;border-radius:8px;display:none;margin-bottom:8px;max-height:220px;object-fit:cover}
+@media print{.top,.tabs,.bbar,.no-print{display:none!important}.pg{display:block!important;padding:0}body{background:#fff;color:#000}#pbol{display:block!important}}
+@media(min-width:600px){.g2{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="top-row">
+    <div><h1>EGA Bill of Lading</h1><p>Eastern Glass &amp; Aluminum &middot; Norcross GA</p></div>
+    <div class="bol-badge" id="bol-badge">NEW BOL</div>
+  </div>
+</div>
+<div class="tabs">
+  <div class="tab on" id="t-new" onclick="goPg('new')">+ NEW BOL</div>
+  <div class="tab" id="t-hist" onclick="goPg('hist')">HISTORY</div>
+  <div class="tab" id="t-lib" onclick="goPg('lib')">ITEM LIBRARY</div>
+</div>
+<div class="pg on" id="p-new">
+  <div class="steps">
+    <div class="step on" id="st-1" onclick="goStep(1)">1 DETAILS</div>
+    <div class="step" id="st-2" onclick="goStep(2)">2 PALLETS</div>
+    <div class="step" id="st-3" onclick="goStep(3)">3 ITEMS</div>
+    <div class="step" id="st-4" onclick="goStep(4)">4 REVIEW</div>
+  </div>
+  <div id="step1">
+    <div class="box">
+      <div class="box-t">Shipment Details</div>
+      <div class="g2" style="margin-bottom:8px">
+        <div class="fg"><div class="lbl">BOL Number</div><input class="inp" id="bol-num" placeholder="e.g. BNA-SHP-001" type="text"></div>
+        <div class="fg"><div class="lbl">Ship Date</div><input class="inp" type="date" id="ship-date"></div>
+      </div>
+      <div class="fg" style="margin-bottom:8px"><div class="lbl">Project</div>
+        <select class="inp" id="project-sel"><option value="BNA">BNA Concourse A - Job #20230013</option><option value="OTHER">Other Project</option></select>
+      </div>
+      <div class="g2">
+        <div class="fg"><div class="lbl">Ship From</div><input class="inp" id="ship-from" value="Eastern Glass &amp; Aluminum, 4274 Shackleford Rd., Norcross, GA 30093" type="text"></div>
+        <div class="fg"><div class="lbl">Ship To (Destination)</div><input class="inp" id="ship-to" placeholder="Job site address" type="text"></div>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-t">Carrier Information</div>
+      <div class="g2">
+        <div class="fg"><div class="lbl">Carrier Name</div><input class="inp" id="carrier" placeholder="e.g. EGA" type="text"></div>
+        <div class="fg"><div class="lbl">Driver Name</div><input class="inp" id="driver" placeholder="Driver full name" type="text"></div>
+        <div class="fg"><div class="lbl">Truck / Tractor #</div><input class="inp" id="truck-num" placeholder="e.g. T-4421" type="text"></div>
+        <div class="fg"><div class="lbl">Trailer #</div><input class="inp" id="trailer-num" placeholder="e.g. TR-882" type="text"></div>
+        <div class="fg"><div class="lbl">Pro Number</div><input class="inp" id="pro-num" placeholder="Optional" type="text"></div>
+        <div class="fg"><div class="lbl">SCAC Code</div><input class="inp" id="scac" placeholder="Optional" type="text"></div>
+      </div>
+      <div class="fg" style="margin-top:8px"><div class="lbl">Freight Terms</div>
+        <div class="ftrow">
+          <div class="ftbtn on" id="ft-prepaid" onclick="setFT('prepaid')">Prepaid</div>
+          <div class="ftbtn" id="ft-collect" onclick="setFT('collect')">Collect</div>
+          <div class="ftbtn" id="ft-3rd" onclick="setFT('3rd')">3rd Party</div>
+        </div>
+      </div>
+      <div class="fg" style="margin-top:8px"><div class="lbl">Special Instructions</div>
+        <input class="inp" id="spec-inst" placeholder="e.g. Deliver by 08/29 - Contact Jose Ricardo 678-857-0449" type="text">
+      </div>
+    </div>
+  </div>
+  <div id="step2" style="display:none">
+    <div class="box">
+      <div class="box-t">Select Pallets</div>
+      <p style="font-size:12px;color:var(--mu);margin-bottom:10px;line-height:1.7">Tap each pallet going on this truck. Frames auto-populate from packing data.</p>
+      <div id="plt-select-list"></div>
+      <button class="scan-btn" onclick="addCustomPallet()" style="margin-top:6px">+ Add Custom Pallet (Accessories / Materials)</button>
+    </div>
+    <div class="box" id="sel-plts-box" style="display:none">
+      <div class="box-t">Selected Pallets <span class="cnt" id="plt-cnt">0</span></div>
+      <div id="sel-plts-list"></div>
+    </div>
+  </div>
+  <div id="step3" style="display:none">
+    <div class="box">
+      <div class="box-t">Scan or Add Items</div>
+      <button class="scan-btn no-print" id="scan-btn" onclick="startScan()">&#128247; Tap to Scan Barcode on Box</button>
+      <video id="cam-view" autoplay playsinline></video>
+      <div id="scan-status" style="font-family:var(--mono);font-size:10px;text-align:center;color:var(--am);min-height:18px;padding:2px 0"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0">
+        <div style="flex:1;height:1px;background:var(--bd2)"></div>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--dm);letter-spacing:.08em">OR SEARCH LIBRARY</span>
+        <div style="flex:1;height:1px;background:var(--bd2)"></div>
+      </div>
+      <input class="srch" id="item-srch" placeholder="Search part # or description..." type="text">
+      <div class="cat-row" id="cat-filter"></div>
+      <div id="item-lib-list"></div>
+      <button class="scan-btn" onclick="toggleNIF()" style="margin-top:4px">+ Add New Part Number Not in Library</button>
+      <div class="nif" id="nif">
+        <div class="g2" style="margin-bottom:8px">
+          <div class="fg"><div class="lbl">Part Number</div><input class="inp" id="new-pn" placeholder="e.g. E1-3960" type="text"></div>
+          <div class="fg"><div class="lbl">Category</div><select class="inp" id="new-cat"><option>Accessories</option><option>Gaskets</option><option>Fasteners</option><option>Materials</option><option>Trims</option><option>Profiles</option><option>Other</option></select></div>
+        </div>
+        <div class="fg" style="margin-bottom:8px"><div class="lbl">Description</div><input class="inp" id="new-desc" placeholder="e.g. BRACKET SLEEVE SPECIAL" type="text"></div>
+        <div class="g2" style="margin-bottom:8px">
+          <div class="fg"><div class="lbl">Unit</div><select class="inp" id="new-unit"><option>EA</option><option>FT</option><option>BX</option><option>TUBE</option><option>BAG</option><option>SET</option><option>LF</option></select></div>
+          <div class="fg"><div class="lbl">Qty</div><input class="inp" id="new-qty" type="number" placeholder="1" min="1"></div>
+        </div>
+        <button onclick="addNewItem()" style="width:100%;padding:10px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border:none;border-radius:8px;font-family:var(--head);font-size:13px;font-weight:600;cursor:pointer;letter-spacing:.06em;text-transform:uppercase">Save to Library + Add to BOL</button>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-t">Items Added <span class="cnt" id="items-cnt">0</span></div>
+      <div id="added-items-list"></div>
+    </div>
+  </div>
+  <div id="step4" style="display:none">
+    <div class="box">
+      <div class="box-t">Review BOL</div>
+      <div id="review-content"></div>
+    </div>
+    <div class="box no-print">
+      <div class="box-t">Driver Signature</div>
+      <p style="font-size:12px;color:var(--mu);margin-bottom:8px">Driver signs below to confirm receipt</p>
+      <canvas id="sig-canvas" style="background:var(--s2);border:1px solid var(--bd2);border-radius:8px;width:100%;height:120px;display:block;touch-action:none"></canvas>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button onclick="clearSig()" style="padding:6px 14px;background:var(--s3);border:1px solid var(--bd2);border-radius:6px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer">Clear Signature</button>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--dm);flex:1;display:flex;align-items:center;padding:0 6px;line-height:1.5">Driver confirms contents are correct</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="pg" id="p-hist">
+  <div class="box"><div class="box-t">BOL History</div><div id="hist-list"></div></div>
+</div>
+<div class="pg" id="p-lib">
+  <div class="box">
+    <div class="box-t">Master Item Library - YKK AP Parts</div>
+    <p style="font-size:12px;color:var(--mu);margin-bottom:10px;line-height:1.7">Pre-loaded YKK AP parts. Scan new barcodes to add more. Upload a CSV to bulk import.</p>
+    <input class="srch" id="lib-srch" placeholder="Search part # or description..." type="text">
+    <div class="cat-row" id="lib-cat-filter"></div>
+    <div id="lib-list"></div>
+    <div style="text-align:center;margin-top:10px">
+      <label style="display:inline-block;padding:8px 16px;background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer">
+        Upload YKK AP Cut List (CSV)
+        <input type="file" accept=".csv,.xlsx,.xls" style="display:none" onchange="importCSV(this)">
+      </label>
+    </div>
+  </div>
+</div>
+<div class="bbar" id="bbar">
+  <button class="btn btn-back" id="btn-back" onclick="prevStep()" style="display:none">Back</button>
+  <button class="btn btn-next" id="btn-next" onclick="nextStep()">Next: Pallets</button>
+</div>
+<div id="pbol" style="display:none"></div>
+<div class="toast" id="toast"></div>
+<script>
+var WH = "https://script.google.com/macros/s/AKfycbyunbjzprsalpg3qJbn6egZBXP7RZXj8dGgumECGepxPx4hZPMgRpEMCNmwbm0d40SFlQ/exec";
+var LIB = [{"pn":"E1-3949","desc":"J-HOOK","cat":"Accessories","unit":"EA"},{"pn":"E1-3945","desc":"BRACKET SLEEVE LEFT","cat":"Accessories","unit":"EA"},{"pn":"E1-3946","desc":"BRACKET SLEEVE RIGHT","cat":"Accessories","unit":"EA"},{"pn":"E1-3954","desc":"STARTER SILL REINF","cat":"Accessories","unit":"EA"},{"pn":"E1-3955","desc":"STOPPER ON J-HOOK","cat":"Accessories","unit":"EA"},{"pn":"E1-3953","desc":"STARTER TRACK END DAM","cat":"Accessories","unit":"EA"},{"pn":"E2-0070","desc":"SILICONE SHEET","cat":"Gaskets","unit":"EA"},{"pn":"E2-0725","desc":"SPACER SPONGE","cat":"Gaskets","unit":"EA"},{"pn":"E2-3841","desc":"GASKET FOR PRESSURE PLATE","cat":"Gaskets","unit":"FT"},{"pn":"E2-7004","desc":"GASKET FOR STARTER TRACK","cat":"Gaskets","unit":"FT"},{"pn":"PM-1006SS","desc":"SCREW FOR STOPPER","cat":"Fasteners","unit":"EA"},{"pn":"HC-1220SS","desc":"SCREW FOR END DAM","cat":"Fasteners","unit":"EA"},{"pn":"UF-0808-SS","desc":"SCREW FOR 9IN FACE CAP","cat":"Fasteners","unit":"EA"},{"pn":"HILTI","desc":"T-BOLTS AND NUTS FOR EMBED","cat":"Fasteners","unit":"BX"},{"pn":"SHIM-050","desc":"SHIMS 1/2 INCH","cat":"Materials","unit":"BX"},{"pn":"CAULK-WHT","desc":"WHITE CAULKING","cat":"Materials","unit":"TUBE"},{"pn":"CAULK-BLK","desc":"BLACK CAULKING","cat":"Materials","unit":"TUBE"},{"pn":"CAULK-GRY","desc":"GRAY CAULKING","cat":"Materials","unit":"TUBE"},{"pn":"CAULK-CLR","desc":"CLEAR CAULKING","cat":"Materials","unit":"TUBE"},{"pn":"FC-LEFT","desc":"FACE CAP LEFT","cat":"Trims","unit":"EA"},{"pn":"FC-RIGHT","desc":"FACE CAP RIGHT","cat":"Trims","unit":"EA"},{"pn":"FC-HEAD","desc":"FACE CAP HEAD","cat":"Trims","unit":"EA"},{"pn":"FC-HORZ","desc":"FACE CAP HORIZONTAL","cat":"Trims","unit":"EA"},{"pn":"FC-SILL","desc":"FACE CAP SILL","cat":"Trims","unit":"EA"},{"pn":"FC-9IN","desc":"FACE CAP 9 INCH","cat":"Trims","unit":"EA"},{"pn":"STARTER","desc":"STARTER TRACK","cat":"Profiles","unit":"EA"},{"pn":"SILL-ADP","desc":"SILL ADAPTOR","cat":"Profiles","unit":"EA"},{"pn":"CORNER-KEY","desc":"CORNER KEY","cat":"Profiles","unit":"EA"},{"pn":"THERM-BRK","desc":"THERMAL BREAK","cat":"Profiles","unit":"EA"},{"pn":"ANCHOR-BLT","desc":"ANCHOR BOLTS 1/2 INCH","cat":"Materials","unit":"BX"}];
+var CC = {"Accessories":"#3B82F6","Gaskets":"#A855F7","Fasteners":"#F59E0B","Materials":"#14B8A6","Trims":"#EC4899","Profiles":"#10B981","Other":"#6B7280"};
+var ST = {step:1,bolNum:"",shipDate:"",shipFrom:"Eastern Glass & Aluminum, 4274 Shackleford Rd., Norcross, GA 30093",shipTo:"",carrier:"",driver:"",truckNum:"",trailerNum:"",proNum:"",scac:"",ft:"prepaid",specInst:"",pallets:[],items:[],sig:null};
+var HI = [];
+var scanning = false, scanStream = null, scanTimer = null;
+
+// Init
+document.getElementById("ship-date").valueAsDate = new Date();
+loadHist();
+loadLib();
+genBolNum();
+buildCatFilter("cat-filter", filterItems);
+buildCatFilter("lib-cat-filter", filterLib);
+renderLib("","ALL");
+renderLibPage("","ALL");
+loadPallets();
+
+// URL auto-select
+(function(){var q=new URLSearchParams(location.search);var f=q.get("frame");if(f){showToast("Frame: "+f);}})();
+
+// Input listeners
+document.getElementById("item-srch").addEventListener("input",function(){filterItems(this.value);});
+document.getElementById("lib-srch").addEventListener("input",function(){filterLib(this.value);});
+
+
+function goPg(name){
+  ["new","hist","lib"].forEach(function(p){
+    document.getElementById("p-"+p).className="pg"+(p===name?" on":"");
+    document.getElementById("t-"+p).className="tab"+(p===name?" on":"");
+  });
+  document.getElementById("bbar").style.display=name==="new"?"flex":"none";
+  if(name==="hist")renderHistPage();
+  if(name==="lib")renderLibPage("","ALL");
+}
+
+function goStep(n){
+  ST.step=n;
+  [1,2,3,4].forEach(function(i){
+    document.getElementById("step"+i).style.display=i===n?"block":"none";
+    var s=document.getElementById("st-"+i);
+    s.className="step"+(i===n?" on":i<n?" done":"");
+  });
+  var back=document.getElementById("btn-back");
+  var next=document.getElementById("btn-next");
+  back.style.display=n>1?"block":"none";
+  if(n===4){
+    next.className="btn btn-pdf";
+    next.textContent="Download PDF";
+    next.onclick=downloadPDF;
+    buildReview();
+    initSig();
+  }else if(n===3){
+    next.className="btn btn-next";next.textContent="Review BOL";next.onclick=nextStep;
+  }else if(n===2){
+    next.className="btn btn-next";next.textContent="Add Items";next.onclick=nextStep;
+  }else{
+    next.className="btn btn-next";next.textContent="Next: Pallets";next.onclick=nextStep;
+  }
+  window.scrollTo(0,0);
+}
+
+function nextStep(){
+  if(ST.step===1){
+    ST.bolNum=document.getElementById("bol-num").value.trim()||ST.bolNum;
+    ST.shipDate=document.getElementById("ship-date").value;
+    ST.shipTo=document.getElementById("ship-to").value.trim();
+    ST.carrier=document.getElementById("carrier").value.trim();
+    ST.driver=document.getElementById("driver").value.trim();
+    ST.truckNum=document.getElementById("truck-num").value.trim();
+    ST.trailerNum=document.getElementById("trailer-num").value.trim();
+    ST.proNum=document.getElementById("pro-num").value.trim();
+    ST.scac=document.getElementById("scac").value.trim();
+    ST.specInst=document.getElementById("spec-inst").value.trim();
+  }
+  if(ST.step<4)goStep(ST.step+1);
+}
+function prevStep(){if(ST.step>1)goStep(ST.step-1);}
+
+function setFT(v){
+  ST.ft=v;
+  ["prepaid","collect","3rd"].forEach(function(x){
+    document.getElementById("ft-"+x).className="ftbtn"+(v===x?" on":"");
+  });
+}
+
+function genBolNum(){
+  var n="BNA-SHP-"+String(HI.length+1).padStart(3,"0");
+  document.getElementById("bol-num").value=n;
+  document.getElementById("bol-badge").textContent=n;
+  ST.bolNum=n;
+}
+
+// PALLETS
+function loadPallets(){
+  var el=document.getElementById("plt-select-list");
+  var pkgHist=[];
+  try{var h=localStorage.getItem("bna-h7");if(h)pkgHist=JSON.parse(h);}catch(e){}
+  try{var h2=localStorage.getItem("bna-h8");if(h2){var a=JSON.parse(h2);pkgHist=pkgHist.concat(a);}}catch(e){}
+  var pallets={};
+  pkgHist.filter(function(r){return r.action==="packaging"&&r.palletNum;}).forEach(function(r){
+    if(!pallets[r.palletNum])pallets[r.palletNum]={num:r.palletNum,frames:[],by:r.packedBy||"-",date:r.packDate||"-"};
+    if(pallets[r.palletNum].frames.indexOf(r.frameId)<0)pallets[r.palletNum].frames.push(r.frameId);
+  });
+  var keys=Object.keys(pallets).sort();
+  el.innerHTML="";
+  if(!keys.length){
+    var msg=document.createElement("div");
+    msg.style.cssText="text-align:center;padding:20px;color:var(--dm);font-family:var(--mono);font-size:11px;line-height:1.9";
+    msg.innerHTML="No packed frames yet.<br>Pallets appear here after packaging team scans them.<br><span style='font-size:9px'>You can still add custom pallets below.</span>";
+    el.appendChild(msg);
+    return;
+  }
+  keys.forEach(function(k){
+    var p=pallets[k];
+    var card=document.createElement("div");
+    card.className="plt-card";card.id="plt-"+k;
+    var num=document.createElement("div");num.className="plt-num";num.textContent=p.num;
+    var info=document.createElement("div");info.className="plt-info";
+    info.textContent=p.frames.length+" frames / Packed by "+p.by+" / "+p.date;
+    var frames=document.createElement("div");
+    frames.style.cssText="font-size:11px;color:var(--tx);margin-top:3px";
+    frames.textContent=p.frames.join(", ");
+    card.appendChild(num);card.appendChild(info);card.appendChild(frames);
+    (function(plt,key){
+      card.addEventListener("click",function(){togglePallet(plt,key);});
+    })(p,k);
+    el.appendChild(card);
+  });
+}
+
+function togglePallet(p,key){
+  var idx=ST.pallets.findIndex(function(x){return x.num===key;});
+  var card=document.getElementById("plt-"+key);
+  if(idx>=0){
+    ST.pallets.splice(idx,1);
+    if(card)card.className="plt-card";
+  }else{
+    ST.pallets.push(p);
+    if(card){card.className="plt-card sel";card.style.position="relative";}
+  }
+  renderSelPallets();
+}
+
+function addCustomPallet(){
+  var num=prompt("Pallet number (e.g. BNA-PLT-ACC-01):");
+  if(!num||!num.trim())return;
+  num=num.trim();
+  var desc=prompt("Description (e.g. ACCESSORIES LV1+LV2):")||"";
+  var custom={num:num,frames:[],by:"Custom",date:new Date().toISOString().split("T")[0],desc:desc};
+  ST.pallets.push(custom);
+  var el=document.getElementById("plt-select-list");
+  var card=document.createElement("div");
+  card.className="plt-card sel";card.id="plt-custom-"+num;
+  var pnum=document.createElement("div");pnum.className="plt-num";pnum.textContent=num;
+  var info=document.createElement("div");info.className="plt-info";
+  info.textContent="Custom / "+desc;
+  card.appendChild(pnum);card.appendChild(info);
+  el.appendChild(card);
+  renderSelPallets();
+  showToast("Added pallet: "+num);
+}
+
+function renderSelPallets(){
+  var box=document.getElementById("sel-plts-box");
+  var list=document.getElementById("sel-plts-list");
+  var cnt=document.getElementById("plt-cnt");
+  cnt.textContent=ST.pallets.length;
+  if(!ST.pallets.length){box.style.display="none";return;}
+  box.style.display="block";
+  list.innerHTML="";
+  ST.pallets.forEach(function(p){
+    var row=document.createElement("div");
+    row.style.cssText="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--s3);font-size:12px";
+    var left=document.createElement("span");
+    left.style.cssText="font-family:var(--mono);font-weight:700;color:var(--bl)";
+    left.textContent=p.num;
+    var right=document.createElement("span");
+    right.style.cssText="color:var(--mu);font-family:var(--mono);font-size:10px";
+    right.textContent=p.frames&&p.frames.length?p.frames.length+" frames":p.desc||"Custom";
+    row.appendChild(left);row.appendChild(right);
+    list.appendChild(row);
+  });
+}
+
+// SCANNER
+function startScan(){
+  if(scanning){stopScan();return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    var code=prompt("Camera not available.\nType the part number from the box:");
+    if(code)handleBarcode(code.trim().toUpperCase());
+    return;
+  }
+  scanning=true;
+  var btn=document.getElementById("scan-btn");
+  var vid=document.getElementById("cam-view");
+  var stat=document.getElementById("scan-status");
+  btn.textContent="Stop Scanning";
+  stat.textContent="Starting camera...";
+  navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false})
+    .then(function(stream){
+      scanStream=stream;
+      vid.srcObject=stream;
+      vid.style.display="block";
+      stat.textContent="Aim at barcode...";
+      if(window.BarcodeDetector){
+        var bd=new BarcodeDetector({formats:["code_128","code_39","qr_code","ean_13","ean_8","upc_a","upc_e"]});
+        scanTimer=setInterval(function(){
+          bd.detect(vid).then(function(codes){
+            if(codes.length>0){stopScan();handleBarcode(codes[0].rawValue.trim().toUpperCase());}
+          }).catch(function(){});
+        },600);
+      }else{
+        stopScan();
+        var c=prompt("Manual entry - type part number from box:");
+        if(c)handleBarcode(c.trim().toUpperCase());
+      }
+    })
+    .catch(function(err){
+      scanning=false;
+      stat.textContent="Camera error: "+err.message;
+      btn.textContent="Tap to Scan Barcode on Box";
+    });
+}
+
+function stopScan(){
+  scanning=false;
+  if(scanTimer){clearInterval(scanTimer);scanTimer=null;}
+  if(scanStream){scanStream.getTracks().forEach(function(t){t.stop();});scanStream=null;}
+  document.getElementById("cam-view").style.display="none";
+  document.getElementById("scan-btn").textContent="Tap to Scan Barcode on Box";
+  document.getElementById("scan-status").textContent="";
+}
+
+function handleBarcode(code){
+  document.getElementById("scan-status").textContent="Scanned: "+code;
+  var found=LIB.find(function(i){return i.pn.toUpperCase()===code;});
+  if(found){
+    addToBOL(found,1);
+    showToast("Found: "+found.desc);
+  }else{
+    showToast("New part: "+code+" - add description below");
+    document.getElementById("new-pn").value=code;
+    var cat="Other";
+    if(code.indexOf("E1-")===0)cat="Accessories";
+    else if(code.indexOf("E2-")===0)cat="Gaskets";
+    else if(code.indexOf("PM-")===0||code.indexOf("HC-")===0||code.indexOf("UF-")===0)cat="Fasteners";
+    else if(code.indexOf("FC-")===0||code.indexOf("TRIM")===0)cat="Trims";
+    else if(code.indexOf("P-")===0||code.indexOf("CW-")===0)cat="Profiles";
+    document.getElementById("new-cat").value=cat;
+    document.getElementById("nif").className="nif open";
+    document.getElementById("new-desc").focus();
+  }
+}
+
+// ITEM LIBRARY
+function loadLib(){
+  try{
+    var s=localStorage.getItem("ega-lib");
+    if(s){JSON.parse(s).forEach(function(item){if(!LIB.find(function(i){return i.pn===item.pn;}))LIB.push(item);});}
+  }catch(e){}
+}
+
+function saveLib(){try{localStorage.setItem("ega-lib",JSON.stringify(LIB));}catch(e){}}
+
+function catColor(cat){return CC[cat]||"#6B7280";}
+
+function buildCatFilter(elId, callback){
+  var el=document.getElementById(elId);
+  if(!el)return;
+  el.innerHTML="";
+  var cats=["ALL"].concat(Object.keys(CC));
+  cats.forEach(function(c){
+    var btn=document.createElement("div");
+    btn.className="cat-btn"+(c==="ALL"?" on":"");
+    btn.textContent=c;
+    if(c!=="ALL"){btn.style.borderColor=catColor(c)+"55";btn.style.color=catColor(c);}
+    (function(cat,eid){
+      btn.addEventListener("click",function(){
+        document.querySelectorAll("#"+eid+" .cat-btn").forEach(function(b){b.className="cat-btn";});
+        this.className="cat-btn on";
+        var q=eid==="cat-filter"?document.getElementById("item-srch").value:document.getElementById("lib-srch").value;
+        callback(q,cat);
+      });
+    })(c,elId);
+    el.appendChild(btn);
+  });
+}
+
+function filterItems(q,cat){renderLib(q||"",cat||"ALL");}
+function filterLib(q,cat){renderLibPage(q||"",cat||"ALL");}
+
+function renderLib(q,cat){
+  var el=document.getElementById("item-lib-list");
+  if(!el)return;
+  var items=LIB.filter(function(i){
+    var mq=!q||(i.pn.toLowerCase().indexOf(q.toLowerCase())>=0||i.desc.toLowerCase().indexOf(q.toLowerCase())>=0);
+    var mc=!cat||cat==="ALL"||(i.cat||"Other")===cat;
+    return mq&&mc;
+  }).slice(0,20);
+  el.innerHTML="";
+  if(!items.length){
+    var msg=document.createElement("div");
+    msg.style.cssText="text-align:center;padding:12px;color:var(--dm);font-family:var(--mono);font-size:11px";
+    msg.textContent="No items found";
+    el.appendChild(msg);
+    return;
+  }
+  items.forEach(function(item){
+    var col=catColor(item.cat||"Other");
+    var row=document.createElement("div");row.className="irow";
+    var pn=document.createElement("span");pn.className="ipn";pn.style.color=col;pn.textContent=item.pn;
+    var desc=document.createElement("span");desc.className="idesc";desc.textContent=item.desc;
+    var unit=document.createElement("span");unit.className="iunit";
+    unit.style.cssText="background:"+col+"22;color:"+col;unit.textContent=item.unit;
+    var add=document.createElement("button");add.className="iadd";add.textContent="+ ADD";
+    (function(it){add.addEventListener("click",function(){addToBOL(it,1);showToast("Added: "+it.desc);});})(item);
+    row.appendChild(pn);row.appendChild(desc);row.appendChild(unit);row.appendChild(add);
+    el.appendChild(row);
+  });
+}
+
+function renderLibPage(q,cat){
+  var el=document.getElementById("lib-list");
+  if(!el)return;
+  var items=LIB.filter(function(i){
+    var mq=!q||(i.pn.toLowerCase().indexOf(q.toLowerCase())>=0||i.desc.toLowerCase().indexOf(q.toLowerCase())>=0);
+    var mc=!cat||cat==="ALL"||(i.cat||"Other")===cat;
+    return mq&&mc;
+  });
+  el.innerHTML="";
+  items.forEach(function(item){
+    var col=catColor(item.cat||"Other");
+    var row=document.createElement("div");row.className="irow";
+    var pn=document.createElement("span");pn.className="ipn";pn.style.color=col;pn.textContent=item.pn;
+    var desc=document.createElement("span");desc.className="idesc";desc.textContent=item.desc;
+    var cat2=document.createElement("span");cat2.className="iunit";
+    cat2.style.cssText="background:"+col+"22;color:"+col;cat2.textContent=(item.cat||"Other")+" / "+item.unit;
+    row.appendChild(pn);row.appendChild(desc);row.appendChild(cat2);
+    el.appendChild(row);
+  });
+  if(!items.length){
+    el.innerHTML="<div style='text-align:center;padding:12px;color:var(--dm);font-family:var(--mono);font-size:11px'>No items found</div>";
+  }
+}
+
+function toggleNIF(){
+  var f=document.getElementById("nif");
+  f.className=f.className.indexOf("open")>=0?"nif":"nif open";
+}
+
+function addNewItem(){
+  var pn=(document.getElementById("new-pn").value||"").trim().toUpperCase();
+  var desc=(document.getElementById("new-desc").value||"").trim().toUpperCase();
+  var cat=document.getElementById("new-cat").value;
+  var unit=document.getElementById("new-unit").value;
+  var qty=parseInt(document.getElementById("new-qty").value)||1;
+  if(!pn||!desc){showToast("Fill part number and description");return;}
+  var item={pn:pn,desc:desc,cat:cat,unit:unit};
+  if(!LIB.find(function(i){return i.pn===pn;})){LIB.push(item);saveLib();showToast("Saved to library: "+pn);}
+  addToBOL(item,qty);
+  ["new-pn","new-desc","new-qty"].forEach(function(id){document.getElementById(id).value="";});
+  document.getElementById("nif").className="nif";
+  document.getElementById("scan-status").textContent="";
+}
+
+function importCSV(input){
+  var file=input.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var lines=e.target.result.split("\n");var added=0;
+    lines.forEach(function(line){
+      var cols=line.split(",");
+      if(cols.length>=2){
+        var pn=(cols[0]||"").trim().toUpperCase();
+        var desc=(cols[1]||"").trim().toUpperCase();
+        var cat=(cols[2]||"Other").trim();
+        var unit=(cols[3]||"EA").trim();
+        if(pn&&desc&&pn!=="PART NUMBER"&&pn!=="PART #"&&pn!=="PN"){
+          if(!LIB.find(function(i){return i.pn===pn;})){LIB.push({pn:pn,desc:desc,cat:cat,unit:unit});added++;}
+        }
+      }
+    });
+    saveLib();renderLibPage("","ALL");renderLib("","ALL");
+    showToast("Imported "+added+" new parts");
+  };
+  reader.readAsText(file);
+}
+
+// ADD TO BOL
+function addToBOL(item,qty){
+  var idx=ST.items.findIndex(function(i){return i.pn===item.pn;});
+  if(idx>=0){ST.items[idx].qty+=qty;}
+  else{ST.items.push({pn:item.pn,desc:item.desc,cat:item.cat||"Other",unit:item.unit||"EA",qty:qty});}
+  renderAddedItems();
+}
+
+function renderAddedItems(){
+  var el=document.getElementById("added-items-list");
+  var cnt=document.getElementById("items-cnt");
+  cnt.textContent=ST.items.length;
+  el.innerHTML="";
+  if(!ST.items.length){
+    var msg=document.createElement("div");
+    msg.style.cssText="text-align:center;padding:16px;color:var(--dm);font-family:var(--mono);font-size:11px";
+    msg.textContent="No items added yet";
+    el.appendChild(msg);return;
+  }
+  ST.items.forEach(function(item,idx){
+    var col=catColor(item.cat);
+    var row=document.createElement("div");row.className="bol-item";
+    var info=document.createElement("div");info.className="bi-info";
+    var pn=document.createElement("div");pn.className="bi-pn";pn.textContent=item.pn;
+    var desc=document.createElement("div");desc.className="bi-desc";desc.textContent=item.desc;
+    info.appendChild(pn);info.appendChild(desc);
+    var cat=document.createElement("span");cat.style.cssText="font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:10px;flex-shrink:0;background:"+col+"22;color:"+col;cat.textContent=item.cat;
+    var qc=document.createElement("div");qc.className="qty-ctrl";
+    var qm=document.createElement("button");qm.className="qbtn";qm.textContent="-";
+    var qi=document.createElement("input");qi.className="qinp";qi.type="number";qi.value=item.qty;qi.min=1;
+    var qu=document.createElement("span");qu.className="qunit";qu.textContent=item.unit;
+    var qp=document.createElement("button");qp.className="qbtn";qp.textContent="+";
+    var del=document.createElement("button");del.className="qdel";del.innerHTML="&#10005;";
+    qc.appendChild(qm);qc.appendChild(qi);qc.appendChild(qu);qc.appendChild(qp);
+    row.appendChild(info);row.appendChild(cat);row.appendChild(qc);row.appendChild(del);
+    el.appendChild(row);
+    (function(i){
+      qm.onclick=function(){if(ST.items[i].qty>1){ST.items[i].qty--;qi.value=ST.items[i].qty;}};
+      qp.onclick=function(){ST.items[i].qty++;qi.value=ST.items[i].qty;};
+      qi.onchange=function(){ST.items[i].qty=Math.max(1,parseInt(this.value)||1);};
+      del.onclick=function(){ST.items.splice(i,1);renderAddedItems();};
+    })(idx);
+  });
+}
+
+// SIGNATURE
+var sigCtx=null,sigDrawing=false;
+function initSig(){
+  var c=document.getElementById("sig-canvas");if(!c)return;
+  c.width=c.offsetWidth||340;c.height=120;
+  sigCtx=c.getContext("2d");
+  sigCtx.strokeStyle="#00d084";sigCtx.lineWidth=2;sigCtx.lineCap="round";
+  function pos(e){var r=c.getBoundingClientRect();var s=e.touches?e.touches[0]:e;return{x:s.clientX-r.left,y:s.clientY-r.top};}
+  c.addEventListener("mousedown",function(e){sigDrawing=true;var p=pos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);e.preventDefault();});
+  c.addEventListener("touchstart",function(e){sigDrawing=true;var p=pos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);e.preventDefault();},{passive:false});
+  c.addEventListener("mousemove",function(e){if(!sigDrawing)return;var p=pos(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();e.preventDefault();});
+  c.addEventListener("touchmove",function(e){if(!sigDrawing)return;var p=pos(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();e.preventDefault();},{passive:false});
+  c.addEventListener("mouseup",function(){sigDrawing=false;ST.sig=c.toDataURL();});
+  c.addEventListener("touchend",function(){sigDrawing=false;ST.sig=c.toDataURL();});
+}
+function clearSig(){if(sigCtx){var c=document.getElementById("sig-canvas");sigCtx.clearRect(0,0,c.width,c.height);}ST.sig=null;}
+
+// REVIEW
+function buildReview(){
+  var el=document.getElementById("review-content");if(!el)return;
+  var tf=ST.pallets.reduce(function(s,p){return s+(p.frames?p.frames.length:0);},0);
+  el.innerHTML="";
+  function addSH(txt){var d=document.createElement("div");d.className="sum-hdr";d.textContent=txt;el.appendChild(d);}
+  function addSR(k,v){
+    var d=document.createElement("div");d.className="sum-row";
+    var dk=document.createElement("span");dk.className="sum-key";dk.textContent=k;
+    var dv=document.createElement("span");dv.textContent=v;
+    d.appendChild(dk);d.appendChild(dv);el.appendChild(d);
+  }
+  addSH("Shipment");
+  addSR("BOL Number",ST.bolNum);addSR("Ship Date",ST.shipDate);
+  addSR("Ship From",ST.shipFrom);addSR("Ship To",ST.shipTo||"Not set");
+  addSR("Carrier",ST.carrier||"Not set");addSR("Driver",ST.driver||"Not set");
+  addSR("Truck / Trailer",(ST.truckNum||"-")+" / "+(ST.trailerNum||"-"));
+  addSR("Freight Terms",ST.ft.toUpperCase());
+  if(ST.specInst)addSR("Special Inst.",ST.specInst);
+  if(ST.pallets.length){
+    addSH("Pallets ("+ST.pallets.length+") - "+tf+" Frames");
+    ST.pallets.forEach(function(p,i){
+      addSR("Item "+(i+1)+" - "+p.num,p.frames&&p.frames.length?p.frames.length+" frames":p.desc||"Custom");
+      if(p.frames&&p.frames.length){
+        var d=document.createElement("div");
+        d.style.cssText="font-size:10px;color:var(--mu);font-family:var(--mono);padding:2px 0 5px 8px;line-height:1.7";
+        d.textContent=p.frames.join(", ");el.appendChild(d);
+      }
+    });
+  }
+  if(ST.items.length){
+    var cats={};
+    ST.items.forEach(function(item){var c=item.cat||"Other";if(!cats[c])cats[c]=[];cats[c].push(item);});
+    Object.keys(cats).forEach(function(cat){
+      addSH(cat+" ("+cats[cat].length+" items)");
+      cats[cat].forEach(function(item){addSR(item.pn+" - "+item.desc,item.qty+" "+item.unit);});
+    });
+  }
+}
+
+// GENERATE + DOWNLOAD PDF
+function downloadPDF(){
+  showToast("Generating PDF...");
+  saveBOL();
+  setTimeout(function(){
+    try{doPDF();}
+    catch(err){console.error(err);showToast("PDF error - using print");window.print();}
+  },200);
+}
+
+function saveBOL(){
+  var tf=ST.pallets.reduce(function(s,p){return s+(p.frames?p.frames.length:0);},0);
+  var entry={bolNum:ST.bolNum,date:ST.shipDate,shipTo:ST.shipTo,carrier:ST.carrier,
+    driver:ST.driver,truckNum:ST.truckNum,trailerNum:ST.trailerNum,
+    ft:ST.ft,specInst:ST.specInst,
+    palletCount:ST.pallets.length,frameCount:tf,itemCount:ST.items.length,
+    pallets:JSON.parse(JSON.stringify(ST.pallets)),
+    items:JSON.parse(JSON.stringify(ST.items)),
+    sig:ST.sig,status:"PENDING",ts:new Date().toISOString()};
+  HI.unshift(entry);
+  try{localStorage.setItem("ega-bol-hist",JSON.stringify(HI));}catch(e){}
+  var params=new URLSearchParams({action:"bol",bolNum:ST.bolNum,shipDate:ST.shipDate,
+    shipTo:ST.shipTo,carrier:ST.carrier,driver:ST.driver,
+    palletCount:ST.pallets.length,frameCount:tf,status:"PENDING"});
+  var img=new Image();img.src=WH+"?"+params.toString();
+}
+
+function doPDF(){
+  var jsPDF=window.jspdf?window.jspdf.jsPDF:null;
+  if(!jsPDF){showToast("PDF library loading - try again");return;}
+  var entry=HI[0];if(!entry)return;
+  var doc=new jsPDF({orientation:"portrait",unit:"mm",format:"letter"});
+  var pw=doc.internal.pageSize.getWidth();
+  var m=14;var y=12;
+  // Title
+  doc.setFontSize(13);doc.setFont("helvetica","bold");
+  doc.text("BILL OF LADING - SHORT FORM - NOT NEGOTIABLE",pw/2,y,{align:"center"});
+  y+=4;doc.setFontSize(8);doc.setFont("helvetica","normal");
+  doc.text("Page 1 of 1",pw/2,y,{align:"center"});
+  y+=5;
+  // Header table
+  doc.setFontSize(8);
+  var ht=[
+    [["SHIP FROM","Eastern Glass & Aluminum","4274 Shackleford Rd., Norcross, GA 30093","678-355-9010"],
+     ["Bill of Lading Number: "+entry.bolNum,"","Date: "+entry.date,""]],
+    [["SHIP TO",entry.shipTo||"","",""],
+     ["Carrier Name: "+(entry.carrier||"EGA"),"Trailer: "+(entry.trailerNum||"-"),"Truck: "+(entry.truckNum||"-"),""]],
+    [["THIRD PARTY FREIGHT CHARGES BILL TO","Eastern Glass & Aluminum","4274 Shackleford Rd., Norcross, GA 30093","678-355-9010"],
+     ["SCAC: "+(entry.scac||""),"Pro Number: "+(entry.proNum||""),"",""]],
+  ];
+  var cw=(pw-m*2)/2;
+  ht.forEach(function(pair){
+    var left=pair[0],right=pair[1];
+    var sh=Math.max(left.length,right.length)*4+4;
+    doc.rect(m,y,cw,sh);doc.rect(m+cw,y,cw,sh);
+    if(left[0].toUpperCase()===left[0]&&left[0].length<30){
+      doc.setFillColor(200,200,200);doc.rect(m,y,cw,5,"F");
+      doc.setFont("helvetica","bold");doc.text(left[0],m+cw/2,y+3.5,{align:"center"});
+      left=left.slice(1);
+    }
+    doc.setFont("helvetica","normal");
+    left.forEach(function(t,i){if(t)doc.text(t,m+2,y+6+i*3.5);});
+    right.forEach(function(t,i){if(t)doc.text(t,m+cw+2,y+3+i*4);});
+    y+=sh;
+  });
+  // Special instructions
+  if(entry.specInst){
+    doc.rect(m,y,pw-m*2,6);
+    doc.setFont("helvetica","normal");doc.setFontSize(8);
+    doc.text("Special Instructions: "+entry.specInst,m+2,y+4);
+    y+=6;
+  }
+  // Freight terms
+  doc.rect(m,y,pw-m*2,6);
+  doc.setFont("helvetica","normal");
+  doc.text("Freight Charge Terms:  Prepaid ["+(entry.ft==="prepaid"?"X":" ")+"]   Collect ["+(entry.ft==="collect"?"X":" ")+"]   3rd Party ["+(entry.ft==="3rd"?"X":" ")+"]   Invoice [ ]",m+2,y+4);
+  y+=6;
+  // Customer order section
+  doc.setFillColor(200,200,200);doc.rect(m,y,pw-m*2,5,"F");
+  doc.setFont("helvetica","bold");doc.text("CUSTOMER ORDER INFORMATION",pw/2,y+3.5,{align:"center"});
+  y+=5;
+  doc.autoTable({startY:y,
+    head:[["Customer Order No.","# of Packages","Weight","Pallet/Slip","Additional Info"]],
+    body:[["Job #20230013",entry.palletCount+entry.items.length,"","Y  N","BNA Concourse A - "+entry.frameCount+" Frames"],["Grand Total","","","",""]],
+    theme:"grid",headStyles:{fillColor:[220,220,220],textColor:[0,0,0],fontSize:7,fontStyle:"bold"},
+    bodyStyles:{fontSize:8},margin:{left:m,right:m}});
+  y=doc.lastAutoTable.finalY;
+  // Carrier section header
+  doc.setFillColor(200,200,200);doc.rect(m,y,pw-m*2,5,"F");
+  doc.setFont("helvetica","bold");doc.text("CARRIER INFORMATION",pw/2,y+3.5,{align:"center"});
+  y+=5;
+  // Build commodity rows
+  var rows=[];var n=1;
+  entry.pallets.forEach(function(p){
+    var desc=p.num+(p.frames&&p.frames.length?" - CW FRAMES: "+p.frames.join(", "):p.desc?" - "+p.desc:" - ACCESSORIES PALLET");
+    rows.push([n++,"",1,"Pallet","","",desc,"",""]);
+  });
+  var cats={};
+  entry.items.forEach(function(item){var c=item.cat||"Other";if(!cats[c])cats[c]=[];cats[c].push(item);});
+  Object.keys(cats).forEach(function(cat){
+    cats[cat].forEach(function(item){rows.push([n++,"",item.qty,item.unit,"","",item.pn+" - "+item.desc,"",""]);});
+  });
+  while(rows.length<10)rows.push([n++,"","","Pallet","","","","",""]);
+  doc.autoTable({startY:y,
+    head:[["Item","Type","Qty","Type","Weight","HM(X)","Commodity Description","NMFC No.","Class"]],
+    body:rows,theme:"grid",
+    headStyles:{fillColor:[220,220,220],textColor:[0,0,0],fontSize:7,fontStyle:"bold"},
+    bodyStyles:{fontSize:7,cellPadding:1.5},
+    columnStyles:{0:{cellWidth:8,halign:"center"},1:{cellWidth:10,halign:"center"},2:{cellWidth:8,halign:"center"},3:{cellWidth:10,halign:"center"},4:{cellWidth:12,halign:"center"},5:{cellWidth:10,halign:"center"},6:{cellWidth:"auto"},7:{cellWidth:14,halign:"center"},8:{cellWidth:10,halign:"center"}},
+    margin:{left:m,right:m}});
+  y=doc.lastAutoTable.finalY+4;
+  // Signature section
+  if(y>220){doc.addPage();y=14;}
+  var hw=(pw-m*2)/2;
+  doc.rect(m,y,hw-2,28);doc.rect(m+hw,y,hw-2,28);
+  doc.setFontSize(8);doc.setFont("helvetica","bold");
+  doc.text("SHIPPER SIGNATURE",m+2,y+4);
+  doc.setFont("helvetica","normal");doc.text("Eastern Glass & Aluminum",m+2,y+9);
+  doc.line(m+2,y+20,m+hw-4,y+20);doc.text("Signature / Date: "+entry.date,m+2,y+25);
+  doc.setFont("helvetica","bold");doc.text("DRIVER ACKNOWLEDGMENT",m+hw+2,y+4);
+  doc.setFont("helvetica","normal");doc.text("Contents received in apparent good order",m+hw+2,y+9);
+  doc.line(m+hw+2,y+20,pw-m-2,y+20);doc.text("Driver Signature",m+hw+2,y+25);
+  // Add digital signature if exists
+  if(entry.sig){try{doc.addImage(entry.sig,"PNG",m+2,y+10,hw-6,10);}catch(e){}}
+  y+=32;
+  doc.setFontSize(7);doc.setFont("helvetica","italic");
+  doc.text("Note: Liability limitation for loss or damage may be applicable. See 49 USC 14706(c)(1)(A) and (B).",m,y);
+  // Save
+  var fname=entry.bolNum+(entry.date?"-"+entry.date:"")+".pdf";
+  doc.save(fname);
+  showToast("Downloaded: "+fname);
+  // Reset UI
+  setTimeout(function(){resetBOL();},500);
+}
+
+// HISTORY
+function loadHist(){try{var h=localStorage.getItem("ega-bol-hist");if(h)HI=JSON.parse(h);}catch(e){}}
+
+function renderHistPage(){
+  var el=document.getElementById("hist-list");if(!el)return;
+  if(!HI.length){
+    el.innerHTML="<div style='text-align:center;padding:20px;color:var(--dm);font-family:var(--mono);font-size:11px'>No BOLs created yet.</div>";
+    return;
+  }
+  el.innerHTML="";
+  HI.forEach(function(b){
+    var card=document.createElement("div");card.className="bol-hist-card";
+    var num=document.createElement("div");num.className="bh-num";num.textContent=b.bolNum;
+    var badge=document.createElement("span");badge.className="sbadge "+(b.status==="DELIVERED"?"s-d":b.status==="IN TRANSIT"?"s-t":"s-p");
+    badge.style.marginLeft="8px";badge.textContent=b.status||"PENDING";
+    num.appendChild(badge);
+    var info=document.createElement("div");info.className="bh-info";
+    info.innerHTML=(b.date||"-")+" / To: "+(b.shipTo||"-")+"<br>"+"Carrier: "+(b.carrier||"-")+" / "+(b.driver||"-")+"<br>"+b.palletCount+" pallets / "+b.frameCount+" frames / "+b.itemCount+" items";
+    var btns=document.createElement("div");btns.style.cssText="display:flex;gap:6px;margin-top:8px";
+    var d=document.createElement("button");d.className="action-btn";d.style.color="var(--gn)";d.textContent="Mark Delivered";
+    var r=document.createElement("button");r.className="action-btn";r.style.color="var(--bl)";r.textContent="Reprint PDF";
+    (function(bol){
+      d.onclick=function(){bol.status="DELIVERED";try{localStorage.setItem("ega-bol-hist",JSON.stringify(HI));}catch(e){}renderHistPage();showToast(bol.bolNum+" marked Delivered");};
+      r.onclick=function(){reprintPDF(bol);};
+    })(b);
+    btns.appendChild(d);btns.appendChild(r);
+    card.appendChild(num);card.appendChild(info);card.appendChild(btns);
+    el.appendChild(card);
+  });
+}
+
+function reprintPDF(entry){
+  HI.unshift(entry);
+  Object.assign(ST,{bolNum:entry.bolNum,shipDate:entry.date,shipTo:entry.shipTo,
+    carrier:entry.carrier,driver:entry.driver,truckNum:entry.truckNum,
+    trailerNum:entry.trailerNum,ft:entry.ft||"prepaid",specInst:entry.specInst||"",
+    pallets:entry.pallets||[],items:entry.items||[],sig:entry.sig||null});
+  try{doPDF();}catch(e){showToast("PDF error");console.error(e);}
+}
+
+function resetBOL(){
+  ST={step:1,bolNum:"",shipDate:"",
+    shipFrom:"Eastern Glass & Aluminum, 4274 Shackleford Rd., Norcross, GA 30093",
+    shipTo:"",carrier:"",driver:"",truckNum:"",trailerNum:"",
+    proNum:"",scac:"",ft:"prepaid",specInst:"",pallets:[],items:[],sig:null};
+  ["ship-to","carrier","driver","truck-num","trailer-num","pro-num","scac","spec-inst"].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value="";
+  });
+  document.getElementById("ship-date").valueAsDate=new Date();
+  setFT("prepaid");
+  genBolNum();
+  loadPallets();
+  document.getElementById("bbar").innerHTML='<button class="btn btn-back" id="btn-back" onclick="prevStep()" style="display:none">Back</button><button class="btn btn-next" id="btn-next" onclick="nextStep()">Next: Pallets</button>';
+  goStep(1);
+  goPg("new");
+}
+
+function showToast(msg){
+  var t=document.getElementById("toast");
+  t.textContent=msg;t.classList.add("show");
+  setTimeout(function(){t.classList.remove("show");},2400);
+}
+
+</script>
+</body>
+</html>
