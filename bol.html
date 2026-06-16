@@ -162,15 +162,16 @@ select.inp option{background:var(--s2)}
   <div id="step3" style="display:none">
     <div class="box">
       <div class="box-t">Scan or Add Items</div>
-      <button class="scan-btn no-print" id="scan-btn" onclick="startScan()">&#128247; Tap to Scan Barcode on Box</button>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="scan-btn no-print" id="scan-btn" onclick="startScan()" style="flex:1;margin-bottom:0;padding:12px 8px">&#128247; Scan Barcode</button>
+        <button class="scan-btn no-print" onclick="manualEntry()" style="flex:1;margin-bottom:0;padding:12px 8px;border-color:var(--am);color:var(--am)">&#9997; Type Part #</button>
+      </div>
       <video id="cam-view" autoplay playsinline></video>
       <div id="scan-status" style="font-family:var(--mono);font-size:10px;text-align:center;color:var(--am);min-height:18px;padding:2px 0"></div>
-      <div style="display:flex;align-items:center;gap:8px;margin:8px 0">
-        <div style="flex:1;height:1px;background:var(--bd2)"></div>
-        <span style="font-family:var(--mono);font-size:9px;color:var(--dm);letter-spacing:.08em">OR SEARCH LIBRARY</span>
-        <div style="flex:1;height:1px;background:var(--bd2)"></div>
+      <div style="position:relative;margin-bottom:6px">
+        <input class="srch" id="item-srch" placeholder="Search by part # or description e.g. J-HOOK or E1-3949..." type="text" style="margin-bottom:0">
+        <div id="srch-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a2436;border:1px solid #3a5070;border-radius:8px;max-height:200px;overflow-y:auto;z-index:500;margin-top:2px;box-shadow:0 4px 16px rgba(0,0,0,.5)"></div>
       </div>
-      <input class="srch" id="item-srch" placeholder="Search part # or description..." type="text">
       <div class="cat-row" id="cat-filter"></div>
       <div id="item-lib-list"></div>
       <button class="scan-btn" onclick="toggleNIF()" style="margin-top:4px">+ Add New Part Number Not in Library</button>
@@ -255,7 +256,15 @@ loadPallets();
 (function(){var q=new URLSearchParams(location.search);var f=q.get("frame");if(f){showToast("Frame: "+f);}})();
 
 // Input listeners
-document.getElementById("item-srch").addEventListener("input",function(){filterItems(this.value);});
+document.getElementById("item-srch").addEventListener("input",function(){
+  filterItems(this.value);
+  showSearchDrop(this.value);
+});
+document.getElementById("item-srch").addEventListener("blur",function(){
+  setTimeout(function(){
+    var d=document.getElementById("srch-drop");if(d)d.style.display="none";
+  },200);
+});
 document.getElementById("lib-srch").addEventListener("input",function(){filterLib(this.value);});
 
 
@@ -649,19 +658,24 @@ function renderAddedItems(){
     var desc=document.createElement("div");desc.className="bi-desc";desc.textContent=item.desc;
     info.appendChild(pn);info.appendChild(desc);
     var cat=document.createElement("span");cat.style.cssText="font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:10px;flex-shrink:0;background:"+col+"22;color:"+col;cat.textContent=item.cat;
-    var qc=document.createElement("div");qc.className="qty-ctrl";
-    var qm=document.createElement("button");qm.className="qbtn";qm.textContent="-";
-    var qi=document.createElement("input");qi.className="qinp";qi.type="number";qi.value=item.qty;qi.min=1;
-    var qu=document.createElement("span");qu.className="qunit";qu.textContent=item.unit;
-    var qp=document.createElement("button");qp.className="qbtn";qp.textContent="+";
+    var qc=document.createElement("div");
+    qc.style.cssText="display:flex;align-items:center;gap:6px;flex-shrink:0";
+    var qlbl=document.createElement("span");
+    qlbl.style.cssText="font-family:var(--mono);font-size:9px;color:var(--dm)";
+    qlbl.textContent="QTY:";
+    var qi=document.createElement("input");
+    qi.type="number";qi.value=item.qty;qi.min=1;
+    qi.style.cssText="width:70px;text-align:center;background:var(--s3);border:1px solid var(--bl);border-radius:6px;color:var(--tx);font-family:var(--mono);font-size:14px;font-weight:700;padding:5px 4px;outline:none";
+    var qu=document.createElement("span");
+    qu.style.cssText="font-family:var(--mono);font-size:10px;color:var(--mu);min-width:26px";
+    qu.textContent=item.unit;
     var del=document.createElement("button");del.className="qdel";del.innerHTML="&#10005;";
-    qc.appendChild(qm);qc.appendChild(qi);qc.appendChild(qu);qc.appendChild(qp);
+    qc.appendChild(qlbl);qc.appendChild(qi);qc.appendChild(qu);
     row.appendChild(info);row.appendChild(cat);row.appendChild(qc);row.appendChild(del);
     el.appendChild(row);
     (function(i){
-      qm.onclick=function(){if(ST.items[i].qty>1){ST.items[i].qty--;qi.value=ST.items[i].qty;}};
-      qp.onclick=function(){ST.items[i].qty++;qi.value=ST.items[i].qty;};
-      qi.onchange=function(){ST.items[i].qty=Math.max(1,parseInt(this.value)||1);};
+      qi.oninput=function(){ST.items[i].qty=Math.max(1,parseInt(this.value)||1);};
+      qi.onblur=function(){if(!this.value||parseInt(this.value)<1){this.value=1;ST.items[i].qty=1;}};
       del.onclick=function(){ST.items.splice(i,1);renderAddedItems();};
     })(idx);
   });
@@ -914,6 +928,82 @@ function resetBOL(){
   document.getElementById("bbar").innerHTML='<button class="btn btn-back" id="btn-back" onclick="prevStep()" style="display:none">Back</button><button class="btn btn-next" id="btn-next" onclick="nextStep()">Next: Pallets</button>';
   goStep(1);
   goPg("new");
+}
+
+function manualEntry(){
+  var code=prompt("Type the part number or description:");
+  if(!code||!code.trim())return;
+  var q=code.trim().toUpperCase();
+  var found=LIB.find(function(i){return i.pn.toUpperCase()===q;});
+  if(found){
+    addToBOL(found,1);
+    showToast("Added: "+found.desc);
+  }else{
+    // Try partial match
+    var matches=LIB.filter(function(i){
+      return i.pn.toUpperCase().indexOf(q)>=0||i.desc.toUpperCase().indexOf(q)>=0;
+    });
+    if(matches.length===1){
+      addToBOL(matches[0],1);
+      showToast("Added: "+matches[0].desc);
+    }else if(matches.length>1){
+      showToast(matches.length+" matches - see search results below");
+      document.getElementById("item-srch").value=code.trim();
+      filterItems(code.trim());
+      showSearchDrop(code.trim());
+    }else{
+      // New part - open the add form
+      document.getElementById("new-pn").value=q;
+      document.getElementById("nif").className="nif open";
+      document.getElementById("new-desc").focus();
+      showToast("New part "+q+" - add description below");
+    }
+  }
+}
+
+function showSearchDrop(q){
+  var drop=document.getElementById("srch-drop");
+  if(!q||!q.trim()){drop.style.display="none";return;}
+  var matches=LIB.filter(function(i){
+    return i.pn.toUpperCase().indexOf(q.toUpperCase())>=0||i.desc.toUpperCase().indexOf(q.toUpperCase())>=0;
+  }).slice(0,12);
+  if(!matches.length){drop.style.display="none";return;}
+  drop.innerHTML="";
+  matches.forEach(function(item){
+    var d=document.createElement("div");
+    d.style.cssText="padding:10px 12px;cursor:pointer;border-bottom:1px solid #1e2a3e;display:flex;justify-content:space-between;align-items:center";
+    d.addEventListener("mouseenter",function(){this.style.background="#1e2a3e";});
+    d.addEventListener("mouseleave",function(){this.style.background="";});
+    var left=document.createElement("div");
+    var pn=document.createElement("div");
+    pn.style.cssText="font-family:var(--mono);font-size:11px;font-weight:700;color:"+catColor(item.cat||"Other");
+    pn.textContent=item.pn;
+    var desc=document.createElement("div");
+    desc.style.cssText="font-size:12px;color:var(--tx);margin-top:2px";
+    desc.textContent=item.desc;
+    left.appendChild(pn);left.appendChild(desc);
+    var right=document.createElement("button");
+    right.style.cssText="background:rgba(59,130,246,.15);color:var(--bl);border:1px solid rgba(59,130,246,.3);border-radius:5px;padding:5px 12px;font-family:var(--mono);font-size:10px;cursor:pointer;white-space:nowrap";
+    right.textContent="+ ADD";
+    (function(it){
+      right.addEventListener("click",function(e){
+        e.stopPropagation();
+        addToBOL(it,1);
+        showToast("Added: "+it.desc);
+        drop.style.display="none";
+        document.getElementById("item-srch").value="";
+      });
+      d.addEventListener("click",function(){
+        addToBOL(it,1);
+        showToast("Added: "+it.desc);
+        drop.style.display="none";
+        document.getElementById("item-srch").value="";
+      });
+    })(item);
+    d.appendChild(left);d.appendChild(right);
+    drop.appendChild(d);
+  });
+  drop.style.display="block";
 }
 
 function showToast(msg){
