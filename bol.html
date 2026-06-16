@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>EGA — Bill of Lading</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0e14;--s1:#0f1520;--s2:#161e2e;--s3:#1e2a3e;--bd2:#2a3a52;
+  --tx:#d4e0f0;--mu:#5a7090;--dm:#3a4f6a;
+  --gn:#00d084;--rd:#ff4d6a;--am:#f5a623;--bl:#3b82f6;--or:#f97316;
+  --mono:"Share Tech Mono",monospace;--head:"Rajdhani",sans-serif;--body:"Inter",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--tx);font-family:var(--body);min-height:100vh}
+.top{background:var(--s1);border-bottom:1px solid var(--bd2);padding:10px 14px;position:sticky;top:0;z-index:100}
+.top-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.top h1{font-family:var(--head);font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.top p{font-family:var(--mono);font-size:9px;color:var(--mu);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.top-badge{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid var(--bd2);padding:4px 10px;border-radius:6px;color:var(--am);white-space:nowrap}
+.tabs{display:flex;gap:5px;padding:8px 14px;background:var(--s1);border-bottom:1px solid var(--s3);overflow-x:auto}
+.tab{padding:6px 12px;border-radius:5px;font-family:var(--mono);font-size:10px;font-weight:500;cursor:pointer;border:1px solid var(--bd2);background:var(--s2);color:var(--mu);white-space:nowrap;user-select:none}
+.tab.on{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.4);color:var(--bl)}
+.pg{display:none;padding:12px 14px}.pg.on{display:block}
+.box{background:var(--s1);border:1px solid var(--bd2);border-radius:12px;padding:14px;margin-bottom:10px}
+.box-title{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:10px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fg{display:flex;flex-direction:column;gap:3px}
+.lbl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--dm);margin-bottom:2px}
+.inp{background:var(--s2);border:1px solid var(--bd2);border-radius:6px;padding:8px 10px;font-size:13px;font-family:var(--body);color:var(--tx);width:100%;outline:none;-webkit-appearance:none}
+.inp::placeholder{color:var(--dm)}
+select.inp option{background:var(--s2)}
+.inp:focus{border-color:var(--bl)}
+/* STEP indicators */
+.steps{display:flex;gap:0;margin-bottom:14px;overflow:hidden;border-radius:8px;border:1px solid var(--bd2)}
+.step{flex:1;padding:8px 4px;text-align:center;font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);background:var(--s2);border-right:1px solid var(--bd2);cursor:pointer;transition:all .15s}
+.step:last-child{border-right:none}
+.step.on{background:rgba(59,130,246,.15);color:var(--bl);font-weight:700}
+.step.done{background:rgba(0,208,132,.08);color:var(--gn)}
+/* Pallet cards */
+.plt-card{background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:all .15s;position:relative}
+.plt-card.sel{border-color:var(--gn);background:rgba(0,208,132,.08)}
+.plt-card.sel::after{content:"ADDED";position:absolute;top:10px;right:10px;font-family:var(--mono);font-size:9px;color:var(--gn);font-weight:700;letter-spacing:.1em}
+.plt-num{font-family:var(--head);font-size:16px;font-weight:700;color:var(--bl);margin-bottom:3px}
+.plt-info{font-family:var(--mono);font-size:10px;color:var(--mu);line-height:1.7}
+/* Item library */
+.cat-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.cat-btn{padding:4px 10px;border-radius:20px;font-family:var(--mono);font-size:10px;cursor:pointer;border:1px solid var(--bd2);background:var(--s2);color:var(--mu);white-space:nowrap}
+.cat-btn.on{font-weight:700}
+.item-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border:1px solid var(--bd2);border-radius:8px;margin-bottom:6px}
+.item-pn{font-family:var(--mono);font-size:11px;font-weight:700;min-width:110px;flex-shrink:0}
+.item-desc{flex:1;font-size:12px;min-width:0;color:var(--tx)}
+.item-cat{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:10px;flex-shrink:0}
+.item-add{background:rgba(59,130,246,.15);color:var(--bl);border:1px solid rgba(59,130,246,.3);border-radius:6px;padding:4px 12px;font-family:var(--mono);font-size:10px;cursor:pointer;white-space:nowrap}
+.item-add:hover{background:rgba(59,130,246,.25)}
+/* Scanner */
+.scan-box{background:var(--s2);border:2px dashed var(--bd2);border-radius:12px;padding:20px;text-align:center;margin-bottom:10px;cursor:pointer;transition:all .15s}
+.scan-box:hover{border-color:var(--bl)}
+.scan-box .icon{font-size:36px;margin-bottom:8px}
+.scan-box p{font-family:var(--mono);font-size:11px;color:var(--mu);line-height:1.7}
+#cam-view{width:100%;border-radius:8px;display:none;margin-bottom:8px;max-height:240px;object-fit:cover}
+/* BOL line items */
+.bol-item{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--s2);border:1px solid var(--bd2);border-radius:8px;margin-bottom:6px}
+.bol-item-info{flex:1;min-width:0}
+.bol-item-pn{font-family:var(--mono);font-size:10px;color:var(--mu);margin-bottom:2px}
+.bol-item-desc{font-size:12px;font-weight:500;color:var(--tx)}
+.bol-item-cat{font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:10px;flex-shrink:0}
+.qty-ctrl{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.qty-btn{width:26px;height:26px;border-radius:5px;border:1px solid var(--bd2);background:var(--s3);color:var(--tx);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.qty-inp{width:45px;text-align:center;background:var(--s3);border:1px solid var(--bd2);border-radius:5px;color:var(--tx);font-family:var(--mono);font-size:12px;padding:3px 4px;outline:none}
+.qty-unit{font-family:var(--mono);font-size:9px;color:var(--mu);min-width:28px}
+.del-btn{color:var(--rd);background:none;border:none;cursor:pointer;font-size:16px;padding:2px 4px;flex-shrink:0}
+/* Summary */
+.sum-section{margin-bottom:14px}
+.sum-hdr{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);padding:6px 0;border-bottom:1px solid var(--bd2);margin-bottom:8px}
+.sum-row{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,.04)}
+.sum-row:last-child{border-bottom:none}
+.sum-key{color:var(--mu);font-family:var(--mono);font-size:11px}
+.sum-val{font-weight:500}
+/* Freight terms */
+.ftm{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.ftm-btn{padding:6px 14px;border-radius:6px;font-family:var(--mono);font-size:10px;cursor:pointer;border:1px solid var(--bd2);background:var(--s2);color:var(--mu)}
+.ftm-btn.on{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.4);color:var(--bl);font-weight:700}
+/* New item form */
+.new-item-form{background:var(--s3);border:1px solid var(--bd2);border-radius:8px;padding:12px;margin-bottom:10px;display:none}
+.new-item-form.open{display:block}
+/* Bottom bar */
+.bbar{position:sticky;bottom:0;background:var(--s1);border-top:1px solid var(--bd2);padding:10px 14px;display:flex;gap:8px}
+.btn{flex:1;padding:11px;border-radius:8px;font-family:var(--head);font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:none}
+.btn-back{background:var(--s2);color:var(--mu);border:1px solid var(--bd2)}
+.btn-next{background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff}
+.btn-next:disabled{opacity:.3;cursor:default}
+.btn-gen{background:linear-gradient(135deg,#00c47a,#00965d);color:#fff}
+/* Search bar */
+.srch{background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--body);color:var(--tx);width:100%;outline:none;margin-bottom:10px}
+.srch::placeholder{color:var(--dm)}
+.srch:focus{border-color:var(--bl)}
+/* Toast */
+.toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--bd2);color:var(--tx);padding:7px 16px;border-radius:20px;font-family:var(--mono);font-size:11px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9999;white-space:nowrap}
+.toast.show{opacity:1}
+/* Section counter badge */
+.cnt{display:inline-block;background:var(--bl);color:#fff;border-radius:10px;font-family:var(--mono);font-size:10px;font-weight:700;padding:1px 7px;margin-left:6px}
+/* History */
+.bol-hist{background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:12px;margin-bottom:8px}
+.bol-hist-num{font-family:var(--head);font-size:15px;font-weight:700;color:var(--bl);margin-bottom:3px}
+.bol-hist-info{font-family:var(--mono);font-size:10px;color:var(--mu);line-height:1.7}
+.status-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-family:var(--mono);font-size:10px;font-weight:600}
+.s-pending{background:rgba(245,166,35,.12);color:var(--am)}
+.s-transit{background:rgba(59,130,246,.12);color:var(--bl)}
+.s-delivered{background:rgba(0,208,132,.12);color:var(--gn)}
+/* Print styles */
+@media print{
+  .top,.tabs,.bbar,.no-print{display:none!important}
+  .pg{display:block!important;padding:0}
+  body{background:#fff;color:#000}
+  #print-bol{display:block!important}
+}
+@media(min-width:600px){.g2{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="top-row">
+    <div>
+      <h1>EGA — Bill of Lading</h1>
+      <p>Eastern Glass &amp; Aluminum &middot; Norcross GA</p>
+    </div>
+    <div class="top-badge" id="bol-num-badge">NEW BOL</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab on" id="t-new" onclick="goPg('new')">+ NEW BOL</div>
+  <div class="tab" id="t-hist" onclick="goPg('hist')">HISTORY</div>
+  <div class="tab" id="t-lib" onclick="goPg('lib')">ITEM LIBRARY</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: NEW BOL — 4 steps
+═══════════════════════════════════════════════════════ -->
+<div class="pg on" id="p-new">
+
+  <!-- Step indicator -->
+  <div class="steps no-print">
+    <div class="step on" id="st-1" onclick="goStep(1)">1 SHIPMENT</div>
+    <div class="step" id="st-2" onclick="goStep(2)">2 PALLETS</div>
+    <div class="step" id="st-3" onclick="goStep(3)">3 ITEMS</div>
+    <div class="step" id="st-4" onclick="goStep(4)">4 REVIEW</div>
+  </div>
+
+  <!-- STEP 1: Shipment Details -->
+  <div id="step1">
+    <div class="box">
+      <div class="box-title">Shipment Details</div>
+      <div class="g2" style="margin-bottom:8px">
+        <div class="fg">
+          <div class="lbl">BOL Number</div>
+          <input class="inp" id="bol-num" placeholder="Auto — e.g. BNA-SHP-001" type="text">
+        </div>
+        <div class="fg">
+          <div class="lbl">Ship Date</div>
+          <input class="inp" type="date" id="ship-date">
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:8px">
+        <div class="lbl">Project</div>
+        <select class="inp" id="project-sel">
+          <option value="BNA">BNA Concourse A — Job #20230013</option>
+          <option value="OTHER">Other Project</option>
+        </select>
+      </div>
+      <div class="g2">
+        <div class="fg">
+          <div class="lbl">Ship From</div>
+          <input class="inp" id="ship-from" value="Eastern Glass &amp; Aluminum, 4274 Shackleford Rd., Norcross, GA 30093" type="text">
+        </div>
+        <div class="fg">
+          <div class="lbl">Ship To</div>
+          <input class="inp" id="ship-to" placeholder="Destination address" type="text">
+        </div>
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="box-title">Carrier Information</div>
+      <div class="g2">
+        <div class="fg">
+          <div class="lbl">Carrier Name</div>
+          <input class="inp" id="carrier" placeholder="e.g. EGA" type="text">
+        </div>
+        <div class="fg">
+          <div class="lbl">Driver Name</div>
+          <input class="inp" id="driver" placeholder="Driver full name" type="text">
+        </div>
+        <div class="fg">
+          <div class="lbl">Truck / Tractor #</div>
+          <input class="inp" id="truck-num" placeholder="e.g. T-4421" type="text">
+        </div>
+        <div class="fg">
+          <div class="lbl">Trailer #</div>
+          <input class="inp" id="trailer-num" placeholder="e.g. TR-882" type="text">
+        </div>
+        <div class="fg">
+          <div class="lbl">Pro Number</div>
+          <input class="inp" id="pro-num" placeholder="Optional" type="text">
+        </div>
+        <div class="fg">
+          <div class="lbl">SCAC Code</div>
+          <input class="inp" id="scac" placeholder="Optional" type="text">
+        </div>
+      </div>
+      <div class="fg" style="margin-top:8px">
+        <div class="lbl">Freight Terms</div>
+        <div class="ftm">
+          <div class="ftm-btn on" id="ft-prepaid" onclick="setFT('prepaid')">Prepaid</div>
+          <div class="ftm-btn" id="ft-collect" onclick="setFT('collect')">Collect</div>
+          <div class="ftm-btn" id="ft-3rd" onclick="setFT('3rd')">3rd Party</div>
+        </div>
+      </div>
+      <div class="fg" style="margin-top:8px">
+        <div class="lbl">Special Instructions</div>
+        <input class="inp" id="special-inst" placeholder="e.g. Deliver by 08/29/25 — Contact Jose Ricardo 678-857-0449" type="text">
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Pallets -->
+  <div id="step2" style="display:none">
+    <div class="box">
+      <div class="box-title">Select Pallets for this Shipment</div>
+      <p style="font-size:12px;color:var(--mu);margin-bottom:10px;line-height:1.7">
+        Tap each pallet going on this truck. Frames auto-populate from packing data.
+        You can also add a custom pallet (accessories, materials, loose items).
+      </p>
+      <div id="pallet-select-list">
+        <div style="text-align:center;padding:20px;color:var(--dm);font-family:var(--mono);font-size:11px">
+          Loading pallets from packing data...
+        </div>
+      </div>
+      <button onclick="addCustomPallet()" style="width:100%;margin-top:8px;padding:10px;background:var(--s3);border:1px dashed var(--bd2);border-radius:8px;color:var(--mu);font-family:var(--mono);font-size:11px;cursor:pointer;letter-spacing:.05em">
+        + ADD CUSTOM PALLET (Accessories / Materials)
+      </button>
+    </div>
+    <div class="box" id="selected-pallets-box" style="display:none">
+      <div class="box-title">Selected Pallets <span class="cnt" id="plt-cnt">0</span></div>
+      <div id="selected-pallets-list"></div>
+    </div>
+  </div>
+
+  <!-- STEP 3: Items (Accessories + Materials) -->
+  <div id="step3" style="display:none">
+    <div class="box">
+      <div class="box-title">Scan or Add Items</div>
+
+      <!-- Scanner -->
+      <div class="scan-box no-print" id="scan-trigger" onclick="startScan()">
+        <div class="icon">&#128247;</div>
+        <p>Tap to scan barcode<br><span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dm)">Points phone camera at box barcode</span></p>
+      </div>
+      <video id="cam-view" autoplay playsinline></video>
+      <canvas id="cam-canvas" style="display:none"></canvas>
+      <div id="scan-status" style="font-family:var(--mono);font-size:10px;text-align:center;color:var(--am);padding:4px 0;min-height:20px"></div>
+
+      <!-- Manual search / quick add -->
+      <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px">
+        <div style="flex:1;height:1px;background:var(--bd2)"></div>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--dm);letter-spacing:.1em">OR SEARCH / TAP TO ADD</span>
+        <div style="flex:1;height:1px;background:var(--bd2)"></div>
+      </div>
+
+      <input class="srch" id="item-srch" placeholder="Search by part # or description..." oninput="filterItems(this.value)">
+
+      <!-- Category filter -->
+      <div class="cat-bar" id="cat-filter"></div>
+
+      <!-- Item list -->
+      <div id="item-lib-list"></div>
+
+      <!-- Add new unknown part -->
+      <button onclick="toggleNewItemForm()" style="width:100%;margin-top:6px;padding:8px;background:var(--s3);border:1px dashed var(--bd2);border-radius:8px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:.05em">
+        + ADD NEW PART NUMBER NOT IN LIBRARY
+      </button>
+      <div class="new-item-form" id="new-item-form">
+        <div class="g2" style="margin-bottom:8px">
+          <div class="fg">
+            <div class="lbl">Part Number</div>
+            <input class="inp" id="new-pn" placeholder="e.g. E1-3960" type="text">
+          </div>
+          <div class="fg">
+            <div class="lbl">Category</div>
+            <select class="inp" id="new-cat">
+              <option>Accessories</option>
+              <option>Gaskets</option>
+              <option>Fasteners</option>
+              <option>Materials</option>
+              <option>Trims</option>
+              <option>Profiles</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg" style="margin-bottom:8px">
+          <div class="lbl">Description</div>
+          <input class="inp" id="new-desc" placeholder="e.g. BRACKET SLEEVE SPECIAL" type="text">
+        </div>
+        <div class="g2" style="margin-bottom:8px">
+          <div class="fg">
+            <div class="lbl">Unit</div>
+            <select class="inp" id="new-unit">
+              <option>EA</option><option>FT</option><option>BX</option>
+              <option>TUBE</option><option>BAG</option><option>SET</option><option>LF</option>
+            </select>
+          </div>
+          <div class="fg">
+            <div class="lbl">Qty</div>
+            <input class="inp" id="new-qty" type="number" placeholder="0" min="0">
+          </div>
+        </div>
+        <button onclick="addNewItem()" style="width:100%;padding:10px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border:none;border-radius:8px;font-family:var(--head);font-size:13px;font-weight:600;cursor:pointer;letter-spacing:.06em;text-transform:uppercase">
+          Save to Library + Add to BOL
+        </button>
+      </div>
+    </div>
+
+    <!-- Added items -->
+    <div class="box" id="added-items-box">
+      <div class="box-title">Items Added to BOL <span class="cnt" id="items-cnt">0</span></div>
+      <div id="added-items-list">
+        <div style="text-align:center;padding:16px;color:var(--dm);font-family:var(--mono);font-size:11px">No items added yet. Scan a barcode or tap an item above.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Review + Generate -->
+  <div id="step4" style="display:none">
+    <div class="box">
+      <div class="box-title">Review BOL</div>
+      <div id="review-content"></div>
+    </div>
+
+    <!-- Signature -->
+    <div class="box no-print">
+      <div class="box-title">Driver Signature</div>
+      <p style="font-size:12px;color:var(--mu);margin-bottom:10px">Confirm driver signs below before generating final BOL</p>
+      <canvas id="sig-canvas" width="100%" height="120"
+        style="background:var(--s2);border:1px solid var(--bd2);border-radius:8px;width:100%;display:block;touch-action:none"></canvas>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button onclick="clearSig()" style="flex:1;padding:8px;background:var(--s3);border:1px solid var(--bd2);border-radius:6px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer">Clear</button>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--dm);flex:2;display:flex;align-items:center;padding:0 8px;line-height:1.5">Driver confirms contents are correct and received in good condition</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: HISTORY
+═══════════════════════════════════════════════════════ -->
+<div class="pg" id="p-hist">
+  <div class="box">
+    <div class="box-title">BOL History</div>
+    <div id="hist-list">
+      <div style="text-align:center;padding:20px;color:var(--dm);font-family:var(--mono);font-size:11px">No BOLs created yet.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: ITEM LIBRARY
+═══════════════════════════════════════════════════════ -->
+<div class="pg" id="p-lib">
+  <div class="box">
+    <div class="box-title">Master Item Library — YKK AP Parts</div>
+    <p style="font-size:12px;color:var(--mu);margin-bottom:10px;line-height:1.7">
+      All known parts pre-loaded. Scan a new barcode on any job and the part saves here automatically.
+      Upload a YKK AP cut list to bulk-import 1000+ parts at once.
+    </p>
+    <input class="srch" id="lib-srch" placeholder="Search by part # or description..." oninput="filterLibView(this.value)">
+    <div class="cat-bar" id="lib-cat-filter"></div>
+    <div id="lib-full-list"></div>
+    <div style="text-align:center;margin-top:10px">
+      <label style="display:inline-block;padding:8px 16px;background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:.05em">
+        UPLOAD YKK AP CUT LIST (Excel/CSV)
+        <input type="file" accept=".xlsx,.csv,.xls" style="display:none" onchange="importCutList(this)">
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bbar no-print" id="bbar">
+  <button class="btn btn-back" id="btn-back" onclick="prevStep()" style="display:none">Back</button>
+  <button class="btn btn-next" id="btn-next" onclick="nextStep()">Next: Select Pallets</button>
+</div>
+
+<!-- PRINT BOL (hidden until generated) -->
+<div id="print-bol" style="display:none"></div>
+
+<div class="toast" id="toast"></div>
+
+
+<script>
+var WH="https://script.google.com/macros/s/AKfycbyunbjzprsalpg3qJbn6egZBXP7RZXj8dGgumECGepxPx4hZPMgRpEMCNmwbm0d40SFlQ/exec";
+var ITEM_LIB=[{"pn":"E1-3949","desc":"J-HOOK","cat":"Accessories","unit":"EA"},{"pn":"E1-3945","desc":"BRACKET SLEEVE (L)","cat":"Accessories","unit":"EA"},{"pn":"E1-3946","desc":"BRACKET SLEEVE (R)","cat":"Accessories","unit":"EA"},{"pn":"E1-3954","desc":"STARTER SILL REINF","cat":"Accessories","unit":"EA"},{"pn":"E1-3955","desc":"STOPPER ON J-HOOK","cat":"Accessories","unit":"EA"},{"pn":"E1-3953","desc":"STARTER TRACK END DAM","cat":"Accessories","unit":"EA"},{"pn":"E2-0070","desc":"SILICONE SHEET","cat":"Gaskets","unit":"EA"},{"pn":"E2-0725","desc":"SPACER SPONGE","cat":"Gaskets","unit":"EA"},{"pn":"E2-3841","desc":"GASKET FOR PRESSURE PLATE","cat":"Gaskets","unit":"FT"},{"pn":"E2-7004","desc":"GASKET FOR STARTER TRACK","cat":"Gaskets","unit":"FT"},{"pn":"PM-1006SS","desc":"SCREW FOR STOPPER","cat":"Fasteners","unit":"EA"},{"pn":"HC-1220SS","desc":"SCREW FOR END DAM","cat":"Fasteners","unit":"EA"},{"pn":"UF-0808-SS","desc":"SCREW FOR 9IN FACE CAP","cat":"Fasteners","unit":"EA"},{"pn":"HILTI","desc":"T-BOLTS AND NUTS FOR EMBED","cat":"Fasteners","unit":"BX"},{"pn":"SHIM-050","desc":"SHIMS 1/2\"","cat":"Materials","unit":"BX"},{"pn":"CAULK-WHT","desc":"WHITE CAULKING","cat":"Materials","unit":"TUBE"},{"pn":"CAULK-BLK","desc":"BLACK CAULKING","cat":"Materials","unit":"TUBE"},{"pn":"CAULK-GRY","desc":"GRAY CAULKING","cat":"Materials","unit":"TUBE"},{"pn":"CAULK-CLR","desc":"CLEAR CAULKING","cat":"Materials","unit":"TUBE"},{"pn":"FC-LEFT","desc":"FACE CAP - LEFT","cat":"Trims","unit":"EA"},{"pn":"FC-RIGHT","desc":"FACE CAP - RIGHT","cat":"Trims","unit":"EA"},{"pn":"FC-HEAD","desc":"FACE CAP - HEAD","cat":"Trims","unit":"EA"},{"pn":"FC-HORZ","desc":"FACE CAP - HORIZONTAL","cat":"Trims","unit":"EA"},{"pn":"FC-SILL","desc":"FACE CAP - SILL","cat":"Trims","unit":"EA"},{"pn":"FC-9IN","desc":"FACE CAP - 9IN","cat":"Trims","unit":"EA"},{"pn":"STARTER","desc":"STARTER TRACK","cat":"Profiles","unit":"EA"},{"pn":"SILL-ADP","desc":"SILL ADAPTOR","cat":"Profiles","unit":"EA"},{"pn":"CORNER-KEY","desc":"CORNER KEY","cat":"Profiles","unit":"EA"},{"pn":"THERM-BRK","desc":"THERMAL BREAK","cat":"Profiles","unit":"EA"},{"pn":"ANCHOR-BLT","desc":"ANCHOR BOLTS 1/2\"","cat":"Materials","unit":"BX"}];
+var CAT_COLORS={"Accessories":"#3B82F6","Gaskets":"#A855F7","Fasteners":"#F59E0B","Materials":"#14B8A6","Trims":"#EC4899","Profiles":"#10B981","Other":"#6B7280"};
+
+// BOL state
+var bolState={
+  step:1, bolNum:"", shipDate:"", project:"BNA",
+  shipFrom:"Eastern Glass & Aluminum, 4274 Shackleford Rd., Norcross, GA 30093",
+  shipTo:"", carrier:"", driver:"", truckNum:"", trailerNum:"",
+  proNum:"", scac:"", freightTerms:"prepaid", specialInst:"",
+  pallets:[], bolItems:[], sigData:null
+};
+var bolHistory=[];
+var activeCat="ALL";
+var scanning=false;
+var scanStream=null;
+var scanInterval=null;
+
+// Init
+document.getElementById("ship-date").valueAsDate=new Date();
+loadHistory();
+loadLibFromStorage();
+genBolNum();
+renderCatFilter("cat-filter");
+renderCatFilter("lib-cat-filter");
+renderItemLib("", "ALL");
+renderLibView("", "ALL");
+loadPallets();
+
+// ── BOL NUMBER ─────────────────────────────────────────────────
+function genBolNum(){
+  var num=bolHistory.length+1;
+  var n="BNA-SHP-"+String(num).padStart(3,"0");
+  document.getElementById("bol-num").value=n;
+  document.getElementById("bol-num-badge").textContent=n;
+  bolState.bolNum=n;
+}
+
+// ── PAGE NAV ───────────────────────────────────────────────────
+function goPg(name){
+  ["new","hist","lib"].forEach(function(p){
+    document.getElementById("p-"+p).className="pg"+(p===name?" on":"");
+    document.getElementById("t-"+p).className="tab"+(p===name?" on":"");
+  });
+  if(name==="hist")renderHistory();
+  if(name==="lib"){renderLibView("","ALL");}
+  document.getElementById("bbar").style.display=name==="new"?"flex":"none";
+}
+
+// ── STEP NAV ───────────────────────────────────────────────────
+function goStep(n){
+  bolState.step=n;
+  [1,2,3,4].forEach(function(i){
+    document.getElementById("step"+i).style.display=i===n?"block":"none";
+    var s=document.getElementById("st-"+i);
+    s.className="step"+(i===n?" on":i<n?" done":"");
+  });
+  // Update bottom bar
+  var back=document.getElementById("btn-back");
+  var next=document.getElementById("btn-next");
+  back.style.display=n>1?"block":"none";
+  if(n===4){
+    next.textContent="Generate BOL";
+    next.className="btn btn-gen";
+    next.onclick=generateBOL;
+    buildReview();
+  }else if(n===3){
+    next.textContent="Review BOL";
+    next.className="btn btn-next";
+    next.onclick=nextStep;
+  }else if(n===2){
+    next.textContent="Add Items";
+    next.className="btn btn-next";
+    next.onclick=nextStep;
+  }else{
+    next.textContent="Next: Select Pallets";
+    next.className="btn btn-next";
+    next.onclick=nextStep;
+  }
+  window.scrollTo(0,0);
+}
+
+function nextStep(){
+  if(bolState.step===1){
+    bolState.bolNum=document.getElementById("bol-num").value.trim()||bolState.bolNum;
+    bolState.shipDate=document.getElementById("ship-date").value;
+    bolState.shipTo=document.getElementById("ship-to").value.trim();
+    bolState.carrier=document.getElementById("carrier").value.trim();
+    bolState.driver=document.getElementById("driver").value.trim();
+    bolState.truckNum=document.getElementById("truck-num").value.trim();
+    bolState.trailerNum=document.getElementById("trailer-num").value.trim();
+    bolState.proNum=document.getElementById("pro-num").value.trim();
+    bolState.scac=document.getElementById("scac").value.trim();
+    bolState.specialInst=document.getElementById("special-inst").value.trim();
+  }
+  if(bolState.step<4)goStep(bolState.step+1);
+}
+function prevStep(){if(bolState.step>1)goStep(bolState.step-1);}
+
+// ── FREIGHT TERMS ──────────────────────────────────────────────
+function setFT(v){
+  bolState.freightTerms=v;
+  ["prepaid","collect","3rd"].forEach(function(x){
+    document.getElementById("ft-"+x).className="ftm-btn"+(v===x?" on":"");
+  });
+}
+
+// ── PALLETS ────────────────────────────────────────────────────
+function loadPallets(){
+  var el=document.getElementById("pallet-select-list");
+  // Try to get from localStorage (saved by QA/QC app)
+  var pkgHist=[];
+  try{var h=localStorage.getItem("bna-h7");if(h)pkgHist=JSON.parse(h);}catch(e){}
+  // Build pallet map from packaging history
+  var pallets={};
+  pkgHist.filter(function(r){return r.action==="packaging"&&r.palletNum;}).forEach(function(r){
+    if(!pallets[r.palletNum])pallets[r.palletNum]={num:r.palletNum,frames:[],by:r.packedBy||"-",date:r.packDate||"-"};
+    pallets[r.palletNum].frames.push(r.frameId);
+  });
+  var keys=Object.keys(pallets);
+  if(!keys.length){
+    el.innerHTML="<div style=\"text-align:center;padding:16px;color:var(--dm);font-family:var(--mono);font-size:11px;line-height:1.8\">No packed frames found.<br>Frames appear here after packaging team scans them.<br><br><span style=\"font-size:9px\">You can still add custom pallets below.</span></div>";
+    return;
+  }
+  el.innerHTML="";
+  keys.sort().forEach(function(k){
+    var p=pallets[k];
+    var d=document.createElement("div");
+    d.className="plt-card";d.id="plt-"+k;
+    d.innerHTML="<div class=\"plt-num\">"+p.num+"</div>"
+      +"<div class=\"plt-info\">"+p.frames.length+" frames &middot; Packed by "+p.by+" &middot; "+p.date+"<br>"
+      +"<span style=\"color:var(--tx);font-size:11px\">"+p.frames.join(", ")+"</span></div>";
+    d.addEventListener("click",(function(plt,key){return function(){togglePallet(plt,key);};})(p,k));
+    el.appendChild(d);
+  });
+}
+
+function togglePallet(plt,key){
+  var idx=bolState.pallets.findIndex(function(p){return p.num===key;});
+  var card=document.getElementById("plt-"+key);
+  if(idx>=0){
+    bolState.pallets.splice(idx,1);
+    card.className="plt-card";
+  }else{
+    bolState.pallets.push(plt);
+    card.className="plt-card sel";
+  }
+  renderSelectedPallets();
+}
+
+function addCustomPallet(){
+  var num=prompt("Pallet number (e.g. BNA-PLT-ACC-01):");
+  if(!num)return;
+  var desc=prompt("Description (e.g. ACCESSORIES LV1+LV2):");
+  var custom={num:num.trim(),frames:[],by:"Custom",date:new Date().toISOString().split("T")[0],desc:desc||""};
+  bolState.pallets.push(custom);
+  var el=document.getElementById("pallet-select-list");
+  var d=document.createElement("div");
+  d.className="plt-card sel";d.id="plt-custom-"+num;
+  d.innerHTML="<div class=\"plt-num\">"+custom.num+"</div>"
+    +"<div class=\"plt-info\">Custom pallet &middot; "+custom.desc+"</div>";
+  el.appendChild(d);
+  renderSelectedPallets();
+  showToast("Added: "+num);
+}
+
+function renderSelectedPallets(){
+  var box=document.getElementById("selected-pallets-box");
+  var list=document.getElementById("selected-pallets-list");
+  var cnt=document.getElementById("plt-cnt");
+  if(!bolState.pallets.length){box.style.display="none";return;}
+  box.style.display="block";
+  cnt.textContent=bolState.pallets.length;
+  list.innerHTML=bolState.pallets.map(function(p){
+    var frameCount=p.frames&&p.frames.length?p.frames.length+" frames":"Custom pallet";
+    return "<div style=\"display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--s3);font-size:12px;\">"
+      +"<span style=\"font-family:var(--mono);font-weight:700;color:var(--bl)\">"+p.num+"</span>"
+      +"<span style=\"color:var(--mu)\">"+frameCount+"</span></div>";
+  }).join("");
+}
+
+// ── BARCODE SCANNER ────────────────────────────────────────────
+function startScan(){
+  if(scanning){stopScan();return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    showToast("Camera not available on this browser");
+    return;
+  }
+  scanning=true;
+  var vid=document.getElementById("cam-view");
+  var status=document.getElementById("scan-status");
+  status.textContent="Starting camera...";
+  document.getElementById("scan-trigger").innerHTML="<div class=\"icon\">&#9209;</div><p>Tap to stop scanning</p>";
+  navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false})
+    .then(function(stream){
+      scanStream=stream;
+      vid.srcObject=stream;
+      vid.style.display="block";
+      status.textContent="Aim camera at barcode on box...";
+      // Poll frames for barcode detection
+      if(window.BarcodeDetector){
+        var bd=new BarcodeDetector({formats:["code_128","code_39","qr_code","ean_13","ean_8","upc_a"]});
+        scanInterval=setInterval(function(){
+          bd.detect(vid).then(function(codes){
+            if(codes.length>0){
+              var raw=codes[0].rawValue.trim();
+              stopScan();
+              handleBarcode(raw);
+            }
+          }).catch(function(){});
+        },500);
+      }else{
+        // Fallback: manual entry
+        stopScan();
+        var code=prompt("Camera scanner not supported on this browser.
+Type the part number from the box:");
+        if(code)handleBarcode(code.trim().toUpperCase());
+      }
+    })
+    .catch(function(err){
+      scanning=false;
+      status.textContent="Camera error: "+err.message;
+      document.getElementById("scan-trigger").innerHTML="<div class=\"icon\">&#128247;</div><p>Tap to scan barcode</p>";
+    });
+}
+
+function stopScan(){
+  scanning=false;
+  if(scanInterval){clearInterval(scanInterval);scanInterval=null;}
+  if(scanStream){scanStream.getTracks().forEach(function(t){t.stop();});scanStream=null;}
+  document.getElementById("cam-view").style.display="none";
+  document.getElementById("scan-trigger").innerHTML="<div class=\"icon\">&#128247;</div><p>Tap to scan barcode<br><span style=\"font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dm)\">Points phone camera at box barcode</span></p>";
+  document.getElementById("scan-status").textContent="";
+}
+
+function handleBarcode(code){
+  document.getElementById("scan-status").textContent="Scanned: "+code;
+  // Look up in library
+  var found=ITEM_LIB.find(function(i){return i.pn.toUpperCase()===code.toUpperCase();});
+  if(found){
+    addItemToBOL(found,1);
+    showToast("Found: "+found.desc);
+  }else{
+    // Unknown part — prompt for description
+    document.getElementById("scan-status").textContent="New part: "+code+" — Add description below";
+    document.getElementById("new-pn").value=code;
+    // Auto-detect category from prefix
+    var cat="Other";
+    if(code.startsWith("E1-"))cat="Accessories";
+    else if(code.startsWith("E2-"))cat="Gaskets";
+    else if(code.startsWith("PM-")||code.startsWith("HC-")||code.startsWith("UF-"))cat="Fasteners";
+    else if(code.startsWith("FC-")||code.startsWith("TRIM"))cat="Trims";
+    else if(code.startsWith("P-")||code.startsWith("CW-")||code.startsWith("PA-"))cat="Profiles";
+    document.getElementById("new-cat").value=cat;
+    document.getElementById("new-item-form").className="new-item-form open";
+    document.getElementById("new-desc").focus();
+    showToast("New part "+code+" — add description to save");
+  }
+}
+
+// ── ITEM LIBRARY ───────────────────────────────────────────────
+function loadLibFromStorage(){
+  try{
+    var saved=localStorage.getItem("ega-bol-lib");
+    if(saved){
+      var extra=JSON.parse(saved);
+      extra.forEach(function(item){
+        if(!ITEM_LIB.find(function(i){return i.pn===item.pn;})){
+          ITEM_LIB.push(item);
+        }
+      });
+    }
+  }catch(e){}
+}
+
+function saveLibToStorage(){
+  try{localStorage.setItem("ega-bol-lib",JSON.stringify(ITEM_LIB));}catch(e){}
+}
+
+function catColor(cat){return CAT_COLORS[cat]||"#6B7280";}
+
+function renderCatFilter(elId){
+  var el=document.getElementById(elId);
+  var cats=["ALL"].concat(Object.keys(CAT_COLORS));
+  el.innerHTML="";
+  cats.forEach(function(c){
+    var btn=document.createElement("div");
+    btn.className="cat-btn"+(c==="ALL"?" on":"");
+    btn.textContent=c;
+    if(c!=="ALL")btn.style.cssText="border-color:"+catColor(c)+"40;color:"+catColor(c);
+    btn.addEventListener("click",(function(cat,eid){return function(){
+      document.querySelectorAll("#"+eid+" .cat-btn").forEach(function(b){b.className="cat-btn";});
+      this.className="cat-btn on";
+      if(eid==="cat-filter")filterItems(document.getElementById("item-srch").value,cat);
+      else filterLibView(document.getElementById("lib-srch").value,cat);
+    };})(c,elId));
+    el.appendChild(btn);
+  });
+}
+
+function filterItems(q,cat){
+  if(cat!==undefined)activeCat=cat;
+  renderItemLib(q||"",activeCat);
+}
+
+function renderItemLib(q,cat){
+  var el=document.getElementById("item-lib-list");
+  var items=ITEM_LIB.filter(function(i){
+    var matchQ=!q||(i.pn.toLowerCase().indexOf(q.toLowerCase())>=0||i.desc.toLowerCase().indexOf(q.toLowerCase())>=0);
+    var matchC=!cat||cat==="ALL"||(i.cat||"Other")===cat;
+    return matchQ&&matchC;
+  });
+  if(!items.length){el.innerHTML="<div style=\"text-align:center;padding:12px;color:var(--dm);font-family:var(--mono);font-size:11px\">No items found</div>";return;}
+  el.innerHTML="";
+  items.slice(0,20).forEach(function(item){
+    var d=document.createElement("div");
+    d.className="item-row";
+    var col=catColor(item.cat||"Other");
+    d.innerHTML="<span class=\"item-pn\" style=\"color:"+col+"\">"+item.pn+"</span>"
+      +"<span class=\"item-desc\">"+item.desc+"</span>"
+      +"<span class=\"item-cat\" style=\"background:"+col+"22;color:"+col+"\">"+item.unit+"</span>"
+      +"<button class=\"item-add\">+ ADD</button>";
+    d.querySelector(".item-add").addEventListener("click",(function(it){return function(){
+      addItemToBOL(it,1);showToast("Added: "+it.desc);
+    };})(item));
+    el.appendChild(d);
+  });
+  if(items.length>20){
+    var more=document.createElement("div");
+    more.style.cssText="text-align:center;padding:8px;font-family:var(--mono);font-size:10px;color:var(--dm)";
+    more.textContent="+"+(items.length-20)+" more — narrow your search";
+    el.appendChild(more);
+  }
+}
+
+function filterLibView(q,cat){
+  renderLibView(q||"",cat||"ALL");
+}
+
+function renderLibView(q,cat){
+  var el=document.getElementById("lib-full-list");
+  var items=ITEM_LIB.filter(function(i){
+    var matchQ=!q||(i.pn.toLowerCase().indexOf(q.toLowerCase())>=0||i.desc.toLowerCase().indexOf(q.toLowerCase())>=0);
+    var matchC=!cat||cat==="ALL"||(i.cat||"Other")===cat;
+    return matchQ&&matchC;
+  });
+  el.innerHTML="";
+  items.forEach(function(item){
+    var col=catColor(item.cat||"Other");
+    var d=document.createElement("div");
+    d.className="item-row";
+    d.innerHTML="<span class=\"item-pn\" style=\"color:"+col+"\">"+item.pn+"</span>"
+      +"<span class=\"item-desc\">"+item.desc+"</span>"
+      +"<span class=\"item-cat\" style=\"background:"+col+"22;color:"+col+"\">"+item.cat+" / "+item.unit+"</span>";
+    el.appendChild(d);
+  });
+  if(!items.length)el.innerHTML="<div style=\"text-align:center;padding:12px;color:var(--dm);font-family:var(--mono);font-size:11px\">No items found</div>";
+}
+
+// ── ADD ITEM TO BOL ────────────────────────────────────────────
+function addItemToBOL(item,qty){
+  var idx=bolState.bolItems.findIndex(function(i){return i.pn===item.pn;});
+  if(idx>=0){
+    bolState.bolItems[idx].qty+=qty;
+  }else{
+    bolState.bolItems.push({pn:item.pn,desc:item.desc,cat:item.cat||"Other",unit:item.unit||"EA",qty:qty});
+  }
+  renderAddedItems();
+}
+
+function renderAddedItems(){
+  var el=document.getElementById("added-items-list");
+  var cnt=document.getElementById("items-cnt");
+  cnt.textContent=bolState.bolItems.length;
+  if(!bolState.bolItems.length){
+    el.innerHTML="<div style=\"text-align:center;padding:16px;color:var(--dm);font-family:var(--mono);font-size:11px\">No items added yet.</div>";
+    return;
+  }
+  el.innerHTML="";
+  bolState.bolItems.forEach(function(item,idx){
+    var col=catColor(item.cat);
+    var d=document.createElement("div");
+    d.className="bol-item";
+    d.innerHTML="<div class=\"bol-item-info\">"
+      +"<div class=\"bol-item-pn\">"+item.pn+"</div>"
+      +"<div class=\"bol-item-desc\">"+item.desc+"</div>"
+      +"</div>"
+      +"<span class=\"bol-item-cat\" style=\"background:"+col+"22;color:"+col+"\">"+item.cat+"</span>"
+      +"<div class=\"qty-ctrl\">"
+      +"<button class=\"qty-btn\" id=\"qm-"+idx+"\">-</button>"
+      +"<input class=\"qty-inp\" id=\"qi-"+idx+"\" value=\""+item.qty+"\" type=\"number\" min=\"0\">"
+      +"<span class=\"qty-unit\">"+item.unit+"</span>"
+      +"</div>"
+      +"<button class=\"del-btn\" id=\"qd-"+idx+"\">&#10005;</button>";
+    el.appendChild(d);
+    (function(i){
+      document.getElementById("qm-"+i).onclick=function(){if(bolState.bolItems[i].qty>1){bolState.bolItems[i].qty--;renderAddedItems();}};
+      document.getElementById("qi-"+i).onchange=function(){bolState.bolItems[i].qty=parseInt(this.value)||1;};
+      document.getElementById("qd-"+i).onclick=function(){bolState.bolItems.splice(i,1);renderAddedItems();};
+      var plusBtn=d.querySelector(".qty-btn:first-of-type");
+      // Actually add + button
+    })(idx);
+  });
+}
+
+// ── ADD NEW ITEM ───────────────────────────────────────────────
+function toggleNewItemForm(){
+  var f=document.getElementById("new-item-form");
+  f.className=f.className.indexOf("open")>=0?"new-item-form":"new-item-form open";
+}
+
+function addNewItem(){
+  var pn=document.getElementById("new-pn").value.trim().toUpperCase();
+  var desc=document.getElementById("new-desc").value.trim().toUpperCase();
+  var cat=document.getElementById("new-cat").value;
+  var unit=document.getElementById("new-unit").value;
+  var qty=parseInt(document.getElementById("new-qty").value)||1;
+  if(!pn||!desc){showToast("Fill part number and description");return;}
+  var item={pn:pn,desc:desc,cat:cat,unit:unit};
+  if(!ITEM_LIB.find(function(i){return i.pn===pn;})){
+    ITEM_LIB.push(item);
+    saveLibToStorage();
+    showToast("Saved to library: "+pn);
+  }
+  addItemToBOL(item,qty);
+  document.getElementById("new-pn").value="";
+  document.getElementById("new-desc").value="";
+  document.getElementById("new-qty").value="";
+  document.getElementById("new-item-form").className="new-item-form";
+  document.getElementById("scan-status").textContent="";
+}
+
+// ── IMPORT CUT LIST ────────────────────────────────────────────
+function importCutList(input){
+  var file=input.files[0];
+  if(!file)return;
+  showToast("Reading file...");
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var text=e.target.result;
+    var lines=text.split("\n");
+    var added=0;
+    lines.forEach(function(line){
+      var cols=line.split(",");
+      if(cols.length>=2){
+        var pn=(cols[0]||"").trim().toUpperCase();
+        var desc=(cols[1]||"").trim().toUpperCase();
+        var cat=(cols[2]||"Other").trim();
+        var unit=(cols[3]||"EA").trim();
+        if(pn&&desc&&pn!=="PART NUMBER"&&pn!=="PART#"&&pn!=="PN"){
+          if(!ITEM_LIB.find(function(i){return i.pn===pn;})){
+            ITEM_LIB.push({pn:pn,desc:desc,cat:cat,unit:unit});
+            added++;
+          }
+        }
+      }
+    });
+    saveLibToStorage();
+    renderLibView("","ALL");
+    renderItemLib("","ALL");
+    showToast("Imported "+added+" new parts");
+  };
+  reader.readAsText(file);
+}
+
+// ── SIGNATURE ──────────────────────────────────────────────────
+var sigCanvas=null,sigCtx=null,sigDrawing=false;
+function initSig(){
+  sigCanvas=document.getElementById("sig-canvas");
+  if(!sigCanvas)return;
+  sigCanvas.width=sigCanvas.offsetWidth||340;
+  sigCanvas.height=120;
+  sigCtx=sigCanvas.getContext("2d");
+  sigCtx.strokeStyle="#00d084";sigCtx.lineWidth=2;sigCtx.lineCap="round";
+  ["mousedown","touchstart"].forEach(function(ev){
+    sigCanvas.addEventListener(ev,function(e){
+      sigDrawing=true;
+      var pt=getPos(e);
+      sigCtx.beginPath();sigCtx.moveTo(pt.x,pt.y);
+      e.preventDefault();
+    });
+  });
+  ["mousemove","touchmove"].forEach(function(ev){
+    sigCanvas.addEventListener(ev,function(e){
+      if(!sigDrawing)return;
+      var pt=getPos(e);
+      sigCtx.lineTo(pt.x,pt.y);sigCtx.stroke();
+      e.preventDefault();
+    });
+  });
+  ["mouseup","touchend"].forEach(function(ev){
+    sigCanvas.addEventListener(ev,function(){sigDrawing=false;bolState.sigData=sigCanvas.toDataURL();});
+  });
+}
+function getPos(e){
+  var r=sigCanvas.getBoundingClientRect();
+  var src=e.touches?e.touches[0]:e;
+  return{x:src.clientX-r.left,y:src.clientY-r.top};
+}
+function clearSig(){if(sigCtx)sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);bolState.sigData=null;}
+
+// ── REVIEW ─────────────────────────────────────────────────────
+function buildReview(){
+  initSig();
+  var el=document.getElementById("review-content");
+  var totalFrames=bolState.pallets.reduce(function(s,p){return s+(p.frames?p.frames.length:0);},0);
+  var html="";
+
+  // Shipment info
+  html+="<div class=\"sum-section\">"
+    +"<div class=\"sum-hdr\">Shipment</div>"
+    +sumRow("BOL Number",bolState.bolNum)
+    +sumRow("Ship Date",bolState.shipDate)
+    +sumRow("Ship From",bolState.shipFrom)
+    +sumRow("Ship To",bolState.shipTo||"—")
+    +sumRow("Carrier",bolState.carrier||"—")
+    +sumRow("Driver",bolState.driver||"—")
+    +sumRow("Truck / Trailer",(bolState.truckNum||"—")+" / "+(bolState.trailerNum||"—"))
+    +sumRow("Freight Terms",bolState.freightTerms.toUpperCase())
+    +(bolState.specialInst?sumRow("Special Inst.",bolState.specialInst):"")
+    +"</div>";
+
+  // Pallets
+  if(bolState.pallets.length){
+    html+="<div class=\"sum-section\">"
+      +"<div class=\"sum-hdr\">Pallets ("+bolState.pallets.length+") — "+totalFrames+" Frames</div>";
+    bolState.pallets.forEach(function(p,i){
+      html+="<div class=\"sum-row\"><span class=\"sum-key\">Item "+(i+1)+" — "+p.num+"</span>"
+        +"<span class=\"sum-val\">"+(p.frames&&p.frames.length?p.frames.length+" frames":p.desc||"Custom")+"</span></div>";
+      if(p.frames&&p.frames.length>0){
+        html+="<div style=\"font-size:10px;color:var(--mu);font-family:var(--mono);padding:3px 0 6px 8px;line-height:1.7\">"+p.frames.join(", ")+"</div>";
+      }
+    });
+    html+="</div>";
+  }
+
+  // Items by category
+  var cats={};
+  bolState.bolItems.forEach(function(item){
+    var c=item.cat||"Other";
+    if(!cats[c])cats[c]=[];
+    cats[c].push(item);
+  });
+  Object.keys(cats).forEach(function(cat){
+    var col=catColor(cat);
+    html+="<div class=\"sum-section\">"
+      +"<div class=\"sum-hdr\" style=\"color:"+col+"\">"+cat+" ("+cats[cat].length+" items)</div>";
+    cats[cat].forEach(function(item){
+      html+="<div class=\"sum-row\"><span class=\"sum-key\">"+item.pn+" — "+item.desc+"</span>"
+        +"<span class=\"sum-val\" style=\"font-family:var(--mono)\">"+item.qty+" "+item.unit+"</span></div>";
+    });
+    html+="</div>";
+  });
+
+  if(!bolState.bolItems.length&&!bolState.pallets.length){
+    html+="<div style=\"text-align:center;padding:16px;color:var(--dm);font-family:var(--mono);font-size:11px\">No items added.</div>";
+  }
+
+  el.innerHTML=html;
+}
+
+function sumRow(k,v){
+  return "<div class=\"sum-row\"><span class=\"sum-key\">"+k+"</span><span class=\"sum-val\">"+v+"</span></div>";
+}
+
+// ── GENERATE BOL ───────────────────────────────────────────────
+function generateBOL(){
+  // Save to history
+  var totalFrames=bolState.pallets.reduce(function(s,p){return s+(p.frames?p.frames.length:0);},0);
+  var entry={
+    bolNum:bolState.bolNum,date:bolState.shipDate,shipTo:bolState.shipTo,
+    carrier:bolState.carrier,driver:bolState.driver,
+    palletCount:bolState.pallets.length,frameCount:totalFrames,
+    itemCount:bolState.bolItems.length,status:"PENDING",
+    pallets:JSON.parse(JSON.stringify(bolState.pallets)),
+    items:JSON.parse(JSON.stringify(bolState.bolItems)),
+    ts:new Date().toISOString()
+  };
+  bolHistory.unshift(entry);
+  try{localStorage.setItem("ega-bol-hist",JSON.stringify(bolHistory));}catch(e){}
+
+  // Send to Google Sheets
+  var params=new URLSearchParams({
+    action:"bol",bolNum:bolState.bolNum,shipDate:bolState.shipDate,
+    shipTo:bolState.shipTo,carrier:bolState.carrier,driver:bolState.driver,
+    truckNum:bolState.truckNum,trailerNum:bolState.trailerNum,
+    palletCount:bolState.pallets.length,frameCount:totalFrames,
+    itemCount:bolState.bolItems.length,status:"PENDING"
+  });
+  var img=new Image();img.src=WH+"?"+params.toString();
+
+  // Render printable BOL
+  renderPrintBOL(entry);
+
+  // Show print
+  setTimeout(function(){
+    document.getElementById("print-bol").style.display="block";
+    document.querySelector(".pg.on").style.display="none";
+    document.getElementById("bbar").innerHTML="<button class=\"btn btn-back\" onclick=\"resetBOL()\">New BOL</button>"
+      +"<button class=\"btn btn-gen\" onclick=\"window.print()\">Print BOL</button>";
+    window.scrollTo(0,0);
+    showToast("BOL "+bolState.bolNum+" generated");
+  },200);
+}
+
+function renderPrintBOL(entry){
+  var totalFrames=entry.pallets.reduce(function(s,p){return s+(p.frames?p.frames.length:0);},0);
+  var itemNum=1;
+  var rows="";
+  // Pallets as line items
+  entry.pallets.forEach(function(p){
+    var desc=p.frames&&p.frames.length
+      ?"CW FRAMES — "+p.frames.join(", ")
+      :p.desc||"ACCESSORIES PALLET";
+    rows+="<tr><td>"+itemNum+++"</td><td></td><td>1</td><td>Pallet</td>"
+      +"<td></td><td></td><td style=\"text-align:left;padding:4px 6px\">"
+      +p.num+" — "+desc+"</td><td></td><td></td></tr>";
+  });
+  // Other items
+  entry.items.forEach(function(item){
+    rows+="<tr><td>"+itemNum+++"</td><td></td><td>"+item.qty+"</td><td>"+item.unit+"</td>"
+      +"<td></td><td></td><td style=\"text-align:left;padding:4px 6px\">"
+      +item.pn+" — "+item.desc+"</td><td></td><td></td></tr>";
+  });
+  // Blank rows
+  for(var i=itemNum;i<=12;i++){
+    rows+="<tr><td>"+i+"</td><td></td><td></td><td>Pallet</td><td></td><td></td><td></td><td></td><td></td></tr>";
+  }
+
+  var ft=entry.status||"PENDING";
+  var isPrepaid=bolState.freightTerms==="prepaid";
+  var isCollect=bolState.freightTerms==="collect";
+
+  var html=`
+  <div style="font-family:Arial,sans-serif;font-size:11px;color:#000;max-width:820px;margin:0 auto;padding:12px">
+    <div style="text-align:center;margin-bottom:8px">
+      <div style="font-size:16px;font-weight:700;letter-spacing:.05em">BILL OF LADING &ndash; SHORT FORM &ndash; NOT NEGOTIABLE</div>
+      <div style="font-size:11px;margin-top:3px">Page 1 of 1</div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:0">
+      <tr>
+        <td style="width:50%;border:1px solid #000;padding:6px;vertical-align:top">
+          <div style="font-weight:700;text-align:center;background:#ccc;padding:2px;margin-bottom:6px">SHIP FROM</div>
+          <div>Eastern Glass &amp; Aluminum</div>
+          <div>4274 Shackleford Rd.</div>
+          <div>Norcross, GA 30093</div>
+        </td>
+        <td style="width:50%;border:1px solid #000;padding:6px;vertical-align:top">
+          <div><strong>Bill of Lading Number:</strong> ${entry.bolNum}</div>
+          <div style="margin-top:8px"><strong>Date:</strong> ${entry.date}</div>
+        </td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #000;padding:6px;vertical-align:top">
+          <div style="font-weight:700;text-align:center;background:#ccc;padding:2px;margin-bottom:6px">SHIP TO</div>
+          <div>${entry.shipTo||"&nbsp;"}</div>
+        </td>
+        <td style="border:1px solid #000;padding:6px;vertical-align:top">
+          <div><strong>Carrier Name:</strong> ${entry.carrier||"EGA"}</div>
+          <div><strong>Trailer number:</strong> ${bolState.trailerNum||"&nbsp;"}</div>
+          <div><strong>Serial number(s):</strong> ${bolState.truckNum||"&nbsp;"}</div>
+        </td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #000;padding:6px;vertical-align:top">
+          <div style="font-weight:700;text-align:center;background:#ccc;padding:2px;margin-bottom:6px">THIRD PARTY FREIGHT CHARGES BILL TO</div>
+          <div>Eastern Glass &amp; Aluminum</div>
+          <div>4274 Shackleford Rd.</div>
+          <div>Norcross, GA 30093</div>
+          <div>678-355-9010</div>
+        </td>
+        <td style="border:1px solid #000;padding:6px;vertical-align:top">
+          <div><strong>SCAC:</strong> ${bolState.scac||"&nbsp;"}</div>
+          <div><strong>Pro Number:</strong> ${bolState.proNum||"&nbsp;"}</div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2" style="border:1px solid #000;padding:6px">
+          ${bolState.specialInst?"<strong>Special Instructions:</strong> "+bolState.specialInst+"&nbsp;&nbsp;&nbsp;":""}
+          ${bolState.driver?"<strong>Driver:</strong> "+bolState.driver:""}
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2" style="border:1px solid #000;padding:4px 6px">
+          <strong>Freight Charge Terms:</strong> &nbsp;
+          Prepaid <input type="checkbox" ${isPrepaid?"checked":""}> &nbsp;
+          Collect <input type="checkbox" ${isCollect?"checked":""}> &nbsp;
+          3rd Party <input type="checkbox" ${!isPrepaid&&!isCollect?"checked":""}> &nbsp;
+          Invoice <input type="checkbox">
+        </td>
+      </tr>
+    </table>
+
+    <div style="font-weight:700;text-align:center;background:#ccc;padding:3px;border:1px solid #000;border-top:none;margin-bottom:0">
+      CUSTOMER ORDER INFORMATION
+    </div>
+    <table style="width:100%;border-collapse:collapse;border:1px solid #000;margin-bottom:0">
+      <tr style="background:#eee">
+        <th style="border:1px solid #000;padding:4px;width:20%">Customer Order No.</th>
+        <th style="border:1px solid #000;padding:4px;width:15%"># of Packages</th>
+        <th style="border:1px solid #000;padding:4px;width:12%">Weight</th>
+        <th style="border:1px solid #000;padding:4px;width:18%">Pallet/Slip (circle one)</th>
+        <th style="border:1px solid #000;padding:4px">Additional Shipper Info</th>
+      </tr>
+      <tr>
+        <td style="border:1px solid #000;padding:4px">Job #20230013</td>
+        <td style="border:1px solid #000;padding:4px;text-align:center">${entry.palletCount+entry.items.length}</td>
+        <td style="border:1px solid #000;padding:4px"></td>
+        <td style="border:1px solid #000;padding:4px;text-align:center">Y &nbsp; N</td>
+        <td style="border:1px solid #000;padding:4px">BNA Concourse A — ${totalFrames} Frames</td>
+      </tr>
+      <tr>
+        <td colspan="2" style="border:1px solid #000;padding:4px"><strong>Grand Total</strong></td>
+        <td style="border:1px solid #000;padding:4px"></td>
+        <td colspan="2" style="border:1px solid #000;padding:4px"></td>
+      </tr>
+    </table>
+
+    <div style="font-weight:700;text-align:center;background:#ccc;padding:3px;border:1px solid #000;border-top:none;margin-bottom:0">
+      CARRIER INFORMATION
+    </div>
+    <table style="width:100%;border-collapse:collapse;border:1px solid #000">
+      <tr style="background:#eee;font-size:10px">
+        <th colspan="2" style="border:1px solid #000;padding:3px">Handling Unit</th>
+        <th colspan="2" style="border:1px solid #000;padding:3px">Package</th>
+        <th style="border:1px solid #000;padding:3px">Weight</th>
+        <th style="border:1px solid #000;padding:3px">HM(X)</th>
+        <th style="border:1px solid #000;padding:3px;width:38%">Commodity Description</th>
+        <th colspan="2" style="border:1px solid #000;padding:3px">LTL Only</th>
+      </tr>
+      <tr style="font-size:10px;background:#eee">
+        <th style="border:1px solid #000;padding:3px">Item</th>
+        <th style="border:1px solid #000;padding:3px">Type</th>
+        <th style="border:1px solid #000;padding:3px">Qty</th>
+        <th style="border:1px solid #000;padding:3px">Type</th>
+        <th style="border:1px solid #000;padding:3px"></th>
+        <th style="border:1px solid #000;padding:3px"></th>
+        <th style="border:1px solid #000;padding:3px;font-weight:400;font-size:9px">Commodities requiring special care must be marked per NMFC</th>
+        <th style="border:1px solid #000;padding:3px">NMFC No.</th>
+        <th style="border:1px solid #000;padding:3px">Class</th>
+      </tr>
+      ${rows}
+    </table>
+
+    <div style="margin-top:10px;font-size:9px;color:#555;line-height:1.5">
+      Note: Liability limitation for loss or damage in this shipment may be applicable. See 49 USC &sect;14706(c)(1)(A) and (B).
+    </div>
+
+    <table style="width:100%;border-collapse:collapse;margin-top:12px;border:1px solid #000">
+      <tr>
+        <td style="width:50%;border:1px solid #000;padding:8px;vertical-align:top">
+          <div style="font-weight:700;margin-bottom:6px">SHIPPER SIGNATURE</div>
+          <div>Eastern Glass &amp; Aluminum</div>
+          ${bolState.sigData?"<img src='"+bolState.sigData+"' style='height:50px;display:block;margin-top:6px'>":"<div style='height:50px;border-bottom:1px solid #000;margin-top:16px'></div>"}
+          <div style="font-size:9px;margin-top:4px">Date: ${entry.date}</div>
+        </td>
+        <td style="width:50%;border:1px solid #000;padding:8px;vertical-align:top">
+          <div style="font-weight:700;margin-bottom:6px">CARRIER ACKNOWLEDGMENT &amp; SIGNATURE</div>
+          <div style="font-size:9px;margin-bottom:8px">Carrier acknowledges receipt of packages in apparent good order.</div>
+          <div><strong>Driver Signature:</strong></div>
+          <div style="height:50px;border-bottom:1px solid #000;margin-top:8px"></div>
+          <div style="font-size:9px;margin-top:4px">Date Received: _______________</div>
+        </td>
+      </tr>
+    </table>
+  </div>`;
+
+  document.getElementById("print-bol").innerHTML=html;
+}
+
+// ── HISTORY ────────────────────────────────────────────────────
+function loadHistory(){
+  try{var h=localStorage.getItem("ega-bol-hist");if(h)bolHistory=JSON.parse(h);}catch(e){}
+}
+
+function renderHistory(){
+  var el=document.getElementById("hist-list");
+  if(!bolHistory.length){
+    el.innerHTML="<div style=\"text-align:center;padding:20px;color:var(--dm);font-family:var(--mono);font-size:11px\">No BOLs created yet.</div>";
+    return;
+  }
+  var html="";
+  bolHistory.forEach(function(b){
+    var cls=b.status==="DELIVERED"?"s-delivered":b.status==="PENDING"?"s-pending":"s-transit";
+    html+="<div class=\"bol-hist\">"
+      +"<div class=\"bol-hist-num\">"+b.bolNum+"<span class=\"status-badge "+cls+"\" style=\"margin-left:8px\">"+b.status+"</span></div>"
+      +"<div class=\"bol-hist-info\">"
+      +b.date+" &middot; To: "+(b.shipTo||"—")+"<br>"
+      +"Carrier: "+(b.carrier||"—")+" / "+(b.driver||"—")+"<br>"
+      +b.palletCount+" pallets &middot; "+b.frameCount+" frames &middot; "+b.itemCount+" accessory items"
+      +"</div>"
+      +"<div style=\"display:flex;gap:6px;margin-top:8px\">"
+      +"<button onclick=\"markDelivered('"+b.bolNum+"')\" style=\"flex:1;padding:6px;background:var(--s3);border:1px solid var(--bd2);border-radius:6px;color:var(--gn);font-family:var(--mono);font-size:10px;cursor:pointer\">Mark Delivered</button>"
+      +"<button onclick=\"reprintBOL('"+b.bolNum+"')\" style=\"flex:1;padding:6px;background:var(--s3);border:1px solid var(--bd2);border-radius:6px;color:var(--bl);font-family:var(--mono);font-size:10px;cursor:pointer\">Reprint</button>"
+      +"</div></div>";
+  });
+  el.innerHTML=html;
+}
+
+function markDelivered(bolNum){
+  var b=bolHistory.find(function(x){return x.bolNum===bolNum;});
+  if(b){b.status="DELIVERED";try{localStorage.setItem("ega-bol-hist",JSON.stringify(bolHistory));}catch(e){}
+  renderHistory();showToast(bolNum+" marked DELIVERED");}
+}
+
+function reprintBOL(bolNum){
+  var b=bolHistory.find(function(x){return x.bolNum===bolNum;});
+  if(!b)return;
+  // Restore state and reprint
+  Object.assign(bolState,{bolNum:b.bolNum,shipDate:b.date,shipTo:b.shipTo,
+    carrier:b.carrier,driver:b.driver,pallets:b.pallets,bolItems:b.items});
+  renderPrintBOL(b);
+  document.getElementById("print-bol").style.display="block";
+  goPg("new");
+  document.getElementById("p-new").style.display="none";
+  document.getElementById("bbar").innerHTML="<button class=\"btn btn-back\" onclick=\"resetBOL()\">Back</button>"
+    +"<button class=\"btn btn-gen\" onclick=\"window.print()\">Print BOL</button>";
+}
+
+function resetBOL(){
+  document.getElementById("print-bol").style.display="none";
+  document.getElementById("p-new").style.display="block";
+  bolState={step:1,bolNum:"",shipDate:"",project:"BNA",
+    shipFrom:"Eastern Glass & Aluminum, 4274 Shackleford Rd., Norcross, GA 30093",
+    shipTo:"",carrier:"",driver:"",truckNum:"",trailerNum:"",
+    proNum:"",scac:"",freightTerms:"prepaid",specialInst:"",
+    pallets:[],bolItems:[],sigData:null};
+  genBolNum();
+  document.getElementById("ship-date").valueAsDate=new Date();
+  document.getElementById("bbar").innerHTML="<button class=\"btn btn-back\" id=\"btn-back\" onclick=\"prevStep()\" style=\"display:none\">Back</button>"
+    +"<button class=\"btn btn-next\" id=\"btn-next\" onclick=\"nextStep()\">Next: Select Pallets</button>";
+  goStep(1);
+  loadPallets();
+  goPg("new");
+}
+
+function showToast(msg){
+  var t=document.getElementById("toast");
+  t.textContent=msg;t.classList.add("show");
+  setTimeout(function(){t.classList.remove("show");},2400);
+}
+</script>
+</body>
+</html>
