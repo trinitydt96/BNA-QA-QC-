@@ -319,6 +319,65 @@ function showStatus(f,st){
        ["Packed By",st.packedBy||"-"],["Pack Date",st.packDate||"-"]]);
   }
   sa.appendChild(wrap);
+
+  // Station tracking buttons - show on every frame scan
+  // Assembly / Glazing / Face Cap happen regardless of QA status
+  var stWrap = document.createElement("div");
+  stWrap.style.cssText = "background:var(--s1);border:1px solid var(--bd2);border-radius:12px;padding:14px;margin-top:10px";
+  var stTitle = document.createElement("div");
+  stTitle.style.cssText = "font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:10px";
+  stTitle.textContent = "Mark Production Stage Done";
+  stWrap.appendChild(stTitle);
+  var stBtns = document.createElement("div");
+  stBtns.style.cssText = "display:flex;gap:8px";
+  var stList = [
+    {id:"assembly", name:"Assembly",  color:"#10B981", bg:"rgba(16,185,129,.12)",  bd:"rgba(16,185,129,.4)"},
+    {id:"glazing",  name:"Glazing",   color:"#A855F7", bg:"rgba(168,85,247,.12)", bd:"rgba(168,85,247,.4)"},
+    {id:"facecap",  name:"Face Cap",  color:"#F59E0B", bg:"rgba(245,158,11,.12)", bd:"rgba(245,158,11,.4)"}
+  ];
+  stList.forEach(function(st){
+    var btn = document.createElement("button");
+    btn.style.cssText = "flex:1;padding:11px 6px;border-radius:8px;font-family:var(--head);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;border:2px solid "+st.bd+";background:"+st.bg+";color:"+st.color;
+    btn.textContent = st.name;
+    (function(station, frame){
+      btn.addEventListener("click", function(){
+        markStation(frame, station);
+      });
+    })(st, f);
+    stBtns.appendChild(btn);
+  });
+  stWrap.appendChild(stBtns);
+  var stMsg = document.createElement("div");
+  stMsg.id = "st-msg";
+  stMsg.style.cssText = "font-family:var(--mono);font-size:10px;text-align:center;color:var(--am);min-height:20px;padding:6px 0";
+  stWrap.appendChild(stMsg);
+  sa.appendChild(stWrap);
+}
+
+function markStation(f, st){
+  var msg = document.getElementById("st-msg");
+  if(msg){msg.textContent = "Saving " + st.name + "...";}
+  var rec = {
+    action: "station",
+    frameId: f.id,
+    station: st.id,
+    stationName: st.name.toUpperCase(),
+    sys: f.sys,
+    level: f.lv || ""
+  };
+  // Save locally to history
+  HI.unshift({action:"station", frameId:f.id, station:st.name, overall:st.name.toUpperCase(), ts:new Date().toISOString()});
+  saveHist();
+  // Send via Image beacon
+  var img = new Image();
+  img.src = WH + "?" + new URLSearchParams(rec).toString();
+  setTimeout(function(){
+    if(msg){
+      msg.style.color = st.color;
+      msg.textContent = f.id + " marked " + st.name.toUpperCase() + " DONE";
+    }
+    showToast(f.id + " - " + st.name + " Done");
+  }, 800);
 }
 
 function mkCard(bg,color,icon,title,sub,rows){
