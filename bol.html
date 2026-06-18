@@ -477,9 +477,49 @@ function renderPalletCards(el, pltList){
       ds.textContent=p.desc;
       card.appendChild(ds);
     }
-    (function(plt,k){
-      card.addEventListener("click",function(){togglePallet(plt,k);});
-    })(p,key);
+    // Add rename/delete buttons for bad-named pallets or any pallet
+    var mgmt=document.createElement("div");
+    mgmt.style.cssText="display:flex;gap:6px;margin-top:8px";
+    var renBtn=document.createElement("button");
+    renBtn.style.cssText="padding:3px 10px;background:var(--s3);border:1px solid var(--bd2);border-radius:5px;color:var(--mu);font-family:var(--mono);font-size:9px;cursor:pointer;flex:1";
+    renBtn.textContent="Rename";
+    var delBtn=document.createElement("button");
+    delBtn.style.cssText="padding:3px 10px;background:var(--s3);border:1px solid rgba(255,77,106,.3);border-radius:5px;color:var(--rd);font-family:var(--mono);font-size:9px;cursor:pointer";
+    delBtn.textContent="Remove";
+    (function(plt,k,c){
+      card.addEventListener("click",function(e){if(e.target===renBtn||e.target===delBtn)return;togglePallet(plt,k);});
+      renBtn.addEventListener("click",function(e){
+        e.stopPropagation();
+        var newName=prompt("Rename pallet (current: "+k+"):",k);
+        if(newName&&newName.trim()&&newName.trim()!==k){
+          plt.num=newName.trim().toUpperCase();
+          // Update in ST.pallets if already selected
+          var idx=ST.pallets.findIndex(function(x){return x.num===k;});
+          if(idx>=0)ST.pallets[idx].num=plt.num;
+          // Save renamed pallet
+          savePallet(plt);
+          showToast("Renamed to "+plt.num);
+          loadPallets();
+        }
+      });
+      delBtn.addEventListener("click",function(e){
+        e.stopPropagation();
+        if(!confirm("Remove pallet "+k+" from list?"))return;
+        // Remove from ST.pallets if selected
+        var idx=ST.pallets.findIndex(function(x){return x.num===k;});
+        if(idx>=0){ST.pallets.splice(idx,1);renderSelPallets();}
+        // Remove from local storage
+        try{
+          var saved=JSON.parse(localStorage.getItem("ega-pallets")||"[]");
+          saved=saved.filter(function(x){return x.num!==k;});
+          localStorage.setItem("ega-pallets",JSON.stringify(saved));
+        }catch(ex){}
+        c.remove();
+        showToast("Removed "+k);
+      });
+    })(p,key,card);
+    mgmt.appendChild(renBtn);mgmt.appendChild(delBtn);
+    card.appendChild(mgmt);
     el.appendChild(card);
   });
 
