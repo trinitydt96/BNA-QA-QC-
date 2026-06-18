@@ -227,11 +227,17 @@ select.inp option{background:var(--s2)}
     <input class="srch" id="lib-srch" placeholder="Search part # or description..." type="text">
     <div class="cat-row" id="lib-cat-filter"></div>
     <div id="lib-list"></div>
-    <div style="text-align:center;margin-top:10px">
-      <label style="display:inline-block;padding:8px 16px;background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer">
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <label style="flex:1;display:inline-block;padding:10px 16px;background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer;text-align:center;min-width:160px">
         Upload YKK AP Cut List (Excel or CSV)
         <input type="file" accept=".csv,.xlsx,.xls" style="display:none" onchange="importCSV(this)">
       </label>
+      <button onclick="clearImported()" style="flex:1;padding:10px 16px;background:var(--s3);border:1px solid rgba(255,77,106,.3);border-radius:8px;color:var(--rd);font-family:var(--mono);font-size:10px;cursor:pointer;min-width:140px">
+        Clear Imported Parts
+      </button>
+      <button onclick="clearAllLib()" style="padding:10px 14px;background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer">
+        Reset All
+      </button>
     </div>
   </div>
 </div>
@@ -1292,6 +1298,31 @@ function showSearchDrop(q){
     drop.appendChild(d);
   });
   drop.style.display="block";
+}
+
+function clearImported(){
+  if(!confirm("Remove all imported parts? Pre-loaded YKK AP parts will be kept."))return;
+  // Remove only the saved (imported) entries from localStorage
+  try{localStorage.removeItem("ega-lib");}catch(e){}
+  // Rebuild LIB from original only (reload page to reset to defaults)
+  var defaultPNs=["E1-3949","E1-3945","E1-3946","E1-3954","E1-3955","E1-3953",
+    "E2-0070","E2-0725","E2-3841","E2-7004","PM-1006SS","HC-1220SS","UF-0808-SS",
+    "HILTI","SHIM-050","CAULK-WHT","CAULK-BLK","CAULK-GRY","CAULK-CLR",
+    "FC-LEFT","FC-RIGHT","FC-HEAD","FC-HORZ","FC-SILL","FC-9IN",
+    "STARTER","SILL-ADP","CORNER-KEY","THERM-BRK","ANCHOR-BLT"];
+  // Remove non-default items from LIB array
+  for(var i=LIB.length-1;i>=0;i--){
+    if(defaultPNs.indexOf(LIB[i].pn)<0){LIB.splice(i,1);}
+  }
+  renderLibPage("","ALL");
+  renderLib("","ALL");
+  showToast("Cleared imported parts — "+LIB.length+" default parts remain");
+}
+
+function clearAllLib(){
+  if(!confirm("Reset library to factory defaults? All imported parts will be removed."))return;
+  try{localStorage.removeItem("ega-lib");}catch(e){}
+  location.reload();
 }
 
 function showToast(msg){
