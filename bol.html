@@ -6,6 +6,7 @@
 <title>EGA Bill of Lading</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <style>
 :root{--bg:#0a0e14;--s1:#0f1520;--s2:#161e2e;--s3:#1e2a3e;--bd2:#2a3a52;--tx:#d4e0f0;--mu:#5a7090;--dm:#3a4f6a;--gn:#00d084;--rd:#ff4d6a;--am:#f5a623;--bl:#3b82f6;--or:#f97316;--mono:"Share Tech Mono",monospace;--head:"Rajdhani",sans-serif;--body:"Inter",sans-serif}
@@ -228,7 +229,7 @@ select.inp option{background:var(--s2)}
     <div id="lib-list"></div>
     <div style="text-align:center;margin-top:10px">
       <label style="display:inline-block;padding:8px 16px;background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer">
-        Upload YKK AP Cut List (CSV)
+        Upload YKK AP Cut List (Excel or CSV)
         <input type="file" accept=".csv,.xlsx,.xls" style="display:none" onchange="importCSV(this)">
       </label>
     </div>
@@ -810,25 +811,112 @@ function addNewItem(){
 
 function importCSV(input){
   var file=input.files[0];if(!file)return;
-  var reader=new FileReader();
-  reader.onload=function(e){
-    var lines=e.target.result.split("\n");var added=0;
-    lines.forEach(function(line){
-      var cols=line.split(",");
-      if(cols.length>=2){
-        var pn=(cols[0]||"").trim().toUpperCase();
-        var desc=(cols[1]||"").trim().toUpperCase();
-        var cat=(cols[2]||"Other").trim();
-        var unit=(cols[3]||"EA").trim();
-        if(pn&&desc&&pn!=="PART NUMBER"&&pn!=="PART #"&&pn!=="PN"){
-          if(!LIB.find(function(i){return i.pn===pn;})){LIB.push({pn:pn,desc:desc,cat:cat,unit:unit});added++;}
-        }
+  var name=file.name.toLowerCase();
+  showToast("Reading file...");
+
+  // Excel files (xlsx/xls) — use SheetJS binary reader
+  if(name.endsWith(".xlsx")||name.endsWith(".xls")){
+    var reader=new FileReader();
+    reader.onload=function(e){
+      try{
+        var wb=XLSX.read(e.target.result,{type:"array"});
+        var ws=wb.Sheets[wb.SheetNames[0]];
+        var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+        processRows(rows);
+      }catch(err){
+        showToast("Error reading Excel file: "+err.message);
+        console.error(err);
       }
-    });
-    saveLib();renderLibPage("","ALL");renderLib("","ALL");
-    showToast("Imported "+added+" new parts");
-  };
-  reader.readAsText(file);
+    };
+    reader.readAsArrayBuffer(file);
+
+  // CSV files — plain text reader
+  }else{
+    var reader2=new FileReader();
+    reader2.onload=function(e){
+      var lines=e.target.result.split("\n");
+      var rows=lines.map(function(l){return l.split(",");});
+      processRows(rows);
+    };
+    reader2.readAsText(file);
+  }
+}
+
+function processRows(rows){
+  var added=0;
+  var skipped=0;
+  // Auto-detect columns — find header row
+  var startRow=0;
+  var pnCol=0,descCol=1,catCol=2,unitCol=3;
+
+  // Try to find header row with Part Number / Description
+  for(var i=0;i<Math.min(5,rows.length);i++){
+    var r=rows[i];
+    for(var c=0;c<r.length;c++){
+      var cell=String(r[c]||"").toLowerCase().trim();
+      if(cell==="part number"||cell==="part #"||cell==="pn"||cell==="part no"||cell==="part no."){pnCol=c;startRow=i+1;}
+      if(cell==="description"||cell==="desc"||cell==="item description"){descCol=c;}
+      if(cell==="category"||cell==="cat"){catCol=c;}
+      if(cell==="unit"||cell==="uom"||cell==="unit of measure"){unitCol=c;}
+    }
+    if(startRow>0)break;
+  }
+
+  // Auto-detect category from part number prefix
+  function autocat(pn){
+    if(!pn)return"Other";
+    var p=pn.toUpperCase();
+    if(p.indexOf("E1-")===0)return"Accessories";
+    if(p.indexOf("E2-")===0)return"Gaskets";
+    if(p.indexOf("PM-")===0||p.indexOf("HC-")===0||p.indexOf("UF-")===0)return"Fasteners";
+    if(p.indexOf("FC-")===0||p.indexOf("TRIM")===0||p.indexOf("CAP")===0)return"Trims";
+    if(p.indexOf("P-")===0||p.indexOf("CW-")===0||p.indexOf("PA-")===0||p.indexOf("MU-")===0)return"Profiles";
+    if(p.indexOf("SHIM")===0||p.indexOf("CAULK")===0||p.indexOf("ANCHOR")===0||p.indexOf("SEALANT")===0)return"Materials";
+    return"Other";
+  }
+
+  // Auto-detect unit from description
+  function autounit(desc){
+    if(!desc)return"EA";
+    var d=desc.toUpperCase();
+    if(d.indexOf(" FT")>=0||d.indexOf("GASKET")>=0||d.indexOf("WEATHERSTRIP")>=0)return"FT";
+    if(d.indexOf(" BX")>=0||d.indexOf("BOX")>=0||d.indexOf("SHIM")>=0)return"BX";
+    if(d.indexOf("TUBE")>=0||d.indexOf("CAULK")>=0||d.indexOf("SEALANT")>=0)return"TUBE";
+    if(d.indexOf("BAG")>=0)return"BAG";
+    return"EA";
+  }
+
+  for(var ri=startRow;ri<rows.length;ri++){
+    var row=rows[ri];
+    if(!row||!row.length)continue;
+    var pn=String(row[pnCol]||"").trim().toUpperCase();
+    var desc=String(row[descCol]||"").trim().toUpperCase();
+
+    // Skip blank rows and header-like rows
+    if(!pn||!desc)continue;
+    if(pn==="PART NUMBER"||pn==="PART #"||pn==="PN"||pn==="PART NO")continue;
+
+    // Get or auto-detect category and unit
+    var cat=String(row[catCol]||"").trim()||autocat(pn);
+    var unit=String(row[unitCol]||"").trim()||autounit(desc);
+
+    // Validate category
+    var validCats=["Accessories","Gaskets","Fasteners","Materials","Trims","Profiles","Other"];
+    if(validCats.indexOf(cat)<0)cat=autocat(pn);
+    if(!unit||unit.length>6)unit=autounit(desc);
+
+    if(!LIB.find(function(i){return i.pn===pn;})){
+      LIB.push({pn:pn,desc:desc,cat:cat,unit:unit});
+      added++;
+    }else{
+      skipped++;
+    }
+  }
+
+  saveLib();
+  renderLibPage("","ALL");
+  renderLib("","ALL");
+  showToast("Imported "+added+" parts"+(skipped?" ("+skipped+" already existed)":""));
 }
 
 // ADD TO BOL
