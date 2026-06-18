@@ -222,7 +222,7 @@ select.inp option{background:var(--s2)}
 </div>
 <div class="pg" id="p-lib">
   <div class="box">
-    <div class="box-t">Master Item Library - YKK AP Parts</div>
+    <div class="box-t" style="display:flex;justify-content:space-between;align-items:center"><span>Master Item Library - YKK AP Parts</span><button id="edit-mode-btn" onclick="toggleEditMode()" style="padding:4px 12px;background:var(--s3);border:1px solid var(--bd2);border-radius:6px;color:var(--mu);font-family:var(--mono);font-size:9px;cursor:pointer;letter-spacing:.06em">Edit Items</button></div>
     <p style="font-size:12px;color:var(--mu);margin-bottom:10px;line-height:1.7">Pre-loaded YKK AP parts. Scan new barcodes to add more. Upload a CSV to bulk import.</p>
     <input class="srch" id="lib-srch" placeholder="Search part # or description..." type="text">
     <div class="cat-row" id="lib-cat-filter"></div>
@@ -771,6 +771,21 @@ function renderLib(q,cat){
   });
 }
 
+var LIB_EDIT_MODE = false;
+
+function toggleEditMode(){
+  LIB_EDIT_MODE = !LIB_EDIT_MODE;
+  var btn = document.getElementById("edit-mode-btn");
+  if(btn){
+    btn.textContent = LIB_EDIT_MODE ? "Done Editing" : "Edit Items";
+    btn.style.color = LIB_EDIT_MODE ? "var(--gn)" : "var(--mu)";
+    btn.style.borderColor = LIB_EDIT_MODE ? "rgba(0,208,132,.4)" : "var(--bd2)";
+    btn.style.background = LIB_EDIT_MODE ? "rgba(0,208,132,.1)" : "var(--s3)";
+  }
+  var q = document.getElementById("lib-srch").value;
+  renderLibPage(q, "ALL");
+}
+
 function renderLibPage(q,cat){
   var el=document.getElementById("lib-list");
   if(!el)return;
@@ -780,19 +795,107 @@ function renderLibPage(q,cat){
     return mq&&mc;
   });
   el.innerHTML="";
-  items.forEach(function(item){
-    var col=catColor(item.cat||"Other");
-    var row=document.createElement("div");row.className="irow";
-    var pn=document.createElement("span");pn.className="ipn";pn.style.color=col;pn.textContent=item.pn;
-    var desc=document.createElement("span");desc.className="idesc";desc.textContent=item.desc;
-    var cat2=document.createElement("span");cat2.className="iunit";
-    cat2.style.cssText="background:"+col+"22;color:"+col;cat2.textContent=(item.cat||"Other")+" / "+item.unit;
-    row.appendChild(pn);row.appendChild(desc);row.appendChild(cat2);
-    el.appendChild(row);
-  });
+
   if(!items.length){
     el.innerHTML="<div style='text-align:center;padding:12px;color:var(--dm);font-family:var(--mono);font-size:11px'>No items found</div>";
+    return;
   }
+
+  items.forEach(function(item,idx){
+    var col=catColor(item.cat||"Other");
+    var globalIdx=LIB.findIndex(function(i){return i.pn===item.pn;});
+
+    if(LIB_EDIT_MODE){
+      // EDIT MODE — show editable fields inline
+      var row=document.createElement("div");
+      row.style.cssText="background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:10px 12px;margin-bottom:6px";
+
+      // Row 1: Part number + Delete button
+      var r1=document.createElement("div");
+      r1.style.cssText="display:flex;gap:6px;align-items:center;margin-bottom:6px";
+      var pnInp=document.createElement("input");
+      pnInp.value=item.pn;
+      pnInp.style.cssText="flex:1;background:var(--s3);border:1px solid "+col+";border-radius:5px;color:"+col+";font-family:var(--mono);font-size:11px;font-weight:700;padding:5px 8px;outline:none;min-width:0";
+      pnInp.placeholder="Part Number";
+      var delBtn=document.createElement("button");
+      delBtn.textContent="Delete";
+      delBtn.style.cssText="padding:4px 10px;background:rgba(255,77,106,.1);border:1px solid rgba(255,77,106,.3);border-radius:5px;color:var(--rd);font-family:var(--mono);font-size:9px;cursor:pointer;white-space:nowrap;flex-shrink:0";
+      r1.appendChild(pnInp);r1.appendChild(delBtn);
+
+      // Row 2: Description
+      var descInp=document.createElement("input");
+      descInp.value=item.desc;
+      descInp.style.cssText="width:100%;background:var(--s3);border:1px solid var(--bd2);border-radius:5px;color:var(--tx);font-size:12px;padding:5px 8px;outline:none;margin-bottom:6px;display:block";
+      descInp.placeholder="Description";
+
+      // Row 3: Category + Unit + Save
+      var r3=document.createElement("div");
+      r3.style.cssText="display:flex;gap:6px;align-items:center";
+      var catSel=document.createElement("select");
+      catSel.style.cssText="flex:1;background:var(--s3);border:1px solid var(--bd2);border-radius:5px;color:var(--tx);font-family:var(--mono);font-size:10px;padding:4px 6px;outline:none;min-width:0";
+      ["Accessories","Gaskets","Fasteners","Materials","Trims","Profiles","Other"].forEach(function(c){
+        var o=document.createElement("option");o.value=c;o.textContent=c;
+        if(c===item.cat)o.selected=true;
+        catSel.appendChild(o);
+      });
+      var unitSel=document.createElement("select");
+      unitSel.style.cssText="width:70px;background:var(--s3);border:1px solid var(--bd2);border-radius:5px;color:var(--tx);font-family:var(--mono);font-size:10px;padding:4px 6px;outline:none;flex-shrink:0";
+      ["EA","FT","BX","TUBE","BAG","SET","LF"].forEach(function(u){
+        var o=document.createElement("option");o.value=u;o.textContent=u;
+        if(u===item.unit)o.selected=true;
+        unitSel.appendChild(o);
+      });
+      var saveBtn=document.createElement("button");
+      saveBtn.textContent="Save";
+      saveBtn.style.cssText="padding:4px 12px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);border-radius:5px;color:var(--bl);font-family:var(--mono);font-size:9px;cursor:pointer;white-space:nowrap;flex-shrink:0";
+      r3.appendChild(catSel);r3.appendChild(unitSel);r3.appendChild(saveBtn);
+
+      row.appendChild(r1);row.appendChild(descInp);row.appendChild(r3);
+      el.appendChild(row);
+
+      // Wire up Save
+      (function(gi,pni,di,ci,ui){
+        saveBtn.addEventListener("click",function(){
+          var newPn=pni.value.trim().toUpperCase();
+          var newDesc=di.value.trim().toUpperCase();
+          if(!newPn||!newDesc){showToast("Part number and description required");return;}
+          LIB[gi].pn=newPn;
+          LIB[gi].desc=newDesc;
+          LIB[gi].cat=ci.value;
+          LIB[gi].unit=ui.value;
+          saveLib();
+          showToast("Saved: "+newPn);
+          var q2=document.getElementById("lib-srch").value;
+          renderLibPage(q2,"ALL");
+          renderLib(q2,"ALL");
+        });
+      })(globalIdx,pnInp,descInp,catSel,unitSel);
+
+      // Wire up Delete
+      (function(gi2,pn2){
+        delBtn.addEventListener("click",function(){
+          if(!confirm("Delete "+pn2+" from library?"))return;
+          LIB.splice(gi2,1);
+          saveLib();
+          showToast("Deleted: "+pn2);
+          var q2=document.getElementById("lib-srch").value;
+          renderLibPage(q2,"ALL");
+          renderLib(q2,"ALL");
+        });
+      })(globalIdx,item.pn);
+
+    }else{
+      // VIEW MODE — clean read-only row
+      var row=document.createElement("div");row.className="irow";
+      var pn=document.createElement("span");pn.className="ipn";pn.style.color=col;pn.textContent=item.pn;
+      var desc=document.createElement("span");desc.className="idesc";desc.textContent=item.desc;
+      var cat2=document.createElement("span");cat2.className="iunit";
+      cat2.style.cssText="background:"+col+"22;color:"+col;
+      cat2.textContent=(item.cat||"Other")+" / "+item.unit;
+      row.appendChild(pn);row.appendChild(desc);row.appendChild(cat2);
+      el.appendChild(row);
+    }
+  });
 }
 
 function toggleNIF(){
