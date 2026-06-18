@@ -320,64 +320,117 @@ function showStatus(f,st){
   }
   sa.appendChild(wrap);
 
-  // Station tracking buttons - show on every frame scan
-  // Assembly / Glazing / Face Cap happen regardless of QA status
+  // Station tracking — fetch what this frame has already completed
   var stWrap = document.createElement("div");
   stWrap.style.cssText = "background:var(--s1);border:1px solid var(--bd2);border-radius:12px;padding:14px;margin-top:10px";
   var stTitle = document.createElement("div");
-  stTitle.style.cssText = "font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:10px";
-  stTitle.textContent = "Mark Production Stage Done";
+  stTitle.style.cssText = "font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:4px";
+  stTitle.textContent = "Production Stage";
+  var stSub = document.createElement("div");
+  stSub.style.cssText = "font-family:var(--mono);font-size:9px;color:var(--dm);margin-bottom:10px";
+  stSub.textContent = "Checking status...";
   stWrap.appendChild(stTitle);
+  stWrap.appendChild(stSub);
   var stBtns = document.createElement("div");
-  stBtns.style.cssText = "display:flex;gap:8px";
-  var stList = [
-    {id:"assembly", name:"Assembly",  color:"#10B981", bg:"rgba(16,185,129,.12)",  bd:"rgba(16,185,129,.4)"},
-    {id:"glazing",  name:"Glazing",   color:"#A855F7", bg:"rgba(168,85,247,.12)", bd:"rgba(168,85,247,.4)"},
-    {id:"facecap",  name:"Face Cap",  color:"#F59E0B", bg:"rgba(245,158,11,.12)", bd:"rgba(245,158,11,.4)"}
-  ];
-  stList.forEach(function(st){
-    var btn = document.createElement("button");
-    btn.style.cssText = "flex:1;padding:11px 6px;border-radius:8px;font-family:var(--head);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;border:2px solid "+st.bd+";background:"+st.bg+";color:"+st.color;
-    btn.textContent = st.name;
-    (function(station, frame){
-      btn.addEventListener("click", function(){
-        markStation(frame, station);
-      });
-    })(st, f);
-    stBtns.appendChild(btn);
-  });
+  stBtns.id = "st-btns";
+  stBtns.style.cssText = "display:flex;gap:8px;margin-bottom:6px";
   stWrap.appendChild(stBtns);
   var stMsg = document.createElement("div");
   stMsg.id = "st-msg";
-  stMsg.style.cssText = "font-family:var(--mono);font-size:10px;text-align:center;color:var(--am);min-height:20px;padding:6px 0";
+  stMsg.style.cssText = "font-family:var(--mono);font-size:10px;text-align:center;min-height:20px;padding:4px 0";
   stWrap.appendChild(stMsg);
   sa.appendChild(stWrap);
+
+  // Fetch which stations already done for this frame
+  fetch(WH+"?action=stationstatus&frameId="+encodeURIComponent(f.id))
+    .then(function(r){return r.json();})
+    .then(function(data){
+      stSub.textContent = data.done&&data.done.length
+        ? data.done.join(", ")+" done"
+        : "No stages completed yet";
+      renderStationBtns(f, data.done||[]);
+    })
+    .catch(function(){
+      stSub.textContent = "Offline - tap to mark done";
+      renderStationBtns(f, []);
+    });
 }
 
-function markStation(f, st){
-  var msg = document.getElementById("st-msg");
-  if(msg){msg.textContent = "Saving " + st.name + "...";}
-  var rec = {
-    action: "station",
-    frameId: f.id,
-    station: st.id,
-    stationName: st.name.toUpperCase(),
-    sys: f.sys,
-    level: f.lv || ""
-  };
-  // Save locally to history
-  HI.unshift({action:"station", frameId:f.id, station:st.name, overall:st.name.toUpperCase(), ts:new Date().toISOString()});
-  saveHist();
-  // Send via Image beacon
-  var img = new Image();
-  img.src = WH + "?" + new URLSearchParams(rec).toString();
-  setTimeout(function(){
-    if(msg){
-      msg.style.color = st.color;
-      msg.textContent = f.id + " marked " + st.name.toUpperCase() + " DONE";
+var ST_LIST = [
+  {id:"assembly", name:"ASSEMBLY", color:"#10B981", bg:"rgba(16,185,129,.12)", bd:"rgba(16,185,129,.4)"},
+  {id:"glazing",  name:"GLAZING",  color:"#A855F7", bg:"rgba(168,85,247,.12)", bd:"rgba(168,85,247,.4)"},
+  {id:"facecap",  name:"FACE CAP", color:"#F59E0B", bg:"rgba(245,158,11,.12)", bd:"rgba(245,158,11,.4)"}
+];
+
+function renderStationBtns(f, done){
+  var el = document.getElementById("st-btns");
+  if(!el) return;
+  el.innerHTML = "";
+  // Find the next undone station
+  var nextIdx = -1;
+  ST_LIST.forEach(function(st, i){
+    if(nextIdx < 0 && done.indexOf(st.name) < 0) nextIdx = i;
+  });
+
+  ST_LIST.forEach(function(st, i){
+    var isDone = done.indexOf(st.name) >= 0;
+    var isNext = i === nextIdx;
+    var btn = document.createElement("button");
+
+    if(isDone){
+      // Completed — grey with checkmark, disabled
+      btn.style.cssText = "flex:1;padding:10px 4px;border-radius:8px;font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:.04em;cursor:default;border:2px solid #2a3a52;background:#1e2a3e;color:#3a5070;text-align:center";
+      btn.innerHTML = "<div style='font-size:16px;color:#00d084'>&#10003;</div><div style='font-size:10px'>" + st.name + "</div>";
+      btn.disabled = true;
+    } else if(isNext){
+      // Next up — fully active, highlighted
+      btn.style.cssText = "flex:1;padding:10px 4px;border-radius:8px;font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:.04em;cursor:pointer;border:2px solid "+st.bd+";background:"+st.bg+";color:"+st.color+";text-align:center";
+      btn.innerHTML = "<div style='font-size:10px;opacity:.7;margin-bottom:2px'>NEXT</div><div>" + st.name + "</div><div style='font-size:10px;margin-top:2px'>TAP DONE</div>";
+      (function(station, frame){
+        btn.addEventListener("click", function(){
+          markStation(frame, station, done);
+        });
+      })(st, f);
+    } else {
+      // Future stage — dimmed, not yet reachable
+      btn.style.cssText = "flex:1;padding:10px 4px;border-radius:8px;font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:.04em;cursor:default;border:2px solid #2a3a52;background:var(--s2);color:#3a5070;text-align:center;opacity:0.4";
+      btn.textContent = st.name;
+      btn.disabled = true;
     }
-    showToast(f.id + " - " + st.name + " Done");
-  }, 800);
+    el.appendChild(btn);
+  });
+
+  // All done!
+  if(nextIdx < 0){
+    var allDone = document.createElement("div");
+    allDone.style.cssText = "text-align:center;padding:10px;font-family:var(--mono);font-size:11px;color:var(--gn);letter-spacing:.08em";
+    allDone.textContent = "All stages complete";
+    el.innerHTML = "";
+    el.appendChild(allDone);
+  }
+}
+
+function markStation(f, st, doneSoFar){
+  var msg = document.getElementById("st-msg");
+  var sub = document.querySelector("#st-btns")&&document.querySelector("#st-btns").previousElementSibling;
+  if(msg){msg.style.color="var(--am)";msg.textContent="Saving...";}
+  var rec = {
+    action:"station", frameId:f.id,
+    station:st.id, stationName:st.name,
+    sys:f.sys, level:f.lv||""
+  };
+  HI.unshift({action:"station",frameId:f.id,station:st.name,overall:st.name,ts:new Date().toISOString()});
+  saveHist();
+  var img = new Image();
+  img.src = WH+"?"+new URLSearchParams(rec).toString();
+  setTimeout(function(){
+    // Update done list and re-render buttons
+    var newDone = doneSoFar.concat([st.name]);
+    if(msg){msg.style.color=st.color;msg.textContent=st.name+" marked DONE";}
+    if(sub){sub.textContent=newDone.join(", ")+" done";}
+    renderStationBtns(f, newDone);
+    showToast(f.id+" - "+st.name+" Done");
+  }, 700);
 }
 
 function mkCard(bg,color,icon,title,sub,rows){
