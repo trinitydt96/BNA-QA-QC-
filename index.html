@@ -104,6 +104,14 @@ select.inp option{background:var(--s2)}
 .plt-i{font-family:var(--mono);font-size:10px;color:var(--mu);line-height:1.7}
 .toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--bd2);color:var(--tx);padding:7px 16px;border-radius:20px;font-family:var(--mono);font-size:11px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9999;white-space:nowrap}
 .toast.show{opacity:1}
+.photo-row{margin-top:8px}
+.photo-btn{width:100%;padding:9px 10px;background:rgba(59,130,246,.1);border:1px dashed rgba(59,130,246,.4);border-radius:8px;color:var(--bl);font-family:var(--mono);font-size:11px;cursor:pointer;letter-spacing:.04em}
+.photo-btn:active{background:rgba(59,130,246,.2)}
+.photo-thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.photo-thumb{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--bd2)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-thumb .pdel{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.7);color:#ff4d6a;border:none;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1}
+.photo-count{font-family:var(--mono);font-size:9px;color:var(--mu);margin-top:4px}
 </style>
 </head>
 <body>
@@ -166,6 +174,7 @@ var SC=[{"id":"pre","title":"PRE-ASSEMBLY","color":"#3B82F6","items":[{"id":"c01
 var FM={}; FR.forEach(function(f){FM[f.id]=f;});
 var AL=[]; SC.forEach(function(s){s.items.forEach(function(i){AL.push(i);});});
 var CK={},HI=[],SF=null;
+var photoFiles=[];
 
 // Init
 document.getElementById("f-date").valueAsDate=new Date();
@@ -453,6 +462,7 @@ function startQA(){
     var el=document.createElement("span");el.className="sp";el.textContent=s;sp.appendChild(el);
   });
   CK={};
+  resetPhotos();
   AL.forEach(function(item){
     var ci=document.getElementById("ci-"+item.id);if(ci)ci.className="ci";
     ["bp","bf","bn"].forEach(function(p){var b=document.getElementById(p+item.id);if(b)b.className="cb";});
@@ -510,10 +520,18 @@ function makeSecs(){
     var body="";
     sec.items.forEach(function(it){
       var nn=n<10?"0"+n:""+n;n++;
+      var isPhotoCheck = (it.id === "c24");
+      var photoUI = isPhotoCheck
+        ? "<div class='photo-row' id='pr-"+it.id+"'>"
+          +"<button class='photo-btn' id='pb-"+it.id+"' type='button'>&#128247; Take / Add Photos</button>"
+          +"<input type='file' id='pf-"+it.id+"' accept='image/*' capture='environment' multiple style='display:none'>"
+          +"<div class='photo-thumbs' id='pt-"+it.id+"'></div>"
+          +"</div>"
+        : "";
       body+="<div class='ci' id='ci-"+it.id+"'>"
         +"<div class='ci-n'>"+nn+"</div>"
         +"<div class='ci-w'>"+(it.crit?"<div class='ci-crit'>CRITICAL</div>":"")
-        +"<div class='ci-txt'>"+it.text+"</div></div>"
+        +"<div class='ci-txt'>"+it.text+"</div>"+photoUI+"</div>"
         +"<div class='cbg'>"
         +"<button class='cb' id='bp"+it.id+"'>P</button>"
         +"<button class='cb' id='bf"+it.id+"'>F</button>"
@@ -543,6 +561,16 @@ function makeSecs(){
         document.getElementById("bf"+iid).addEventListener("click",function(){doChk(iid,"fail");});
         document.getElementById("bn"+iid).addEventListener("click",function(){doChk(iid,"na");});
       })(it.id);
+      if(it.id==="c24"){
+        (function(){
+          var pb=document.getElementById("pb-c24");
+          var pf=document.getElementById("pf-c24");
+          if(pb&&pf){
+            pb.addEventListener("click",function(){pf.click();});
+            pf.addEventListener("change",function(){handlePhotoSelect(this.files);});
+          }
+        })();
+      }
     });
   });
 }
@@ -639,20 +667,42 @@ function doSubmitQA(){
     stage:document.getElementById("f-stage").value,
     bay:document.getElementById("f-bay").value,
     overall:ov,pass:p,fail:f,na:n,
-    notes:document.getElementById("f-notes").value};
+    notes:document.getElementById("f-notes").value,
+    photoCount:photoFiles.length};
   AL.forEach(function(i){rec[i.id]=CK[i.id]||"";});
   var copy={ts:new Date().toISOString()};
   Object.keys(rec).forEach(function(k){copy[k]=rec[k];});
   HI.unshift(copy);saveHist();
+
+  // Send main QA/QC data via GET (Image beacon - fast, no CORS issues)
   var img=new Image();img.src=WH+"?"+new URLSearchParams(rec).toString();
+
+  // Send photos separately via POST (base64 data too large for URL/GET)
+  if(photoFiles.length>0){
+    sst.textContent="Saving photos...";
+    fetch(WH,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({
+        action:"photos",
+        frameId:SF.id,
+        inspector:insp,
+        date:document.getElementById("f-date").value,
+        photos:photoFiles
+      })
+    }).catch(function(err){console.log("Photo upload error (non-blocking):",err);});
+  }
+
   setTimeout(function(){
-    sst.className="sstbar ok";sst.textContent="Saved - "+SF.id+" "+ov;
+    sst.className="sstbar ok";
+    sst.textContent="Saved - "+SF.id+" "+ov+(photoFiles.length?" ("+photoFiles.length+" photos)":"");
     showToast(SF.id+" - "+ov);
     setTimeout(function(){
       goPg("scan");
       document.getElementById("si").value="";
       document.getElementById("sa").innerHTML="<div style='text-align:center;padding:40px;color:var(--mu);font-family:var(--mono);font-size:11px'>Submitted - search next frame</div>";
       SF=null;
+      resetPhotos();
     },1500);
   },1500);
 }
@@ -713,6 +763,87 @@ function showPlts(){
       +"<div class='plt-i'>"+p.fr.length+" frames / "+p.by+" / "+p.dt+"<br>"+p.fr.join(", ")+"</div></div>";
   });
   el.innerHTML=html;
+}
+
+function handlePhotoSelect(files){
+  if(!files||!files.length)return;
+  var remaining=4-photoFiles.length;
+  if(remaining<=0){showToast("Maximum 4 photos reached");return;}
+  var toProcess=Math.min(files.length,remaining);
+  for(var i=0;i<toProcess;i++){
+    (function(file){
+      var reader=new FileReader();
+      reader.onload=function(e){
+        // Compress image before storing
+        compressImage(e.target.result, function(compressed){
+          photoFiles.push(compressed);
+          renderPhotoThumbs();
+        });
+      };
+      reader.readAsDataURL(file);
+    })(files[i]);
+  }
+  if(files.length>remaining){
+    showToast("Only "+remaining+" more photo(s) allowed - max 4 total");
+  }
+  // Reset input so same file can be re-selected if needed
+  document.getElementById("pf-c24").value="";
+}
+
+function compressImage(dataUrl, callback){
+  var img=new Image();
+  img.onload=function(){
+    var maxW=900;
+    var scale=Math.min(1, maxW/img.width);
+    var canvas=document.createElement("canvas");
+    canvas.width=img.width*scale;
+    canvas.height=img.height*scale;
+    var ctx=canvas.getContext("2d");
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    callback(canvas.toDataURL("image/jpeg",0.6));
+  };
+  img.src=dataUrl;
+}
+
+function renderPhotoThumbs(){
+  var el=document.getElementById("pt-c24");
+  if(!el)return;
+  el.innerHTML="";
+  photoFiles.forEach(function(src,idx){
+    var thumb=document.createElement("div");
+    thumb.className="photo-thumb";
+    var img=document.createElement("img");
+    img.src=src;
+    var del=document.createElement("button");
+    del.className="pdel";
+    del.innerHTML="&#10005;";
+    del.addEventListener("click",function(e){
+      e.stopPropagation();
+      photoFiles.splice(idx,1);
+      renderPhotoThumbs();
+    });
+    thumb.appendChild(img);
+    thumb.appendChild(del);
+    el.appendChild(thumb);
+  });
+  var pb=document.getElementById("pb-c24");
+  if(pb){
+    pb.textContent = photoFiles.length>=4
+      ? "4/4 photos added"
+      : "Take / Add Photos ("+photoFiles.length+"/4)";
+  }
+  // Auto-mark as PASS once 4 photos are in (optional convenience)
+  if(photoFiles.length>=4 && !CK["c24"]){
+    doChk("c24","pass");
+  }
+}
+
+function resetPhotos(){
+  photoFiles=[];
+  var el=document.getElementById("pt-c24");
+  if(el)el.innerHTML="";
+  var pb=document.getElementById("pb-c24");
+  if(pb)pb.textContent="Take / Add Photos";
 }
 
 function showToast(msg){
