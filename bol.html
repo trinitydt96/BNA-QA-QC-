@@ -1156,10 +1156,20 @@ function saveBOL(){
     sig:ST.sig,status:"PENDING",ts:new Date().toISOString()};
   HI.unshift(entry);
   try{localStorage.setItem("ega-bol-hist",JSON.stringify(HI));}catch(e){}
-  var params=new URLSearchParams({action:"bol",bolNum:ST.bolNum,shipDate:ST.shipDate,
-    shipTo:ST.shipTo,carrier:ST.carrier,driver:ST.driver,
-    palletCount:ST.pallets.length,frameCount:tf,status:"PENDING"});
-  var img=new Image();img.src=WH+"?"+params.toString();
+var palletNums = ST.pallets.map(function(p){return p.num;}).join(",");
+var params=new URLSearchParams({
+  action:"bol",
+  bolNum:ST.bolNum,
+  shipDate:ST.shipDate,
+  shipTo:ST.shipTo,
+  carrier:ST.carrier,
+  driver:ST.driver,
+  palletCount:ST.pallets.length,
+  frameCount:tf,
+  palletNums:palletNums,
+  status:"PENDING"
+});
+var img=new Image();img.src=WH+"?"+params.toString();
 }
 
 function doPDF(){
