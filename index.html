@@ -791,35 +791,10 @@ function handlePhotoSelect(files){
 }
 
 function compressImage(dataUrl, callback){
-  var img=new Image();
-  img.onload=function(){
-    // Guard against zero-dimension canvas (iOS Safari decode timing bug)
-    if(!img.width || !img.height){
-      console.warn("Image failed to report dimensions, using original");
-      callback(dataUrl);
-      return;
-    }
-    var maxW=900;
-    var scale=Math.min(1, maxW/img.width);
-    var canvas=document.createElement("canvas");
-    canvas.width=Math.round(img.width*scale);
-    canvas.height=Math.round(img.height*scale);
-    var ctx=canvas.getContext("2d");
-    ctx.drawImage(img,0,0,canvas.width,canvas.height);
-    var result=canvas.toDataURL("image/jpeg",0.6);
-    // Sanity check: a valid compressed photo should never be this small
-    if(!result || result.length<5000){
-      console.warn("Compression produced suspiciously small output, using original");
-      callback(dataUrl);
-      return;
-    }
-    callback(result);
-  };
-  img.onerror=function(){
-    console.warn("Image failed to load for compression, using original");
-    callback(dataUrl);
-  };
-  img.src=dataUrl;
+  // Skip canvas compression entirely — phone camera JPEGs are already
+  // compressed by the hardware. Canvas re-encoding on iOS causes black
+  // output due to color profile / memory limits. Send the original directly.
+  callback(dataUrl);
 }
 
 function renderPhotoThumbs(){
