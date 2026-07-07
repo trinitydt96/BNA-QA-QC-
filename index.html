@@ -729,10 +729,9 @@ function doReset(){
 function saveHist(){try{localStorage.setItem("bna-h8",JSON.stringify(HI.slice(0,80)));}catch(e){}}
 function loadHist(){try{var h=localStorage.getItem("bna-h8");if(h)HI=JSON.parse(h);}catch(e){}showHist();}
 
-ffunction showHist(){
+function showHist(){
   var el=document.getElementById("hl");
   if(!HI.length){el.innerHTML="<div style='text-align:center;padding:30px;color:var(--dm);font-family:var(--mono);font-size:11px'>No records yet.</div>";return;}
-  // Clear all button
   var html="<div style='margin-bottom:10px'>"
     +"<button onclick='clearAllHistory()' style='width:100%;padding:10px;background:rgba(255,77,106,.08);border:1px solid rgba(255,77,106,.3);border-radius:8px;color:var(--rd);font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:.06em'>&#128465; Clear All History</button>"
     +"</div>";
@@ -744,6 +743,34 @@ ffunction showHist(){
       +"<span class='hb "+cls+"'>"+ov+"</span>"
       +(r.palletNum?"<span style='font-family:var(--mono);font-size:10px;color:var(--bl);margin-left:8px'>"+r.palletNum+"</span>":"")
       +"</div>";
+  });
+  el.innerHTML=html;
+}
+
+function clearAllHistory(){
+  if(!confirm("Clear all local history from this device?\n\nThis does NOT affect Google Sheets — only clears the on-device history list."))return;
+  HI=[];
+  try{localStorage.removeItem("bna-h8");}catch(e){}
+  showHist();
+  showToast("History cleared");
+}
+
+function showPlts(){
+  var pts={};
+  HI.forEach(function(r){
+    if(r.action==="packaging"&&r.palletNum){
+      if(!pts[r.palletNum])pts[r.palletNum]={n:r.palletNum,fr:[],by:r.packedBy,dt:r.packDate};
+      pts[r.palletNum].fr.push(r.frameId);
+    }
+  });
+  var el=document.getElementById("pl");
+  var ks=Object.keys(pts);
+  if(!ks.length){el.innerHTML="<div style='color:var(--mu);font-family:var(--mono);font-size:11px'>No packed frames yet.</div>";return;}
+  var html="";
+  ks.forEach(function(k){
+    var p=pts[k];
+    html+="<div class='plt'><div class='plt-n'>"+p.n+"</div>"
+      +"<div class='plt-i'>"+p.fr.length+" frames / "+p.by+" / "+p.dt+"<br>"+p.fr.join(", ")+"</div></div>";
   });
   el.innerHTML=html;
 }
