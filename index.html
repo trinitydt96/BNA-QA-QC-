@@ -753,10 +753,10 @@ function clearAllHistory(){
   HI=[];
   try{localStorage.removeItem("bna-h8");}catch(e){}
   showHist();
-  showToast("History cleared");
+showToast("History cleared");
 }
 
-function showPlts(){
+function showHist(){
   var pts={};
   HI.forEach(function(r){
     if(r.action==="packaging"&&r.palletNum){
