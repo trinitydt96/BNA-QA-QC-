@@ -644,9 +644,33 @@ function doSubmitQA(){
   AL.forEach(function(i){if(CK[i.id]==="pass")p++;else if(CK[i.id]==="fail")f++;else if(CK[i.id]==="na")n++;});
   var ov=f>0?"FAIL":"PASS";
   var sst=document.getElementById("sst");sst.className="sstbar sv";sst.textContent="Saving...";
-  var rec={action:"qaqc",frameId:SF.id,inspector:insp,date:document.getElementById("f-date").value,
-    stage:document.getElementById("f-stage").value,bay:document.getElementById("f-bay").value,
-    overall:ov,pass:p,fail:f,na:n,notes:document.getElementById("f-notes").value,photoCount:photoFiles.length};
+  // Collect saved section names from localStorage
+var secNames={};
+var secKey="bna-sec-"+SF.id;
+try{
+  var secData=localStorage.getItem(secKey);
+  if(secData){
+    var secSaved=JSON.parse(secData);
+    SC.forEach(function(sec){
+      if(secSaved[sec.id]&&secSaved[sec.id]["_name"]){
+        secNames[sec.id]=secSaved[sec.id]["_name"];
+      }
+    });
+  }
+}catch(ex){}
+
+var rec={action:"qaqc",frameId:SF.id,inspector:insp,
+    date:document.getElementById("f-date").value,
+    stage:document.getElementById("f-stage").value,
+    bay:document.getElementById("f-bay").value,
+    overall:ov,pass:p,fail:f,na:n,
+    notes:document.getElementById("f-notes").value,
+    photoCount:photoFiles.length,
+    sec_pre:secNames["pre"]||"",
+    sec_frm:secNames["frm"]||"",
+    sec_gls:secNames["gls"]||"",
+    sec_fc:secNames["fc"]||"",
+    sec_qc:secNames["qc"]||""};
   AL.forEach(function(i){rec[i.id]=CK[i.id]||"";});
   var copy={ts:new Date().toISOString()};Object.keys(rec).forEach(function(k){copy[k]=rec[k];});
   HI.unshift(copy);saveHist();
