@@ -504,6 +504,13 @@ function togSec(id){var b=document.getElementById("sb-"+id);if(b)b.style.display
 function saveSection(secId,e){
   if(e)e.stopPropagation();
   if(!SF){showToast("Search a frame first");return;}
+  // Get name — use inspector field if filled, otherwise prompt
+  var name=document.getElementById("f-insp").value.trim();
+  if(!name){
+    name=prompt("Your name for this save:");
+    if(!name||!name.trim()){showToast("Name required to save");return;}
+    name=name.trim();
+  }
   var key="bna-sec-"+SF.id;
   var saved={};
   try{var ex=localStorage.getItem(key);if(ex)saved=JSON.parse(ex);}catch(err){}
@@ -511,12 +518,18 @@ function saveSection(secId,e){
   if(!sec)return;
   saved[secId]={};
   sec.items.forEach(function(it){if(CK[it.id])saved[secId][it.id]=CK[it.id];});
+  saved[secId]["_name"]=name;
+  saved[secId]["_ts"]=new Date().toISOString();
   saved["_frame"]=SF.id;
   saved["_ts"]=new Date().toISOString();
   try{localStorage.setItem(key,JSON.stringify(saved));}catch(err){}
   var btn=document.getElementById("svbtn-"+secId);
-  if(btn){btn.className="sec-save-btn saved";btn.innerHTML="<span class='save-dot gn'></span>SAVED";}
-  showToast(sec.title+" progress saved");
+  if(btn){
+    btn.className="sec-save-btn saved";
+    btn.innerHTML="<span class='save-dot gn'></span>"+name;
+    btn.title="Saved by "+name+" at "+new Date().toLocaleTimeString();
+  }
+  showToast(sec.title+" saved by "+name);
 }
 
 function restoreSection(secId){
@@ -529,9 +542,15 @@ function restoreSection(secId){
   if(!sec)return;
   sec.items.forEach(function(it){var v=saved[secId][it.id];if(v)doChk(it.id,v);});
   var btn=document.getElementById("svbtn-"+secId);
-  if(btn){btn.className="sec-save-btn saved";btn.innerHTML="<span class='save-dot gn'></span>SAVED";}
-}
-
+  if(btn){
+    var savedName=saved[secId]["_name"]||"";
+    var savedTs=saved[secId]["_ts"]||"";
+    var timeStr="";
+    if(savedTs){try{timeStr=new Date(savedTs).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}catch(x){}}
+    btn.className="sec-save-btn saved";
+    btn.innerHTML="<span class='save-dot gn'></span>"+(savedName||"SAVED");
+    btn.title=(savedName?"Saved by "+savedName:"Saved")+(timeStr?" at "+timeStr:"");
+  }
 function restoreAllSections(){
   if(!SF)return;
   SC.forEach(function(sec){restoreSection(sec.id);});
