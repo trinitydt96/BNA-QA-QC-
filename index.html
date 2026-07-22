@@ -280,7 +280,77 @@ function showStatus(f,st){
     wrap.innerHTML=mkCard("#081a08","#00d084","[OK]","QA PASSED - Ready to Pack","Scan confirmed. Fill details below.",
       [["Frame ID",f.id],["System",f.sys+(f.lv?" / "+f.lv:"")],["Size","W:"+f.mdw+"\" x H:"+f.mdh+"\""],
        ["QA Inspector",(st.qaInspector||"-")+" / "+(st.qaDate||"-")],["QA Result",(st.qaPass||0)+" checks passed"]]);
-    var pf=document.createElement("div");pf.className="pkf";
+
+    // ── Photo resubmit section on PASS card ──────────────────────────
+    (function(){
+      var photoDiv=document.createElement("div");
+      photoDiv.style.cssText="background:var(--s2);border:1px solid var(--bd2);border-radius:10px;padding:12px;margin-bottom:10px";
+      photoDiv.innerHTML="<div style='font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:8px'>As-Built Photos</div>"
+        +"<button class='photo-btn' id='pb-rs' type='button'>&#128247; Add / Resubmit Photos</button>"
+        +"<input type='file' id='pf-rs' accept='image/*' capture='environment' multiple style='display:none'>"
+        +"<div class='photo-thumbs' id='pt-rs' style='margin-top:8px'></div>"
+        +"<div id='ps-rs' style='font-family:var(--mono);font-size:10px;text-align:center;margin-top:6px;min-height:16px'></div>";
+      wrap.appendChild(photoDiv);
+      var resubPhotos=[];
+      var pbr=document.getElementById("pb-rs");
+      var pfr=document.getElementById("pf-rs");
+      var ptr=document.getElementById("pt-rs");
+      var psr=document.getElementById("ps-rs");
+      if(!pbr||!pfr)return;
+      pbr.addEventListener("click",function(){pfr.click();});
+      pfr.addEventListener("change",function(){
+        var files=this.files;if(!files||!files.length)return;
+        var rem=4-resubPhotos.length;if(rem<=0){showToast("Max 4 photos");return;}
+        Array.prototype.slice.call(files,0,rem).forEach(function(file){
+          var reader=new FileReader();
+          reader.onload=function(e){
+            resubPhotos.push(e.target.result);
+            // Render thumbs
+            ptr.innerHTML="";
+            resubPhotos.forEach(function(src,i){
+              var th=document.createElement("div");th.className="photo-thumb";
+              var im=document.createElement("img");im.src=src;th.appendChild(im);ptr.appendChild(th);
+            });
+            pbr.textContent=resubPhotos.length>=4?"4/4 photos":"Add Photos ("+resubPhotos.length+"/4)";
+            // Show or update upload button
+            var ub=document.getElementById("ub-rs");
+            if(!ub){
+              ub=document.createElement("button");ub.id="ub-rs";ub.className="btn btn-sub";
+              ub.style.cssText="width:100%;margin-top:10px";
+              ub.addEventListener("click",function(){
+                if(!resubPhotos.length){showToast("No photos selected");return;}
+                psr.style.color="var(--am)";
+                psr.textContent="Uploading "+resubPhotos.length+" photo(s)... do not close app";
+                ub.disabled=true;ub.textContent="Uploading...";
+                fetch(WH,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+                  body:JSON.stringify({action:"photos",frameId:f.id,
+                    inspector:st.qaInspector||"",
+                    date:st.qaDate||new Date().toISOString().split("T")[0],
+                    photos:resubPhotos})
+                })
+                .then(function(r){return r.json();})
+                .then(function(res){
+                  psr.style.color="var(--gn)";
+                  psr.textContent=(res.photoCount||resubPhotos.length)+" photo(s) saved";
+                  ub.textContent="&#10003; Photos Uploaded";
+                  showToast("Photos saved for "+f.id);
+                })
+                .catch(function(err){
+                  psr.style.color="var(--rd)";
+                  psr.textContent="Upload failed — check connection";
+                  ub.disabled=false;ub.textContent="Retry Upload";
+                });
+              });
+              photoDiv.appendChild(ub);
+            }
+            ub.textContent="Upload "+resubPhotos.length+" Photo(s)";
+          };
+          reader.readAsDataURL(file);
+        });
+        this.value="";
+      });
+    })();
+        var pf=document.createElement("div");pf.className="pkf";
     pf.innerHTML="<div style='font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#00d084;margin-bottom:12px'>This frame is approved for packing</div>"
       +"<div class='fg' style='margin-bottom:8px'><div class='lbl'>Pallet Number <span style='color:#ff4d6a'>* required</span></div>"
       +"<input class='inp' id='pkg-p' placeholder='e.g. BNA-PLT-001' type='text'></div>"
