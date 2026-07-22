@@ -285,18 +285,21 @@ function showStatus(f,st){
     (function(){
       var photoDiv=document.createElement("div");
       photoDiv.style.cssText="background:var(--s2);border:1px solid var(--bd2);border-radius:10px;padding:12px;margin-bottom:10px";
-      photoDiv.innerHTML="<div style='font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:8px'>As-Built Photos</div>"
-        +"<button class='photo-btn' id='pb-rs' type='button'>&#128247; Add / Resubmit Photos</button>"
-        +"<input type='file' id='pf-rs' accept='image/*' capture='environment' multiple style='display:none'>"
-        +"<div class='photo-thumbs' id='pt-rs' style='margin-top:8px'></div>"
-        +"<div id='ps-rs' style='font-family:var(--mono);font-size:10px;text-align:center;margin-top:6px;min-height:16px'></div>";
+      var plabel=document.createElement("div");
+      plabel.style.cssText="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:8px";
+      plabel.textContent="As-Built Photos";
+      var pbr=document.createElement("button");
+      pbr.className="photo-btn";pbr.type="button";pbr.textContent="Take / Add Photos";
+      var pfr=document.createElement("input");
+      pfr.type="file";pfr.accept="image/*";pfr.setAttribute("capture","environment");
+      pfr.multiple=true;pfr.style.display="none";
+      var ptr=document.createElement("div");ptr.className="photo-thumbs";ptr.style.marginTop="8px";
+      var psr=document.createElement("div");
+      psr.style.cssText="font-family:var(--mono);font-size:10px;text-align:center;margin-top:6px;min-height:16px";
+      photoDiv.appendChild(plabel);photoDiv.appendChild(pbr);photoDiv.appendChild(pfr);
+      photoDiv.appendChild(ptr);photoDiv.appendChild(psr);
       wrap.appendChild(photoDiv);
       var resubPhotos=[];
-      var pbr=document.getElementById("pb-rs");
-      var pfr=document.getElementById("pf-rs");
-      var ptr=document.getElementById("pt-rs");
-      var psr=document.getElementById("ps-rs");
-      if(!pbr||!pfr)return;
       pbr.addEventListener("click",function(){pfr.click();});
       pfr.addEventListener("change",function(){
         var files=this.files;if(!files||!files.length)return;
