@@ -644,31 +644,69 @@ function doSubmitQA(){
   AL.forEach(function(i){if(CK[i.id]==="pass")p++;else if(CK[i.id]==="fail")f++;else if(CK[i.id]==="na")n++;});
   var ov=f>0?"FAIL":"PASS";
   var sst=document.getElementById("sst");sst.className="sstbar sv";sst.textContent="Saving...";
-  var rec={action:"qaqc",frameId:SF.id,inspector:insp,date:document.getElementById("f-date").value,
-    stage:document.getElementById("f-stage").value,bay:document.getElementById("f-bay").value,
-    overall:ov,pass:p,fail:f,na:n,notes:document.getElementById("f-notes").value,photoCount:photoFiles.length};
+
+  // Collect section inspector names from localStorage
+  var secNames={pre:"",frm:"",gls:"",fc:"",qc:""};
+  try{
+    var secData=localStorage.getItem("bna-sec-"+SF.id);
+    if(secData){
+      var secSaved=JSON.parse(secData);
+      if(secSaved["pre"]&&secSaved["pre"]["_name"])secNames.pre=secSaved["pre"]["_name"];
+      if(secSaved["frm"]&&secSaved["frm"]["_name"])secNames.frm=secSaved["frm"]["_name"];
+      if(secSaved["gls"]&&secSaved["gls"]["_name"])secNames.gls=secSaved["gls"]["_name"];
+      if(secSaved["fc"] &&secSaved["fc"]["_name"]) secNames.fc =secSaved["fc"]["_name"];
+      if(secSaved["qc"] &&secSaved["qc"]["_name"]) secNames.qc =secSaved["qc"]["_name"];
+    }
+  }catch(ex){}
+
+  var rec={action:"qaqc",frameId:SF.id,inspector:insp,
+    date:document.getElementById("f-date").value,
+    stage:document.getElementById("f-stage").value,
+    bay:document.getElementById("f-bay").value,
+    overall:ov,pass:p,fail:f,na:n,
+    notes:document.getElementById("f-notes").value,
+    photoCount:photoFiles.length,
+    sec_pre:secNames.pre,sec_frm:secNames.frm,
+    sec_gls:secNames.gls,sec_fc:secNames.fc,sec_qc:secNames.qc};
   AL.forEach(function(i){rec[i.id]=CK[i.id]||"";});
   var copy={ts:new Date().toISOString()};Object.keys(rec).forEach(function(k){copy[k]=rec[k];});
   HI.unshift(copy);saveHist();
+
+  // Send QA checklist via image beacon (GET)
   var img=new Image();img.src=WH+"?"+new URLSearchParams(rec).toString();
-  if(photoFiles.length>0){
-    sst.textContent="Saving photos...";
-    fetch(WH,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({action:"photos",frameId:SF.id,inspector:insp,date:document.getElementById("f-date").value,photos:photoFiles})
-    }).catch(function(err){console.log("Photo upload error (non-blocking):",err);});
-  }
-  setTimeout(function(){
+
+  // Navigate away only AFTER photos finish uploading
+  function finishSubmit(){
     sst.className="sstbar ok";
     sst.textContent="Saved - "+SF.id+" "+ov+(photoFiles.length?" ("+photoFiles.length+" photos)":"");
     showToast(SF.id+" - "+ov);
-    // Clear section saves after successful full submission
     clearSectionSaves(SF.id);
     setTimeout(function(){
       goPg("scan");document.getElementById("si").value="";
-      document.getElementById("sa").innerHTML="<div style='text-align:center;padding:40px;color:var(--mu);font-family:var(--mono);font-size:11px'>Submitted - search next frame</div>";
+      document.getElementById("sa").innerHTML="<div style='text-align:center;padding:40px;color:var(--mu);font-family:var(--mono);font-size:11px'>Submitted — search next frame</div>";
       SF=null;resetPhotos();
     },1500);
-  },1500);
+  }
+
+  if(photoFiles.length>0){
+    sst.textContent="Saving "+photoFiles.length+" photo(s)... do not close app";
+    fetch(WH,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({action:"photos",frameId:SF.id,inspector:insp,
+        date:document.getElementById("f-date").value,photos:photoFiles})
+    })
+    .then(function(r){return r.json();})
+    .then(function(res){
+      console.log("Photos uploaded:",JSON.stringify(res));
+      finishSubmit();
+    })
+    .catch(function(err){
+      console.log("Photo upload error:",err);
+      sst.textContent="Photo upload issue — QA saved, retry photos";
+      setTimeout(finishSubmit,2500);
+    });
+  } else {
+    setTimeout(finishSubmit,1500);
+  }
 }
 
 function doReset(){
