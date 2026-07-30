@@ -361,7 +361,8 @@ function showStatus(f,st){
       +"<input class='inp' id='pkg-n' placeholder='Your full name' type='text'></div>"
       +"<div class='fg' style='margin-bottom:8px'><div class='lbl'>Pack Date</div>"
       +"<input class='inp' id='pkg-d' type='date'></div>"
-      +"<div class='fg' style='margin-bottom:8px'><div class='lbl'>Pallet Photos <span style='color:#ff4d6a'>* 2 photos of full pallet required</span></div></div>"
+      
+      +"<div class='fg' style='margin-bottom:8px'><div class='lbl'>Pallet Photos <span style='color:#ff4d6a'>* 2 required</span></div></div>"
       +"<button class='photo-btn' id='pkg-pb' type='button'>&#128247; Take / Add Photos (0/2)</button>"
       +"<input type='file' id='pkg-pf' accept='image/*' capture='environment' multiple style='display:none'>"
       +"<div class='photo-thumbs' id='pkg-pt' style='margin-top:8px'></div>"
@@ -377,14 +378,14 @@ function showStatus(f,st){
       if(pn)pn.addEventListener("input",updPkgBtn);
       document.getElementById("bb-pkg").style.display="flex";
       document.getElementById("bb-qa").style.display="none";
-      // Wire packaging photo button
+      window.pkgPhotos=[];
+      // Wire pallet photo button
       var pkgPb=document.getElementById("pkg-pb");
       var pkgPf=document.getElementById("pkg-pf");
       var pkgPt=document.getElementById("pkg-pt");
       var pkgPs=document.getElementById("pkg-ps");
-      window.pkgPhotos=[];
       if(pkgPb&&pkgPf){
-        pkgPb.addEventListener("click",function(){pkgPf.click();});
+        pkgPb.addEventListener("click",function(){if(!pkgPb.disabled)pkgPf.click();});
         pkgPf.addEventListener("change",function(){
           var files=this.files;if(!files||!files.length)return;
           var rem=2-window.pkgPhotos.length;if(rem<=0){showToast("Max 2 photos");return;}
@@ -397,11 +398,13 @@ function showStatus(f,st){
                 var th=document.createElement("div");th.className="photo-thumb";
                 var im=document.createElement("img");im.src=src;th.appendChild(im);pkgPt.appendChild(th);
               });
-              pkgPb.textContent=window.pkgPhotos.length>=2?"2/2 photos":"Take / Add Photos ("+window.pkgPhotos.length+"/2)";
               if(window.pkgPhotos.length>=2){
-                pkgPs.style.color="var(--gn)";pkgPs.textContent="2 photos ready";
+                pkgPb.textContent="2/2 Photos Ready";
+                pkgPb.disabled=true;pkgPb.style.opacity="0.5";
+                if(pkgPs){pkgPs.style.color="var(--gn)";pkgPs.textContent="2 photos ready";}
               } else {
-                pkgPs.style.color="var(--am)";pkgPs.textContent=window.pkgPhotos.length+" photo added — need 2";
+                pkgPb.textContent="Add 1 More Photo ("+window.pkgPhotos.length+"/2)";
+                if(pkgPs){pkgPs.style.color="var(--am)";pkgPs.textContent=window.pkgPhotos.length+" photo added — need 1 more";}
               }
               updPkgBtn();
             };
@@ -652,8 +655,8 @@ function updPkgBtn(){
   btn.disabled=false;
   if(hasInfo&&hasPhotos){
     btn.textContent="Confirm Packed";btn.style.cssText="";
-  } else if(hasInfo){
-    btn.textContent="Add 2 photos to confirm";
+  } else if(hasInfo&&!hasPhotos){
+    btn.textContent="Add 2 pallet photos to confirm";
     btn.style.background="linear-gradient(135deg,#b45309,#92400e)";btn.style.opacity="0.8";
   } else {
     btn.textContent="Enter pallet + name";btn.style.background="linear-gradient(135deg,#5a7090,#3a4f6a)";
@@ -682,23 +685,26 @@ function doSubmitPkg(){
       document.getElementById("bb-pkg").style.display="none";SF=null;window.pkgPhotos=[];
     },2000);
   }
-
-  // Upload packaging photos before navigating away
+  // Upload pallet photos to FRAME STATUS (C_PKP1/C_PKP2) before navigating
   var pkgPics=window.pkgPhotos||[];
   if(pkgPics.length>0){
-    if(ps)ps.textContent="Saving "+pkgPics.length+" photo(s)... do not close app";
+    if(ps)ps.textContent="Saving "+pkgPics.length+" pallet photo(s)... do not close app";
     fetch(WH,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({action:"packagingPhotos",frameId:rec.palletNum,
-        palletNum:rec.palletNum,packedBy:rec.packedBy,
-        date:packDate,photos:pkgPics,isPalletPhoto:true})
+      body:JSON.stringify({action:"packagingPhotos",
+        frameId:rec.palletNum,
+        palletNum:rec.palletNum,
+        packedBy:rec.packedBy,
+        date:packDate,
+        photos:pkgPics,
+        isPalletPhoto:true})
     })
     .then(function(r){return r.json();})
     .then(function(res){
-      console.log("Packaging photos uploaded:",JSON.stringify(res));
+      console.log("Pallet photos saved:",JSON.stringify(res));
       finishPack();
     })
     .catch(function(err){
-      console.log("Photo upload error:",err);
+      console.log("Pallet photo error:",err);
       if(ps)ps.textContent="Photos may not have saved — check connection";
       setTimeout(finishPack,2000);
     });
@@ -754,6 +760,23 @@ function makeSecs(){
         document.getElementById("bn"+iid).addEventListener("click",function(){doChk(iid,"na");});
       })(it.id);
       if(it.id==="c24"){
+        // Render photo button for c24
+        var ciEl=document.getElementById("ci-"+it.id);
+        if(ciEl){
+          var photoRow=document.createElement("div");
+          photoRow.className="photo-row";photoRow.id="pr-c24";
+          var pb=document.createElement("button");
+          pb.className="photo-btn";pb.id="pb-c24";pb.type="button";
+          pb.textContent="Take / Add Photos";
+          var pf=document.createElement("input");
+          pf.type="file";pf.id="pf-c24";pf.accept="image/*";
+          pf.setAttribute("capture","environment");pf.multiple=true;pf.style.display="none";
+          var pt=document.createElement("div");pt.className="photo-thumbs";pt.id="pt-c24";
+          pb.addEventListener("click",function(){pf.click();});
+          pf.addEventListener("change",function(){handlePhotoSelect(this.files);});
+          photoRow.appendChild(pb);photoRow.appendChild(pf);photoRow.appendChild(pt);
+          ciEl.appendChild(photoRow);
+        }
         }
     });
   });
