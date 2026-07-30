@@ -418,79 +418,134 @@ function showStatus(f,st){
     wrap.innerHTML=mkCard(bg,col,shipped?"[S]":"[B]",tt,sb,
       [["Frame ID",f.id],["Pallet",st.palletNum||"-"],["Packed By",st.packedBy||"-"],["Pack Date",st.packDate||"-"]]);
 
-    // Add packaging photo section even on already-packed/shipped card
+    // Packaging Photos — add missing photos for already-packed pallet
     if (!shipped) {
       (function(){
+        // Check if photos already exist in FRAME STATUS (pkPhoto1 from status response)
+        var alreadyHasPhotos = !!(st.pkPhoto1 && st.pkPhoto1.length > 5);
+
         var photoDiv=document.createElement("div");
         photoDiv.style.cssText="background:var(--s2);border:1px solid var(--bd2);border-radius:10px;padding:12px;margin-top:10px";
+
+        // Header row
+        var headerRow=document.createElement("div");
+        headerRow.style.cssText="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px";
         var plabel=document.createElement("div");
-        plabel.style.cssText="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:8px";
-        plabel.textContent="Pallet Photos — "+( st.palletNum||"Pallet")+" (2 photos of full pallet)";
-        var pbr=document.createElement("button");
-        pbr.className="photo-btn";pbr.type="button";pbr.textContent="Take / Add Photos (0/2)";
-        var pfr=document.createElement("input");
-        pfr.type="file";pfr.accept="image/*";pfr.setAttribute("capture","environment");
-        pfr.multiple=true;pfr.style.display="none";
-        var ptr=document.createElement("div");ptr.className="photo-thumbs";ptr.style.marginTop="8px";
-        var psr=document.createElement("div");
-        psr.style.cssText="font-family:var(--mono);font-size:10px;text-align:center;margin-top:6px;min-height:16px";
-        var ubtn=document.createElement("button");
-        ubtn.className="btn btn-sub";
-        ubtn.style.cssText="width:100%;margin-top:10px;display:none";
-        ubtn.textContent="Upload Photos";
-        photoDiv.appendChild(plabel);photoDiv.appendChild(pbr);photoDiv.appendChild(pfr);
-        photoDiv.appendChild(ptr);photoDiv.appendChild(psr);photoDiv.appendChild(ubtn);
+        plabel.style.cssText="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu)";
+        plabel.textContent="Packaging Photos — "+(st.palletNum||"Pallet");
+        var pbadge=document.createElement("div");
+        pbadge.style.cssText="font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:12px;"
+          +(alreadyHasPhotos
+            ?"background:rgba(0,208,132,.15);color:var(--gn)"
+            :"background:rgba(249,115,22,.15);color:var(--or)");
+        pbadge.textContent=alreadyHasPhotos?"2/2 Photos Done":"0/2 Photos Missing";
+        headerRow.appendChild(plabel);headerRow.appendChild(pbadge);
+        photoDiv.appendChild(headerRow);
+
+        if (alreadyHasPhotos) {
+          // Already has photos — show locked state
+          var doneMsg=document.createElement("div");
+          doneMsg.style.cssText="font-family:var(--mono);font-size:10px;color:var(--gn);text-align:center;padding:10px 0";
+          doneMsg.textContent="Photos already submitted for this pallet";
+          var lockedBtn=document.createElement("button");
+          lockedBtn.className="photo-btn";lockedBtn.type="button";
+          lockedBtn.disabled=true;
+          lockedBtn.style.cssText="width:100%;opacity:0.4;cursor:not-allowed;background:var(--s3);color:var(--mu)";
+          lockedBtn.textContent="Photos Submitted — No Further Action Needed";
+          photoDiv.appendChild(doneMsg);photoDiv.appendChild(lockedBtn);
+        } else {
+          // Missing photos — show upload UI
+          var pbr=document.createElement("button");
+          pbr.className="photo-btn";pbr.type="button";pbr.textContent="Take / Add Photos (0/2)";
+          var pfr=document.createElement("input");
+          pfr.type="file";pfr.accept="image/*";pfr.setAttribute("capture","environment");
+          pfr.multiple=true;pfr.style.display="none";
+          var ptr=document.createElement("div");ptr.className="photo-thumbs";ptr.style.marginTop="8px";
+          var psr=document.createElement("div");
+          psr.style.cssText="font-family:var(--mono);font-size:10px;text-align:center;margin-top:6px;min-height:16px;color:var(--am)";
+          psr.textContent="2 photos of the full packed pallet required";
+          var ubtn=document.createElement("button");
+          ubtn.className="btn btn-sub";
+          ubtn.style.cssText="width:100%;margin-top:10px;display:none";
+          ubtn.textContent="Upload 2 Photos";
+
+          photoDiv.appendChild(pbr);photoDiv.appendChild(pfr);
+          photoDiv.appendChild(ptr);photoDiv.appendChild(psr);photoDiv.appendChild(ubtn);
+
+          var retroPhotos=[];
+
+          pbr.addEventListener("click",function(){
+            if(pbr.disabled)return;
+            pfr.click();
+          });
+
+          pfr.addEventListener("change",function(){
+            var files=this.files;if(!files||!files.length)return;
+            var rem=2-retroPhotos.length;if(rem<=0){showToast("Max 2 photos");return;}
+            Array.prototype.slice.call(files,0,rem).forEach(function(file){
+              var reader=new FileReader();
+              reader.onload=function(e){
+                retroPhotos.push(e.target.result);
+                // Render thumbs
+                ptr.innerHTML="";
+                retroPhotos.forEach(function(src){
+                  var th=document.createElement("div");th.className="photo-thumb";
+                  var im=document.createElement("img");im.src=src;
+                  th.appendChild(im);ptr.appendChild(th);
+                });
+                if(retroPhotos.length>=2){
+                  pbr.textContent="2/2 Photos Ready";
+                  pbr.disabled=true;pbr.style.opacity="0.5";
+                  ubtn.style.display="block";
+                  ubtn.textContent="Upload 2 Photos";
+                  psr.style.color="var(--gn)";psr.textContent="2 photos ready — tap Upload";
+                } else {
+                  pbr.textContent="Add 1 More Photo ("+(2-retroPhotos.length)+" remaining)";
+                  ubtn.style.display="block";
+                  ubtn.textContent="Upload "+retroPhotos.length+" Photo(s)";
+                  psr.style.color="var(--am)";psr.textContent=retroPhotos.length+"/2 — need 1 more";
+                }
+              };
+              reader.readAsDataURL(file);
+            });
+            this.value="";
+          });
+
+          ubtn.addEventListener("click",function(){
+            if(!retroPhotos.length){showToast("No photos selected");return;}
+            if(retroPhotos.length<2){showToast("Need 2 photos — add 1 more");return;}
+            psr.style.color="var(--am)";
+            psr.textContent="Uploading... do not close app";
+            ubtn.disabled=true;ubtn.textContent="Uploading...";
+            fetch(WH,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+              body:JSON.stringify({action:"packagingPhotos",
+                frameId:st.palletNum||f.id,
+                palletNum:st.palletNum||"",
+                packedBy:st.packedBy||"",
+                date:st.packDate||new Date().toISOString().split("T")[0],
+                photos:retroPhotos,isPalletPhoto:true})
+            })
+            .then(function(r){return r.json();})
+            .then(function(res){
+              psr.style.color="var(--gn)";
+              psr.textContent="2 photos saved to Drive";
+              ubtn.textContent="Photos Submitted";
+              ubtn.disabled=true;ubtn.style.opacity="0.5";
+              pbr.textContent="Photos Submitted — Done";
+              pbr.disabled=true;pbr.style.cssText="width:100%;opacity:0.4;cursor:not-allowed;background:var(--s3);color:var(--mu)";
+              pbadge.textContent="2/2 Photos Done";
+              pbadge.style.background="rgba(0,208,132,.15)";pbadge.style.color="var(--gn)";
+              showToast("Pallet photos saved — "+( st.palletNum||f.id));
+            })
+            .catch(function(err){
+              psr.style.color="var(--rd)";
+              psr.textContent="Upload failed — check connection and retry";
+              ubtn.disabled=false;ubtn.textContent="Retry Upload";
+            });
+          });
+        }
+
         wrap.appendChild(photoDiv);
-        var retroPhotos=[];
-        pbr.addEventListener("click",function(){pfr.click();});
-        pfr.addEventListener("change",function(){
-          var files=this.files;if(!files||!files.length)return;
-          var rem=2-retroPhotos.length;if(rem<=0){showToast("Max 2 photos");return;}
-          Array.prototype.slice.call(files,0,rem).forEach(function(file){
-            var reader=new FileReader();
-            reader.onload=function(e){
-              retroPhotos.push(e.target.result);
-              ptr.innerHTML="";
-              retroPhotos.forEach(function(src){
-                var th=document.createElement("div");th.className="photo-thumb";
-                var im=document.createElement("img");im.src=src;
-                th.appendChild(im);ptr.appendChild(th);
-              });
-              pbr.textContent=retroPhotos.length>=2?"2/2 photos":"Take / Add Photos ("+retroPhotos.length+"/2)";
-              ubtn.style.display="block";
-              ubtn.textContent="Upload "+retroPhotos.length+" Photo(s)";
-              psr.style.color="var(--am)";
-              psr.textContent=retroPhotos.length+" photo(s) selected — tap Upload";
-            };
-            reader.readAsDataURL(file);
-          });
-          this.value="";
-        });
-        ubtn.addEventListener("click",function(){
-          if(!retroPhotos.length){showToast("No photos selected");return;}
-          psr.style.color="var(--am)";
-          psr.textContent="Uploading... do not close app";
-          ubtn.disabled=true;ubtn.textContent="Uploading...";
-          fetch(WH,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
-            body:JSON.stringify({action:"packagingPhotos",frameId:st.palletNum||f.id,
-              palletNum:st.palletNum||"",packedBy:st.packedBy||"",
-              date:st.packDate||new Date().toISOString().split("T")[0],
-              photos:retroPhotos,isPalletPhoto:true})
-          })
-          .then(function(r){return r.json();})
-          .then(function(res){
-            psr.style.color="var(--gn)";
-            psr.textContent=(res.photoCount||retroPhotos.length)+" photo(s) saved to Drive";
-            ubtn.textContent="Photos Uploaded";
-            showToast("Packaging photos saved for "+f.id);
-          })
-          .catch(function(err){
-            psr.style.color="var(--rd)";
-            psr.textContent="Upload failed — check connection and retry";
-            ubtn.disabled=false;ubtn.textContent="Retry Upload";
-            console.log("Retro packaging photo error:",err);
-          });
-        });
       })();
     }
   }
