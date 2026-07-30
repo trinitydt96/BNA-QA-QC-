@@ -361,7 +361,7 @@ function showStatus(f,st){
       +"<input class='inp' id='pkg-n' placeholder='Your full name' type='text'></div>"
       +"<div class='fg' style='margin-bottom:8px'><div class='lbl'>Pack Date</div>"
       +"<input class='inp' id='pkg-d' type='date'></div>"
-      +"<div class='fg' style='margin-bottom:8px'><div class='lbl'>Packaging Photos <span style='color:#ff4d6a'>* 2 required</span></div></div>"
+      +"<div class='fg' style='margin-bottom:8px'><div class='lbl'>Pallet Photos <span style='color:#ff4d6a'>* 2 photos of full pallet required</span></div></div>"
       +"<button class='photo-btn' id='pkg-pb' type='button'>&#128247; Take / Add Photos (0/2)</button>"
       +"<input type='file' id='pkg-pf' accept='image/*' capture='environment' multiple style='display:none'>"
       +"<div class='photo-thumbs' id='pkg-pt' style='margin-top:8px'></div>"
@@ -417,6 +417,82 @@ function showStatus(f,st){
     var tt=shipped?"SHIPPED":"ALREADY PACKED";var sb=shipped?"Shipped to site.":"Already packed - duplicate scan.";
     wrap.innerHTML=mkCard(bg,col,shipped?"[S]":"[B]",tt,sb,
       [["Frame ID",f.id],["Pallet",st.palletNum||"-"],["Packed By",st.packedBy||"-"],["Pack Date",st.packDate||"-"]]);
+
+    // Add packaging photo section even on already-packed/shipped card
+    if (!shipped) {
+      (function(){
+        var photoDiv=document.createElement("div");
+        photoDiv.style.cssText="background:var(--s2);border:1px solid var(--bd2);border-radius:10px;padding:12px;margin-top:10px";
+        var plabel=document.createElement("div");
+        plabel.style.cssText="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:8px";
+        plabel.textContent="Pallet Photos — "+( st.palletNum||"Pallet")+" (2 photos of full pallet)";
+        var pbr=document.createElement("button");
+        pbr.className="photo-btn";pbr.type="button";pbr.textContent="Take / Add Photos (0/2)";
+        var pfr=document.createElement("input");
+        pfr.type="file";pfr.accept="image/*";pfr.setAttribute("capture","environment");
+        pfr.multiple=true;pfr.style.display="none";
+        var ptr=document.createElement("div");ptr.className="photo-thumbs";ptr.style.marginTop="8px";
+        var psr=document.createElement("div");
+        psr.style.cssText="font-family:var(--mono);font-size:10px;text-align:center;margin-top:6px;min-height:16px";
+        var ubtn=document.createElement("button");
+        ubtn.className="btn btn-sub";
+        ubtn.style.cssText="width:100%;margin-top:10px;display:none";
+        ubtn.textContent="Upload Photos";
+        photoDiv.appendChild(plabel);photoDiv.appendChild(pbr);photoDiv.appendChild(pfr);
+        photoDiv.appendChild(ptr);photoDiv.appendChild(psr);photoDiv.appendChild(ubtn);
+        wrap.appendChild(photoDiv);
+        var retroPhotos=[];
+        pbr.addEventListener("click",function(){pfr.click();});
+        pfr.addEventListener("change",function(){
+          var files=this.files;if(!files||!files.length)return;
+          var rem=2-retroPhotos.length;if(rem<=0){showToast("Max 2 photos");return;}
+          Array.prototype.slice.call(files,0,rem).forEach(function(file){
+            var reader=new FileReader();
+            reader.onload=function(e){
+              retroPhotos.push(e.target.result);
+              ptr.innerHTML="";
+              retroPhotos.forEach(function(src){
+                var th=document.createElement("div");th.className="photo-thumb";
+                var im=document.createElement("img");im.src=src;
+                th.appendChild(im);ptr.appendChild(th);
+              });
+              pbr.textContent=retroPhotos.length>=2?"2/2 photos":"Take / Add Photos ("+retroPhotos.length+"/2)";
+              ubtn.style.display="block";
+              ubtn.textContent="Upload "+retroPhotos.length+" Photo(s)";
+              psr.style.color="var(--am)";
+              psr.textContent=retroPhotos.length+" photo(s) selected — tap Upload";
+            };
+            reader.readAsDataURL(file);
+          });
+          this.value="";
+        });
+        ubtn.addEventListener("click",function(){
+          if(!retroPhotos.length){showToast("No photos selected");return;}
+          psr.style.color="var(--am)";
+          psr.textContent="Uploading... do not close app";
+          ubtn.disabled=true;ubtn.textContent="Uploading...";
+          fetch(WH,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+            body:JSON.stringify({action:"packagingPhotos",frameId:st.palletNum||f.id,
+              palletNum:st.palletNum||"",packedBy:st.packedBy||"",
+              date:st.packDate||new Date().toISOString().split("T")[0],
+              photos:retroPhotos,isPalletPhoto:true})
+          })
+          .then(function(r){return r.json();})
+          .then(function(res){
+            psr.style.color="var(--gn)";
+            psr.textContent=(res.photoCount||retroPhotos.length)+" photo(s) saved to Drive";
+            ubtn.textContent="Photos Uploaded";
+            showToast("Packaging photos saved for "+f.id);
+          })
+          .catch(function(err){
+            psr.style.color="var(--rd)";
+            psr.textContent="Upload failed — check connection and retry";
+            ubtn.disabled=false;ubtn.textContent="Retry Upload";
+            console.log("Retro packaging photo error:",err);
+          });
+        });
+      })();
+    }
   }
   sa.appendChild(wrap);
   var stWrap=document.createElement("div");
@@ -557,9 +633,9 @@ function doSubmitPkg(){
   if(pkgPics.length>0){
     if(ps)ps.textContent="Saving "+pkgPics.length+" photo(s)... do not close app";
     fetch(WH,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({action:"packagingPhotos",frameId:SF.id,
+      body:JSON.stringify({action:"packagingPhotos",frameId:rec.palletNum,
         palletNum:rec.palletNum,packedBy:rec.packedBy,
-        date:packDate,photos:pkgPics})
+        date:packDate,photos:pkgPics,isPalletPhoto:true})
     })
     .then(function(r){return r.json();})
     .then(function(res){
