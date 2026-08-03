@@ -281,8 +281,11 @@ function showStatus(f,st){
       [["Frame ID",f.id],["System",f.sys+(f.lv?" / "+f.lv:"")],["Size","W:"+f.mdw+"\" x H:"+f.mdh+"\""],
        ["QA Inspector",(st.qaInspector||"-")+" / "+(st.qaDate||"-")],["QA Result",(st.qaPass||0)+" checks passed"]]);
 
-    // ── Photo resubmit section on PASS card ──────────────────────────
-    (function(){
+    // ── Photo resubmit section on PASS card — only show if NO photos yet ──
+    // st.pkPhoto1 comes from getFrameStatus response (col O = As-Built Photos formula)
+    // Check col Q (As-Built Photos) — if formula exists, photos already submitted
+    var hasAsBuiltPhotos = !!(st.asBuiltPhoto && String(st.asBuiltPhoto).length > 5);
+    if (!hasAsBuiltPhotos) (function(){
       var photoDiv=document.createElement("div");
       photoDiv.style.cssText="background:var(--s2);border:1px solid var(--bd2);border-radius:10px;padding:12px;margin-bottom:10px";
       var plabel=document.createElement("div");
