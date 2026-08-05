@@ -27,23 +27,20 @@ html,body{background:var(--bg);color:var(--tx);font-family:var(--body);min-heigh
 .fg{display:flex;flex-direction:column;gap:3px}
 .lbl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--dm);margin-bottom:2px}
 .inp{background:var(--s2);border:1px solid var(--bd2);border-radius:6px;padding:8px 10px;font-size:13px;font-family:var(--body);color:var(--tx);width:100%;outline:none;-webkit-appearance:none}
-.inp::placeholder{color:var(--dm)}
-.inp:focus{border-color:var(--bl)}
+.inp::placeholder{color:var(--dm)}.inp:focus{border-color:var(--bl)}
 select.inp option{background:var(--s2)}
 .steps{display:flex;margin-bottom:12px;border-radius:8px;border:1px solid var(--bd2);overflow:hidden}
 .step{flex:1;padding:8px 4px;text-align:center;font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);background:var(--s2);border-right:1px solid var(--bd2);cursor:pointer}
 .step:last-child{border-right:none}
 .step.on{background:rgba(59,130,246,.15);color:var(--bl);font-weight:700}
 .step.done{background:rgba(0,208,132,.08);color:var(--gn)}
-.plt-card{background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;position:relative}
+.plt-card{background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer}
 .plt-card.sel{border-color:var(--gn);background:rgba(0,208,132,.06)}
 .plt-num{font-family:var(--head);font-size:15px;font-weight:700;color:var(--bl);margin-bottom:3px}
 .plt-info{font-family:var(--mono);font-size:10px;color:var(--mu);line-height:1.7}
 .scan-btn{width:100%;padding:16px;background:var(--s2);border:2px dashed var(--bd2);border-radius:10px;color:var(--mu);font-family:var(--mono);font-size:11px;cursor:pointer;text-align:center;margin-bottom:10px;display:block}
-.scan-btn:hover{border-color:var(--bl);color:var(--bl)}
 .srch{background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--body);color:var(--tx);width:100%;outline:none;margin-bottom:8px}
-.srch::placeholder{color:var(--dm)}
-.srch:focus{border-color:var(--bl)}
+.srch::placeholder{color:var(--dm)}.srch:focus{border-color:var(--bl)}
 .cat-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
 .cat-btn{padding:4px 10px;border-radius:20px;font-family:var(--mono);font-size:10px;cursor:pointer;border:1px solid var(--bd2);background:var(--s2);color:var(--mu);white-space:nowrap;user-select:none}
 .cat-btn.on{font-weight:700;border-color:var(--bl);color:var(--bl);background:rgba(59,130,246,.1)}
@@ -52,16 +49,20 @@ select.inp option{background:var(--s2)}
 .idesc{flex:1;font-size:12px;min-width:0}
 .iunit{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:10px;flex-shrink:0}
 .iadd{background:rgba(59,130,246,.15);color:var(--bl);border:1px solid rgba(59,130,246,.3);border-radius:5px;padding:4px 10px;font-family:var(--mono);font-size:10px;cursor:pointer;white-space:nowrap}
-.bol-item{display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--s2);border:1px solid var(--bd2);border-radius:7px;margin-bottom:5px}
+.bol-item{background:var(--s2);border:1px solid var(--bd2);border-radius:7px;margin-bottom:6px;overflow:hidden}
+.bi-main{display:flex;align-items:center;gap:8px;padding:9px 10px}
 .bi-info{flex:1;min-width:0}
 .bi-pn{font-family:var(--mono);font-size:9px;color:var(--mu);margin-bottom:1px}
 .bi-desc{font-size:12px;font-weight:500}
+.bi-bottom{display:flex;align-items:center;gap:8px;padding:6px 10px 8px;border-top:1px solid var(--s3);flex-wrap:wrap}
 .qty-ctrl{display:flex;align-items:center;gap:5px;flex-shrink:0}
-.qbtn{width:24px;height:24px;border-radius:4px;border:1px solid var(--bd2);background:var(--s3);color:var(--tx);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.qinp{width:40px;text-align:center;background:var(--s3);border:1px solid var(--bd2);border-radius:4px;color:var(--tx);font-family:var(--mono);font-size:12px;padding:3px;outline:none}
+.qinp{width:52px;text-align:center;background:var(--s3);border:1px solid var(--bd2);border-radius:4px;color:var(--tx);font-family:var(--mono);font-size:13px;font-weight:700;padding:4px;outline:none}
 .qunit{font-family:var(--mono);font-size:9px;color:var(--mu);min-width:24px}
-.qdel{color:var(--rd);background:none;border:none;cursor:pointer;font-size:15px;padding:2px;flex-shrink:0}
-.ftrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.qdel{color:var(--rd);background:none;border:none;cursor:pointer;font-size:16px;padding:2px;flex-shrink:0}
+.psel{flex:1;min-width:120px;background:var(--s3);border:1px solid var(--bd2);border-radius:6px;color:var(--tx);font-family:var(--mono);font-size:10px;padding:5px 8px;outline:none;cursor:pointer}
+.psel:focus{border-color:var(--bl)}
+.psel-badge{font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:10px;background:rgba(59,130,246,.15);color:var(--bl);border:1px solid rgba(59,130,246,.3);white-space:nowrap}
+.ftrow{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
 .ftbtn{padding:6px 14px;border-radius:6px;font-family:var(--mono);font-size:10px;cursor:pointer;border:1px solid var(--bd2);background:var(--s2);color:var(--mu);user-select:none}
 .ftbtn.on{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.4);color:var(--bl);font-weight:700}
 .sum-hdr{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);padding:5px 0;border-bottom:1px solid var(--bd2);margin-bottom:6px;margin-top:10px}
@@ -75,7 +76,6 @@ select.inp option{background:var(--s2)}
 .btn-back{background:var(--s2);color:var(--mu);border:1px solid var(--bd2)}
 .btn-next{background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff}
 .btn-pdf{background:linear-gradient(135deg,#00c47a,#00965d);color:#fff}
-.btn-print{background:var(--s2);color:var(--mu);border:1px solid var(--bd2)}
 .cnt{display:inline-block;background:var(--bl);color:#fff;border-radius:10px;font-family:var(--mono);font-size:10px;font-weight:700;padding:1px 7px;margin-left:6px}
 .bol-hist-card{background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:12px;margin-bottom:8px}
 .bh-num{font-family:var(--head);font-size:15px;font-weight:700;color:var(--bl);margin-bottom:3px}
@@ -85,11 +85,11 @@ select.inp option{background:var(--s2)}
 .s-t{background:rgba(59,130,246,.12);color:var(--bl)}
 .s-d{background:rgba(0,208,132,.12);color:var(--gn)}
 .action-btn{padding:5px 12px;border-radius:5px;font-family:var(--mono);font-size:10px;cursor:pointer;border:1px solid var(--bd2);background:var(--s3);color:var(--mu)}
+.plt-group-hdr{font-family:var(--mono);font-size:10px;color:var(--bl);background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:6px;padding:5px 10px;margin-bottom:4px;margin-top:8px;display:flex;align-items:center;gap:6px}
+.plt-group-hdr:first-child{margin-top:0}
 .toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--bd2);color:var(--tx);padding:7px 16px;border-radius:20px;font-family:var(--mono);font-size:11px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9999;white-space:nowrap}
 .toast.show{opacity:1}
 #cam-view{width:100%;border-radius:8px;display:none;margin-bottom:8px;max-height:220px;object-fit:cover}
-@media print{.top,.tabs,.bbar,.no-print{display:none!important}.pg{display:block!important;padding:0}body{background:#fff;color:#000}#pbol{display:block!important}}
-@media(min-width:600px){.g2{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
 <body>
@@ -111,6 +111,7 @@ select.inp option{background:var(--s2)}
     <div class="step" id="st-3" onclick="goStep(3)">3 ITEMS</div>
     <div class="step" id="st-4" onclick="goStep(4)">4 REVIEW</div>
   </div>
+  <!-- STEP 1: DETAILS -->
   <div id="step1">
     <div class="box">
       <div class="box-t">Shipment Details</div>
@@ -119,14 +120,17 @@ select.inp option{background:var(--s2)}
         <div class="fg"><div class="lbl">Ship Date</div><input class="inp" type="date" id="ship-date"></div>
       </div>
       <div class="fg" style="margin-bottom:8px"><div class="lbl">Project</div>
-        <select class="inp" id="project-sel" onchange="onProjectChange(this.value)"><option value="BNA">BNA Concourse A - Job #20230013</option><option value="OTHER">Other Project</option></select>
+        <select class="inp" id="project-sel" onchange="onProjectChange(this.value)">
+          <option value="BNA">BNA Concourse A - Job #20230013</option>
+          <option value="OTHER">Other Project</option>
+        </select>
       </div>
       <div class="g2">
         <div class="fg"><div class="lbl">Ship From</div><input class="inp" id="ship-from" value="Eastern Glass &amp; Aluminum, 4274 Shackleford Rd., Norcross, GA 30093" type="text"></div>
         <div class="fg">
-          <div class="lbl">Ship To (Destination)</div>
-          <input class="inp" id="ship-to" placeholder="Job site address" type="text" value="Nashville International Airport, 801 McGavock Pike, Nashville, TN 37217" style="color:var(--gn)">
-          <div id="ship-to-note" style="font-family:var(--mono);font-size:9px;color:var(--gn);margin-top:3px;letter-spacing:.05em">Auto-filled for BNA project</div>
+          <div class="lbl">Ship To</div>
+          <input class="inp" id="ship-to" value="Nashville International Airport, 801 McGavock Pike, Nashville, TN 37217" style="color:var(--gn)" type="text">
+          <div id="ship-to-note" style="font-family:var(--mono);font-size:9px;color:var(--gn);margin-top:3px">Auto-filled for BNA project</div>
         </div>
       </div>
     </div>
@@ -152,6 +156,7 @@ select.inp option{background:var(--s2)}
       </div>
     </div>
   </div>
+  <!-- STEP 2: PALLETS -->
   <div id="step2" style="display:none">
     <div class="box">
       <div class="box-t">Select Pallets</div>
@@ -159,30 +164,35 @@ select.inp option{background:var(--s2)}
       <div id="plt-select-list"></div>
       <div style="display:flex;gap:8px;margin-top:8px">
         <button class="scan-btn" onclick="addCustomPallet()" style="flex:1;margin-bottom:0;padding:12px 8px">+ Add Pallet Manually</button>
-        <button class="scan-btn" onclick="loadPallets()" style="flex:1;margin-bottom:0;padding:12px 8px;border-color:var(--bl);color:var(--bl)">&#8635; Refresh Pallets</button>
+        <button class="scan-btn" onclick="loadPallets()" style="flex:1;margin-bottom:0;padding:12px 8px;border-color:var(--bl);color:var(--bl)">&#8635; Refresh</button>
       </div>
     </div>
     <div class="box" id="sel-plts-box" style="display:none">
-      <div class="box-t">Selected Pallets <span class="cnt" id="plt-cnt">0</span></div>
+      <div class="box-t">Selected <span class="cnt" id="plt-cnt">0</span></div>
       <div id="sel-plts-list"></div>
     </div>
   </div>
+  <!-- STEP 3: ITEMS -->
   <div id="step3" style="display:none">
     <div class="box">
-      <div class="box-t">Scan or Add Items</div>
+      <div class="box-t">Add Items</div>
+      <!-- Pallet assignment tip -->
+      <div id="plt-tip" style="display:none;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-family:var(--mono);font-size:10px;color:var(--bl);line-height:1.8">
+        &#128230; <b>Pallet tip:</b> Each item can be assigned to a specific pallet below. Accessories for the same pallet will be grouped together in the PDF.
+      </div>
       <div style="display:flex;gap:8px;margin-bottom:8px">
-        <button class="scan-btn no-print" id="scan-btn" onclick="startScan()" style="flex:1;margin-bottom:0;padding:12px 8px">&#128247; Scan Barcode</button>
-        <button class="scan-btn no-print" onclick="manualEntry()" style="flex:1;margin-bottom:0;padding:12px 8px;border-color:var(--am);color:var(--am)">&#9997; Type Part #</button>
+        <button class="scan-btn" id="scan-btn" onclick="startScan()" style="flex:1;margin-bottom:0;padding:12px 8px">&#128247; Scan Barcode</button>
+        <button class="scan-btn" onclick="manualEntry()" style="flex:1;margin-bottom:0;padding:12px 8px;border-color:var(--am);color:var(--am)">&#9997; Type Part #</button>
       </div>
       <video id="cam-view" autoplay playsinline></video>
       <div id="scan-status" style="font-family:var(--mono);font-size:10px;text-align:center;color:var(--am);min-height:18px;padding:2px 0"></div>
       <div style="position:relative;margin-bottom:6px">
-        <input class="srch" id="item-srch" placeholder="Search by part # or description e.g. J-HOOK or E1-3949..." type="text" style="margin-bottom:0">
+        <input class="srch" id="item-srch" placeholder="Search part # or description..." type="text" style="margin-bottom:0">
         <div id="srch-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a2436;border:1px solid #3a5070;border-radius:8px;max-height:200px;overflow-y:auto;z-index:500;margin-top:2px;box-shadow:0 4px 16px rgba(0,0,0,.5)"></div>
       </div>
       <div class="cat-row" id="cat-filter"></div>
       <div id="item-lib-list"></div>
-      <button class="scan-btn" onclick="toggleNIF()" style="margin-top:4px">+ Add New Part Number Not in Library</button>
+      <button class="scan-btn" onclick="toggleNIF()" style="margin-top:4px">+ Add New Part Not in Library</button>
       <div class="nif" id="nif">
         <div class="g2" style="margin-bottom:8px">
           <div class="fg"><div class="lbl">Part Number</div><input class="inp" id="new-pn" placeholder="e.g. E1-3960" type="text"></div>
@@ -197,47 +207,47 @@ select.inp option{background:var(--s2)}
       </div>
     </div>
     <div class="box">
-      <div class="box-t">Items Added <span class="cnt" id="items-cnt">0</span></div>
+      <div class="box-t">Items on This BOL <span class="cnt" id="items-cnt">0</span></div>
       <div id="added-items-list"></div>
     </div>
   </div>
+  <!-- STEP 4: REVIEW -->
   <div id="step4" style="display:none">
     <div class="box">
       <div class="box-t">Review BOL</div>
       <div id="review-content"></div>
     </div>
-    <div class="box no-print">
+    <div class="box">
       <div class="box-t">Driver Signature</div>
       <p style="font-size:12px;color:var(--mu);margin-bottom:8px">Driver signs below to confirm receipt</p>
       <canvas id="sig-canvas" style="background:var(--s2);border:1px solid var(--bd2);border-radius:8px;width:100%;height:120px;display:block;touch-action:none"></canvas>
       <div style="display:flex;gap:8px;margin-top:6px">
-        <button onclick="clearSig()" style="padding:6px 14px;background:var(--s3);border:1px solid var(--bd2);border-radius:6px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer">Clear Signature</button>
-        <span style="font-family:var(--mono);font-size:9px;color:var(--dm);flex:1;display:flex;align-items:center;padding:0 6px;line-height:1.5">Driver confirms contents are correct</span>
+        <button onclick="clearSig()" style="padding:6px 14px;background:var(--s3);border:1px solid var(--bd2);border-radius:6px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer">Clear</button>
       </div>
     </div>
   </div>
 </div>
+<!-- HISTORY PAGE -->
 <div class="pg" id="p-hist">
   <div class="box"><div class="box-t">BOL History</div><div id="hist-list"></div></div>
 </div>
+<!-- LIBRARY PAGE -->
 <div class="pg" id="p-lib">
   <div class="box">
-    <div class="box-t" style="display:flex;justify-content:space-between;align-items:center"><span>Master Item Library - YKK AP Parts</span><button id="edit-mode-btn" onclick="toggleEditMode()" style="padding:4px 12px;background:var(--s3);border:1px solid var(--bd2);border-radius:6px;color:var(--mu);font-family:var(--mono);font-size:9px;cursor:pointer;letter-spacing:.06em">Edit Items</button></div>
-    <p style="font-size:12px;color:var(--mu);margin-bottom:10px;line-height:1.7">Pre-loaded YKK AP parts. Scan new barcodes to add more. Upload a CSV to bulk import.</p>
+    <div class="box-t" style="display:flex;justify-content:space-between;align-items:center">
+      <span>Master Item Library</span>
+      <button id="edit-mode-btn" onclick="toggleEditMode()" style="padding:4px 12px;background:var(--s3);border:1px solid var(--bd2);border-radius:6px;color:var(--mu);font-family:var(--mono);font-size:9px;cursor:pointer">Edit Items</button>
+    </div>
     <input class="srch" id="lib-srch" placeholder="Search part # or description..." type="text">
     <div class="cat-row" id="lib-cat-filter"></div>
     <div id="lib-list"></div>
     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
       <label style="flex:1;display:inline-block;padding:10px 16px;background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer;text-align:center;min-width:160px">
-        Upload YKK AP Cut List (Excel or CSV)
+        Upload Excel / CSV
         <input type="file" accept=".csv,.xlsx,.xls" style="display:none" onchange="importCSV(this)">
       </label>
-      <button onclick="clearImported()" style="flex:1;padding:10px 16px;background:var(--s3);border:1px solid rgba(255,77,106,.3);border-radius:8px;color:var(--rd);font-family:var(--mono);font-size:10px;cursor:pointer;min-width:140px">
-        Clear Imported Parts
-      </button>
-      <button onclick="clearAllLib()" style="padding:10px 14px;background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer">
-        Reset All
-      </button>
+      <button onclick="clearImported()" style="flex:1;padding:10px 16px;background:var(--s3);border:1px solid rgba(255,77,106,.3);border-radius:8px;color:var(--rd);font-family:var(--mono);font-size:10px;cursor:pointer;min-width:140px">Clear Imported</button>
+      <button onclick="clearAllLib()" style="padding:10px 14px;background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer">Reset All</button>
     </div>
   </div>
 </div>
@@ -245,44 +255,66 @@ select.inp option{background:var(--s2)}
   <button class="btn btn-back" id="btn-back" onclick="prevStep()" style="display:none">Back</button>
   <button class="btn btn-next" id="btn-next" onclick="nextStep()">Next: Pallets</button>
 </div>
-<div id="pbol" style="display:none"></div>
 <div class="toast" id="toast"></div>
 <script>
-var WH = "https://script.google.com/macros/s/AKfycbxaKZcA5Deth70mYDCNvRpprADkJLG-V8TUVx7k6mum6ib2WCaSe9o2WYFbmPPACNe2lg/exec";
-var LIB = [{"pn":"E1-3949","desc":"J-HOOK","cat":"Accessories","unit":"EA"},{"pn":"E1-3945","desc":"BRACKET SLEEVE LEFT","cat":"Accessories","unit":"EA"},{"pn":"E1-3946","desc":"BRACKET SLEEVE RIGHT","cat":"Accessories","unit":"EA"},{"pn":"E1-3954","desc":"STARTER SILL REINF","cat":"Accessories","unit":"EA"},{"pn":"E1-3955","desc":"STOPPER ON J-HOOK","cat":"Accessories","unit":"EA"},{"pn":"E1-3953","desc":"STARTER TRACK END DAM","cat":"Accessories","unit":"EA"},{"pn":"E2-0070","desc":"SILICONE SHEET","cat":"Gaskets","unit":"EA"},{"pn":"E2-0725","desc":"SPACER SPONGE","cat":"Gaskets","unit":"EA"},{"pn":"E2-3841","desc":"GASKET FOR PRESSURE PLATE","cat":"Gaskets","unit":"FT"},{"pn":"E2-7004","desc":"GASKET FOR STARTER TRACK","cat":"Gaskets","unit":"FT"},{"pn":"PM-1006SS","desc":"SCREW FOR STOPPER","cat":"Fasteners","unit":"EA"},{"pn":"HC-1220SS","desc":"SCREW FOR END DAM","cat":"Fasteners","unit":"EA"},{"pn":"UF-0808-SS","desc":"SCREW FOR 9IN FACE CAP","cat":"Fasteners","unit":"EA"},{"pn":"HILTI","desc":"T-BOLTS AND NUTS FOR EMBED","cat":"Fasteners","unit":"BX"},{"pn":"SHIM-050","desc":"SHIMS 1/2 INCH","cat":"Materials","unit":"BX"},{"pn":"CAULK-WHT","desc":"WHITE CAULKING","cat":"Materials","unit":"TUBE"},{"pn":"CAULK-BLK","desc":"BLACK CAULKING","cat":"Materials","unit":"TUBE"},{"pn":"CAULK-GRY","desc":"GRAY CAULKING","cat":"Materials","unit":"TUBE"},{"pn":"CAULK-CLR","desc":"CLEAR CAULKING","cat":"Materials","unit":"TUBE"},{"pn":"FC-LEFT","desc":"FACE CAP LEFT","cat":"Trims","unit":"EA"},{"pn":"FC-RIGHT","desc":"FACE CAP RIGHT","cat":"Trims","unit":"EA"},{"pn":"FC-HEAD","desc":"FACE CAP HEAD","cat":"Trims","unit":"EA"},{"pn":"FC-HORZ","desc":"FACE CAP HORIZONTAL","cat":"Trims","unit":"EA"},{"pn":"FC-SILL","desc":"FACE CAP SILL","cat":"Trims","unit":"EA"},{"pn":"FC-9IN","desc":"FACE CAP 9 INCH","cat":"Trims","unit":"EA"},{"pn":"STARTER","desc":"STARTER TRACK","cat":"Profiles","unit":"EA"},{"pn":"SILL-ADP","desc":"SILL ADAPTOR","cat":"Profiles","unit":"EA"},{"pn":"CORNER-KEY","desc":"CORNER KEY","cat":"Profiles","unit":"EA"},{"pn":"THERM-BRK","desc":"THERMAL BREAK","cat":"Profiles","unit":"EA"},{"pn":"ANCHOR-BLT","desc":"ANCHOR BOLTS 1/2 INCH","cat":"Materials","unit":"BX"}];
-var CC = {"Accessories":"#3B82F6","Gaskets":"#A855F7","Fasteners":"#F59E0B","Materials":"#14B8A6","Trims":"#EC4899","Profiles":"#10B981","Other":"#6B7280"};
-var ST = {step:1,bolNum:"",shipDate:"",shipFrom:"Eastern Glass & Aluminum, 4274 Shackleford Rd., Norcross, GA 30093",shipTo:"",carrier:"",driver:"",truckNum:"",trailerNum:"",proNum:"",scac:"",ft:"prepaid",specInst:"",pallets:[],items:[],sig:null};
-var HI = [];
-var scanning = false, scanStream = null, scanTimer = null;
+var WH="https://script.google.com/macros/s/AKfycbxaKZcA5Deth70mYDCNvRpprADkJLG-V8TUVx7k6mum6ib2WCaSe9o2WYFbmPPACNe2lg/exec";
+var LIB=[
+  {pn:"E1-3949",desc:"J-HOOK",cat:"Accessories",unit:"EA"},
+  {pn:"E1-3945",desc:"BRACKET SLEEVE LEFT",cat:"Accessories",unit:"EA"},
+  {pn:"E1-3946",desc:"BRACKET SLEEVE RIGHT",cat:"Accessories",unit:"EA"},
+  {pn:"E1-3954",desc:"STARTER SILL REINF",cat:"Accessories",unit:"EA"},
+  {pn:"E1-3955",desc:"STOPPER ON J-HOOK",cat:"Accessories",unit:"EA"},
+  {pn:"E1-3953",desc:"STARTER TRACK END DAM",cat:"Accessories",unit:"EA"},
+  {pn:"E2-0070",desc:"SILICONE SHEET",cat:"Gaskets",unit:"EA"},
+  {pn:"E2-0725",desc:"SPACER SPONGE",cat:"Gaskets",unit:"EA"},
+  {pn:"E2-3841",desc:"GASKET FOR PRESSURE PLATE",cat:"Gaskets",unit:"FT"},
+  {pn:"E2-7004",desc:"GASKET FOR STARTER TRACK",cat:"Gaskets",unit:"FT"},
+  {pn:"PM-1006SS",desc:"SCREW FOR STOPPER",cat:"Fasteners",unit:"EA"},
+  {pn:"HC-1220SS",desc:"SCREW FOR END DAM",cat:"Fasteners",unit:"EA"},
+  {pn:"UF-0808-SS",desc:"SCREW FOR 9IN FACE CAP",cat:"Fasteners",unit:"EA"},
+  {pn:"HILTI",desc:"T-BOLTS AND NUTS FOR EMBED",cat:"Fasteners",unit:"BX"},
+  {pn:"SHIM-050",desc:"SHIMS 1/2 INCH",cat:"Materials",unit:"BX"},
+  {pn:"SHIM-052",desc:"SHIM 1/8 INCH",cat:"Materials",unit:"BX"},
+  {pn:"SHIM-053",desc:"SHIM 1/16 INCH",cat:"Materials",unit:"BX"},
+  {pn:"CAULK-WHT",desc:"WHITE CAULKING",cat:"Materials",unit:"TUBE"},
+  {pn:"CAULK-BLK",desc:"BLACK CAULKING",cat:"Materials",unit:"TUBE"},
+  {pn:"CAULK-GRY",desc:"GRAY CAULKING",cat:"Materials",unit:"TUBE"},
+  {pn:"CAULK-CLR",desc:"CLEAR CAULKING",cat:"Materials",unit:"TUBE"},
+  {pn:"FC-LEFT",desc:"FACE CAP LEFT",cat:"Trims",unit:"EA"},
+  {pn:"FC-RIGHT",desc:"FACE CAP RIGHT",cat:"Trims",unit:"EA"},
+  {pn:"FC-HEAD",desc:"FACE CAP HEAD",cat:"Trims",unit:"EA"},
+  {pn:"FC-HORZ",desc:"FACE CAP HORIZONTAL",cat:"Trims",unit:"EA"},
+  {pn:"FC-SILL",desc:"FACE CAP SILL",cat:"Trims",unit:"EA"},
+  {pn:"FC-9IN",desc:"FACE CAP 9 INCH",cat:"Trims",unit:"EA"},
+  {pn:"STARTER",desc:"STARTER TRACK",cat:"Profiles",unit:"EA"},
+  {pn:"SILL-ADP",desc:"SILL ADAPTOR",cat:"Profiles",unit:"EA"},
+  {pn:"CORNER-KEY",desc:"CORNER KEY",cat:"Profiles",unit:"EA"},
+  {pn:"THERM-BRK",desc:"THERMAL BREAK",cat:"Profiles",unit:"EA"},
+  {pn:"ANCHOR-BLT",desc:"ANCHOR BOLTS 1/2 INCH",cat:"Materials",unit:"BX"},
+  {pn:"CAST-NYLON-12",desc:"CAST NYLON-12 3/4 X 3/4",cat:"Accessories",unit:"EA"},
+  {pn:"CAST-NYLON-6",desc:"CAST NYLON-6 3/4 X 3/4",cat:"Accessories",unit:"EA"},
+  {pn:"BNA-TRIMS-001",desc:"TRIM PIECES - BNA PROJECT",cat:"Trims",unit:"EA"},
+  {pn:"BNA-TOOLS-001",desc:"TOOLS AND EQUIPMENT",cat:"Other",unit:"EA"},
+  {pn:"BNA-ACC-001",desc:"BACKER ROD 7/8 INCH",cat:"Materials",unit:"EA"}
+];
+var CC={Accessories:"#3B82F6",Gaskets:"#A855F7",Fasteners:"#F59E0B",Materials:"#14B8A6",Trims:"#EC4899",Profiles:"#10B981",Other:"#6B7280"};
+var ST={step:1,bolNum:"",shipDate:"",shipFrom:"Eastern Glass & Aluminum, 4274 Shackleford Rd., Norcross, GA 30093",shipTo:"",carrier:"",driver:"",truckNum:"",trailerNum:"",proNum:"",scac:"",ft:"prepaid",specInst:"",pallets:[],items:[],sig:null};
+var HI=[];
+var scanning=false,scanStream=null,scanTimer=null;
+var LIB_EDIT_MODE=false;
 
-// Init
-document.getElementById("ship-date").valueAsDate = new Date();
-document.getElementById("ship-to").value = "Nashville International Airport, 801 McGavock Pike, Nashville, TN 37217";
-loadHist();
-loadLib();
-genBolNum();
-buildCatFilter("cat-filter", filterItems);
-buildCatFilter("lib-cat-filter", filterLib);
-renderLib("","ALL");
-renderLibPage("","ALL");
-loadPallets();
+// ── Init ───────────────────────────────────────────────────────────
+document.getElementById("ship-date").valueAsDate=new Date();
+loadHist();loadLib();genBolNum();
+buildCatFilter("cat-filter",filterItems);
+buildCatFilter("lib-cat-filter",filterLib);
+renderLib("","ALL");renderLibPage("","ALL");loadPallets();
 
-// URL auto-select
-(function(){var q=new URLSearchParams(location.search);var f=q.get("frame");if(f){showToast("Frame: "+f);}})();
-
-// Input listeners
-document.getElementById("item-srch").addEventListener("input",function(){
-  filterItems(this.value);
-  showSearchDrop(this.value);
-});
-document.getElementById("item-srch").addEventListener("blur",function(){
-  setTimeout(function(){
-    var d=document.getElementById("srch-drop");if(d)d.style.display="none";
-  },200);
-});
+document.getElementById("item-srch").addEventListener("input",function(){filterItems(this.value);showSearchDrop(this.value);});
+document.getElementById("item-srch").addEventListener("blur",function(){setTimeout(function(){var d=document.getElementById("srch-drop");if(d)d.style.display="none";},200);});
 document.getElementById("lib-srch").addEventListener("input",function(){filterLib(this.value);});
 
-
+// ── Navigation ─────────────────────────────────────────────────────
 function goPg(name){
   ["new","hist","lib"].forEach(function(p){
     document.getElementById("p-"+p).className="pg"+(p===name?" on":"");
@@ -303,19 +335,16 @@ function goStep(n){
   var back=document.getElementById("btn-back");
   var next=document.getElementById("btn-next");
   back.style.display=n>1?"block":"none";
-  if(n===4){
-    next.className="btn btn-pdf";
-    next.textContent="Download PDF";
-    next.onclick=downloadPDF;
-    buildReview();
-    initSig();
-  }else if(n===3){
-    next.className="btn btn-next";next.textContent="Review BOL";next.onclick=nextStep;
-  }else if(n===2){
-    next.className="btn btn-next";next.textContent="Add Items";next.onclick=nextStep;
-  }else{
-    next.className="btn btn-next";next.textContent="Next: Pallets";next.onclick=nextStep;
+  if(n===3){
+    // Show pallet tip if pallets selected
+    var tip=document.getElementById("plt-tip");
+    if(tip)tip.style.display=ST.pallets.length>0?"block":"none";
+    renderAddedItems();
   }
+  if(n===4){next.className="btn btn-pdf";next.textContent="Download PDF";next.onclick=downloadPDF;buildReview();initSig();}
+  else if(n===3){next.className="btn btn-next";next.textContent="Review BOL";next.onclick=nextStep;}
+  else if(n===2){next.className="btn btn-next";next.textContent="Add Items";next.onclick=nextStep;}
+  else{next.className="btn btn-next";next.textContent="Next: Pallets";next.onclick=nextStep;}
   window.scrollTo(0,0);
 }
 
@@ -335,573 +364,179 @@ function nextStep(){
   if(ST.step<4)goStep(ST.step+1);
 }
 function prevStep(){if(ST.step>1)goStep(ST.step-1);}
-
-function setFT(v){
-  ST.ft=v;
-  ["prepaid","collect","3rd"].forEach(function(x){
-    document.getElementById("ft-"+x).className="ftbtn"+(v===x?" on":"");
-  });
-}
-
+function setFT(v){ST.ft=v;["prepaid","collect","3rd"].forEach(function(x){document.getElementById("ft-"+x).className="ftbtn"+(v===x?" on":"");});}
 function onProjectChange(val){
-  var shipTo = document.getElementById("ship-to");
-  var note = document.getElementById("ship-to-note");
-  if(val === "BNA"){
-    shipTo.value = "Nashville International Airport, 801 McGavock Pike, Nashville, TN 37217";
-    shipTo.style.color = "var(--gn)";
-    shipTo.readOnly = false;
-    if(note){note.style.display="block";note.textContent="Auto-filled for BNA project";}
-  }else{
-    shipTo.value = "";
-    shipTo.style.color = "var(--tx)";
-    shipTo.readOnly = false;
-    shipTo.placeholder = "Enter job site address";
-    if(note){note.style.display="none";}
-  }
+  var st=document.getElementById("ship-to"),note=document.getElementById("ship-to-note");
+  if(val==="BNA"){st.value="Nashville International Airport, 801 McGavock Pike, Nashville, TN 37217";st.style.color="var(--gn)";if(note)note.style.display="block";}
+  else{st.value="";st.style.color="var(--tx)";st.placeholder="Enter job site address";if(note)note.style.display="none";}
 }
+function genBolNum(){var n="BNA-SHP-"+String(HI.length+1).padStart(3,"0");document.getElementById("bol-num").value=n;document.getElementById("bol-badge").textContent=n;ST.bolNum=n;}
 
-function genBolNum(){
-  var n="BNA-SHP-"+String(HI.length+1).padStart(3,"0");
-  document.getElementById("bol-num").value=n;
-  document.getElementById("bol-badge").textContent=n;
-  ST.bolNum=n;
-}
-
-// PALLETS
+// ── Pallet loading ─────────────────────────────────────────────────
 function loadPallets(){
   var el=document.getElementById("plt-select-list");
-  el.innerHTML="<div class='ld'><div class='spin'></div>Loading pallets from Google Sheets...</div>";
-
-  // Fetch FRAME STATUS from Google Sheets live
-  // This works on ANY device - coordinator computer, phone, tablet
+  el.innerHTML="<div style='padding:12px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--mu)'>Loading pallets...</div>";
   fetch(WH+"?action=pallets")
     .then(function(r){return r.json();})
-    .then(function(data){
-      if(data.pallets&&data.pallets.length){
-        renderPalletCards(el, data.pallets);
-      }else{
-        // No data from sheets yet - fall back to local + manual
-        loadPalletsLocal(el);
-      }
-    })
-    .catch(function(){
-      // Network error - fall back to local storage
-      loadPalletsLocal(el);
-    });
+    .then(function(data){if(data.pallets&&data.pallets.length)renderPalletCards(el,data.pallets);else loadPalletsLocal(el);})
+    .catch(function(){loadPalletsLocal(el);});
 }
-
 function loadPalletsLocal(el){
-  var pkgHist=[];
-  ["bna-h7","bna-h8","bna-h6","bna-h5"].forEach(function(k){
-    try{var h=localStorage.getItem(k);if(h){var a=JSON.parse(h);if(Array.isArray(a))pkgHist=pkgHist.concat(a);}}catch(e){}
-  });
-  var manualPallets=[];
-  try{var mp=localStorage.getItem("ega-pallets");if(mp)manualPallets=JSON.parse(mp);}catch(e){}
-
-  var pallets={};
-  pkgHist.filter(function(r){return r.action==="packaging"&&r.palletNum;}).forEach(function(r){
-    if(!pallets[r.palletNum])pallets[r.palletNum]={num:r.palletNum,frames:[],by:r.packedBy||"-",date:r.packDate||"-"};
-    if(r.frameId&&pallets[r.palletNum].frames.indexOf(r.frameId)<0)pallets[r.palletNum].frames.push(r.frameId);
-  });
-  manualPallets.forEach(function(p){if(!pallets[p.num])pallets[p.num]=p;});
-
-  var pltList=Object.keys(pallets).sort().map(function(k){return pallets[k];});
-
-  el.innerHTML="";
-  if(pltList.length){
-    renderPalletCards(el, pltList);
-  }else{
-    var msg=document.createElement("div");
-    msg.style.cssText="background:var(--s3);border:1px solid var(--bd2);border-radius:8px;padding:16px;margin-bottom:10px;line-height:1.8";
-    msg.innerHTML="<div style='font-family:var(--mono);font-size:10px;color:var(--am);letter-spacing:.08em;margin-bottom:8px'>NO PALLET DATA FOUND</div>"
-      +"<div style='font-size:12px;color:var(--mu);margin-bottom:10px'>"
-      +"Pallets are read from Google Sheets automatically.<br>"
-      +"If nothing shows, the packaging team has not scanned any frames yet, "
-      +"or the Google Sheet has no packing data.<br><br>"
-      +"<strong style='color:var(--tx)'>Add pallets manually</strong> using the button below - "
-      +"enter the pallet number and frame IDs going on this truck.</div>";
-    el.appendChild(msg);
-  }
+  var manualPallets=[];try{var mp=localStorage.getItem("ega-pallets");if(mp)manualPallets=JSON.parse(mp);}catch(e){}
+  if(manualPallets.length)renderPalletCards(el,manualPallets);
+  else{el.innerHTML="<div style='padding:12px;font-size:12px;color:var(--mu)'>No pallet data. Add pallets manually below.</div>";}
 }
+function fmtDate(d){if(!d||d==="-")return"";try{var dt=new Date(d);if(!isNaN(dt.getTime()))return(dt.getMonth()+1)+"/"+dt.getDate()+"/"+dt.getFullYear();}catch(e){}return String(d).split("T")[0];}
 
-function fmtDate(d){
-  if(!d||d==="-")return "";
-  // Clean up long date strings like "Tue Jun 16 2026 00:00:00 GMT-0400..."
-  try{
-    var dt=new Date(d);
-    if(!isNaN(dt.getTime())){
-      return (dt.getMonth()+1)+"/"+dt.getDate()+"/"+dt.getFullYear();
-    }
-  }catch(e){}
-  // Already short format like "2026-06-16" - just return as is
-  return String(d).split(" ")[0].split("T")[0];
-}
-
-function renderPalletCards(el, pltList){
+function renderPalletCards(el,pltList){
   el.innerHTML="";
-  // Filter to show PACKED pallets first, then OPEN ones
-  var packed=pltList.filter(function(p){return p.status==="PACKED"||( p.frames&&p.frames.length>0);});
-  var open=pltList.filter(function(p){return p.status==="OPEN"&&(!p.frames||!p.frames.length);});
-
-  var hdr=document.createElement("div");
-  hdr.style.cssText="font-family:var(--mono);font-size:9px;color:var(--gn);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center";
-  hdr.innerHTML="<span>"+packed.length+" packed pallets — tap to select</span>"
-    +"<span style='color:var(--bl)'>Live from Google Sheets</span>";
-  el.appendChild(hdr);
-
-  // Show packed pallets first (these are what you actually ship)
-  packed.forEach(function(p){
+  pltList.forEach(function(p){
     var key=p.num;
-    var card=document.createElement("div");
-    card.className="plt-card";card.id="plt-"+key.replace(/[^a-z0-9]/gi,"-");
-
-    var topRow=document.createElement("div");
-    topRow.style.cssText="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px";
+    var card=document.createElement("div");card.className="plt-card";card.id="plt-"+key.replace(/[^a-z0-9]/gi,"-");
+    var topRow=document.createElement("div");topRow.style.cssText="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px";
     var num=document.createElement("div");num.className="plt-num";num.style.marginBottom="0";num.textContent=p.num;
     var badge=document.createElement("span");
-    badge.style.cssText="font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700;"
-      +(p.frames&&p.frames.length?"background:rgba(0,208,132,.15);color:var(--gn)":"background:rgba(245,166,35,.12);color:var(--am)");
+    badge.style.cssText="font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700;"+(p.frames&&p.frames.length?"background:rgba(0,208,132,.15);color:var(--gn)":"background:rgba(245,166,35,.12);color:var(--am)");
     badge.textContent=p.frames&&p.frames.length?"PACKED":"OPEN";
     topRow.appendChild(num);topRow.appendChild(badge);
-
     var info=document.createElement("div");info.className="plt-info";
-    var frameCount=p.frames&&p.frames.length?p.frames.length+" frame(s)":"Empty pallet";
-    var packer=p.by&&p.by!=="-"?" · "+p.by:"";
-    var dt=fmtDate(p.date);
-    info.textContent=frameCount+packer+(dt?" · "+dt:"");
-
+    info.textContent=(p.frames&&p.frames.length?p.frames.length+" frame(s)":"Empty")+(p.by&&p.by!=="-"?" · "+p.by:"")+(fmtDate(p.date)?" · "+fmtDate(p.date):"");
     card.appendChild(topRow);card.appendChild(info);
-
-    if(p.frames&&p.frames.length){
-      var fr=document.createElement("div");
-      fr.style.cssText="font-size:11px;color:var(--tx);margin-top:5px;line-height:1.8;padding:6px 8px;background:var(--s3);border-radius:5px";
-      fr.textContent=p.frames.join(", ");
-      card.appendChild(fr);
-    }
-    if(p.desc){
-      var ds=document.createElement("div");
-      ds.style.cssText="font-size:11px;color:var(--mu);margin-top:3px";
-      ds.textContent=p.desc;
-      card.appendChild(ds);
-    }
-    // Add rename/delete buttons for bad-named pallets or any pallet
-    var mgmt=document.createElement("div");
-    mgmt.style.cssText="display:flex;gap:6px;margin-top:8px";
-    var renBtn=document.createElement("button");
-    renBtn.style.cssText="padding:3px 10px;background:var(--s3);border:1px solid var(--bd2);border-radius:5px;color:var(--mu);font-family:var(--mono);font-size:9px;cursor:pointer;flex:1";
-    renBtn.textContent="Rename";
-    var delBtn=document.createElement("button");
-    delBtn.style.cssText="padding:3px 10px;background:var(--s3);border:1px solid rgba(255,77,106,.3);border-radius:5px;color:var(--rd);font-family:var(--mono);font-size:9px;cursor:pointer";
-    delBtn.textContent="Remove";
-    (function(plt,k,c){
-      card.addEventListener("click",function(e){if(e.target===renBtn||e.target===delBtn)return;togglePallet(plt,k);});
-      renBtn.addEventListener("click",function(e){
-        e.stopPropagation();
-        var newName=prompt("Rename pallet (current: "+k+"):",k);
-        if(newName&&newName.trim()&&newName.trim()!==k){
-          plt.num=newName.trim().toUpperCase();
-          // Update in ST.pallets if already selected
-          var idx=ST.pallets.findIndex(function(x){return x.num===k;});
-          if(idx>=0)ST.pallets[idx].num=plt.num;
-          // Save renamed pallet
-          savePallet(plt);
-          showToast("Renamed to "+plt.num);
-          loadPallets();
-        }
-      });
-      delBtn.addEventListener("click",function(e){
-        e.stopPropagation();
-        if(!confirm("Remove pallet "+k+" from list?"))return;
-        // Remove from ST.pallets if selected
-        var idx=ST.pallets.findIndex(function(x){return x.num===k;});
-        if(idx>=0){ST.pallets.splice(idx,1);renderSelPallets();}
-        // Remove from local storage
-        try{
-          var saved=JSON.parse(localStorage.getItem("ega-pallets")||"[]");
-          saved=saved.filter(function(x){return x.num!==k;});
-          localStorage.setItem("ega-pallets",JSON.stringify(saved));
-        }catch(ex){}
-        c.remove();
-        showToast("Removed "+k);
-      });
-    })(p,key,card);
-    mgmt.appendChild(renBtn);mgmt.appendChild(delBtn);
-    card.appendChild(mgmt);
+    if(p.frames&&p.frames.length){var fr=document.createElement("div");fr.style.cssText="font-size:11px;color:var(--tx);margin-top:5px;padding:5px 8px;background:var(--s3);border-radius:5px;line-height:1.8";fr.textContent=p.frames.join(", ");card.appendChild(fr);}
+    (function(plt,k){card.addEventListener("click",function(){togglePallet(plt,k);});})(p,key);
     el.appendChild(card);
   });
-
-  // Show open/empty pallets separately at bottom
-  if(open.length){
-    var openHdr=document.createElement("div");
-    openHdr.style.cssText="font-family:var(--mono);font-size:9px;color:var(--am);letter-spacing:.08em;text-transform:uppercase;margin:10px 0 6px";
-    openHdr.textContent="Open pallets (no frames assigned yet)";
-    el.appendChild(openHdr);
-    open.forEach(function(p){
-      var key=p.num;
-      var card=document.createElement("div");
-      card.className="plt-card";
-      card.style.opacity="0.6";
-      card.id="plt-"+key.replace(/[^a-z0-9]/gi,"-");
-      var num=document.createElement("div");num.className="plt-num";num.textContent=p.num;
-      var info=document.createElement("div");info.className="plt-info";
-      info.textContent="Open · "+(fmtDate(p.date)||"-")+(p.desc?" · "+p.desc:"");
-      card.appendChild(num);card.appendChild(info);
-      (function(plt,k){
-        card.addEventListener("click",function(){togglePallet(plt,k);});
-      })(p,key);
-      el.appendChild(card);
-    });
-  }
 }
 
-function savePallet(p){
-  var saved=[];
-  try{var s=localStorage.getItem("ega-pallets");if(s)saved=JSON.parse(s);}catch(e){}
-  var idx=saved.findIndex(function(x){return x.num===p.num;});
-  if(idx>=0)saved[idx]=p;else saved.push(p);
-  try{localStorage.setItem("ega-pallets",JSON.stringify(saved));}catch(e){}
-}
+function savePallet(p){var saved=[];try{var s=localStorage.getItem("ega-pallets");if(s)saved=JSON.parse(s);}catch(e){}var idx=saved.findIndex(function(x){return x.num===p.num;});if(idx>=0)saved[idx]=p;else saved.push(p);try{localStorage.setItem("ega-pallets",JSON.stringify(saved));}catch(e){}}
 
 function togglePallet(p,key){
   var idx=ST.pallets.findIndex(function(x){return x.num===key;});
-  var card=document.getElementById("plt-"+key);
-  if(idx>=0){
-    ST.pallets.splice(idx,1);
-    if(card)card.className="plt-card";
-  }else{
-    ST.pallets.push(p);
-    if(card){card.className="plt-card sel";card.style.position="relative";}
-  }
+  var card=document.getElementById("plt-"+key.replace(/[^a-z0-9]/gi,"-"));
+  if(idx>=0){ST.pallets.splice(idx,1);if(card)card.className="plt-card";}
+  else{ST.pallets.push(p);if(card)card.className="plt-card sel";}
   renderSelPallets();
 }
 
 function addCustomPallet(){
-  var num=prompt("Pallet number:\n(e.g. BNA-PLT-001 or BNA-PLT-ACC-01)");
-  if(!num||!num.trim())return;
-  num=num.trim().toUpperCase();
-
-  var desc=prompt("Description:\n(e.g. ACCESSORIES LV1+LV2 or FRAMES CW1.1)")||"";
-
-  var frameInput=prompt("Frame IDs on this pallet:\n(comma separated, or leave blank)\ne.g. CW1.1-F1L1, CW1.1-F2L1, CW1.1-F3L1")||"";
-  var frames=frameInput?frameInput.split(",").map(function(f){return f.trim();}).filter(function(f){return f.length>0;})
-:[];
-
+  var num=prompt("Pallet number:\n(e.g. BNA-PLT-003)");if(!num||!num.trim())return;num=num.trim().toUpperCase();
+  var desc=prompt("Description:\n(e.g. ACCESSORIES PALLET)")||"";
+  var frameInput=prompt("Frame IDs (comma separated, or leave blank)")||"";
+  var frames=frameInput?frameInput.split(",").map(function(f){return f.trim();}).filter(Boolean):[];
   var custom={num:num,frames:frames,by:"Manual",date:new Date().toISOString().split("T")[0],desc:desc,source:"manual"};
-
-  // Save to storage so it persists
-  savePallet(custom);
-  ST.pallets.push(custom);
-
-  // Add card to UI
+  savePallet(custom);ST.pallets.push(custom);
   var el=document.getElementById("plt-select-list");
-  var card=document.createElement("div");
-  card.className="plt-card sel";card.id="plt-manual-"+num;
+  var card=document.createElement("div");card.className="plt-card sel";card.id="plt-manual-"+num.replace(/[^a-z0-9]/gi,"-");
   var pnum=document.createElement("div");pnum.className="plt-num";pnum.textContent=num;
-  var info=document.createElement("div");info.className="plt-info";
-  info.textContent=(frames.length?frames.length+" frames":"Custom")+(desc?" / "+desc:"");
-  if(frames.length){
-    var fr=document.createElement("div");
-    fr.style.cssText="font-size:11px;color:var(--tx);margin-top:3px";
-    fr.textContent=frames.join(", ");
-    card.appendChild(pnum);card.appendChild(info);card.appendChild(fr);
-  }else{
-    card.appendChild(pnum);card.appendChild(info);
-  }
-  el.appendChild(card);
-  renderSelPallets();
-  showToast("Added: "+num+(frames.length?" ("+frames.length+" frames)":""));
+  var info=document.createElement("div");info.className="plt-info";info.textContent=(frames.length?frames.length+" frames":"Accessories pallet")+(desc?" / "+desc:"");
+  card.appendChild(pnum);card.appendChild(info);el.appendChild(card);
+  renderSelPallets();showToast("Added: "+num);
 }
 
 function renderSelPallets(){
-  var box=document.getElementById("sel-plts-box");
-  var list=document.getElementById("sel-plts-list");
-  var cnt=document.getElementById("plt-cnt");
+  var box=document.getElementById("sel-plts-box");var list=document.getElementById("sel-plts-list");var cnt=document.getElementById("plt-cnt");
   cnt.textContent=ST.pallets.length;
   if(!ST.pallets.length){box.style.display="none";return;}
-  box.style.display="block";
-  list.innerHTML="";
+  box.style.display="block";list.innerHTML="";
   ST.pallets.forEach(function(p){
-    var row=document.createElement("div");
-    row.style.cssText="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--s3);font-size:12px";
-    var left=document.createElement("span");
-    left.style.cssText="font-family:var(--mono);font-weight:700;color:var(--bl)";
-    left.textContent=p.num;
-    var right=document.createElement("span");
-    right.style.cssText="color:var(--mu);font-family:var(--mono);font-size:10px";
-    right.textContent=p.frames&&p.frames.length?p.frames.length+" frames":p.desc||"Custom";
-    row.appendChild(left);row.appendChild(right);
-    list.appendChild(row);
+    var row=document.createElement("div");row.style.cssText="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--s3);font-size:12px";
+    var left=document.createElement("span");left.style.cssText="font-family:var(--mono);font-weight:700;color:var(--bl)";left.textContent=p.num;
+    var right=document.createElement("span");right.style.cssText="color:var(--mu);font-family:var(--mono);font-size:10px";right.textContent=p.frames&&p.frames.length?p.frames.length+" frames":p.desc||"Accessories";
+    row.appendChild(left);row.appendChild(right);list.appendChild(row);
   });
 }
 
-// SCANNER
+// ── Scanning ───────────────────────────────────────────────────────
 function startScan(){
   if(scanning){stopScan();return;}
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    var code=prompt("Camera not available.\nType the part number from the box:");
-    if(code)handleBarcode(code.trim().toUpperCase());
-    return;
-  }
-  scanning=true;
-  var btn=document.getElementById("scan-btn");
-  var vid=document.getElementById("cam-view");
-  var stat=document.getElementById("scan-status");
-  btn.textContent="Stop Scanning";
-  stat.textContent="Starting camera...";
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){var code=prompt("Type the part number:");if(code)handleBarcode(code.trim().toUpperCase());return;}
+  scanning=true;var btn=document.getElementById("scan-btn");var vid=document.getElementById("cam-view");var stat=document.getElementById("scan-status");
+  btn.textContent="Stop Scanning";stat.textContent="Starting camera...";
   navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false})
-    .then(function(stream){
-      scanStream=stream;
-      vid.srcObject=stream;
-      vid.style.display="block";
-      stat.textContent="Aim at barcode...";
-      if(window.BarcodeDetector){
-        var bd=new BarcodeDetector({formats:["code_128","code_39","qr_code","ean_13","ean_8","upc_a","upc_e"]});
-        scanTimer=setInterval(function(){
-          bd.detect(vid).then(function(codes){
-            if(codes.length>0){stopScan();handleBarcode(codes[0].rawValue.trim().toUpperCase());}
-          }).catch(function(){});
-        },600);
-      }else{
-        stopScan();
-        var c=prompt("Manual entry - type part number from box:");
-        if(c)handleBarcode(c.trim().toUpperCase());
-      }
+    .then(function(stream){scanStream=stream;vid.srcObject=stream;vid.style.display="block";stat.textContent="Aim at barcode...";
+      if(window.BarcodeDetector){var bd=new BarcodeDetector({formats:["code_128","code_39","qr_code","ean_13","upc_a"]});scanTimer=setInterval(function(){bd.detect(vid).then(function(codes){if(codes.length>0){stopScan();handleBarcode(codes[0].rawValue.trim().toUpperCase());}}).catch(function(){});},600);}
+      else{stopScan();var c=prompt("Manual entry:");if(c)handleBarcode(c.trim().toUpperCase());}
     })
-    .catch(function(err){
-      scanning=false;
-      stat.textContent="Camera error: "+err.message;
-      btn.textContent="Tap to Scan Barcode on Box";
-    });
+    .catch(function(err){scanning=false;stat.textContent="Camera error: "+err.message;btn.textContent="Tap to Scan Barcode";});
 }
-
-function stopScan(){
-  scanning=false;
-  if(scanTimer){clearInterval(scanTimer);scanTimer=null;}
-  if(scanStream){scanStream.getTracks().forEach(function(t){t.stop();});scanStream=null;}
-  document.getElementById("cam-view").style.display="none";
-  document.getElementById("scan-btn").textContent="Tap to Scan Barcode on Box";
-  document.getElementById("scan-status").textContent="";
-}
-
+function stopScan(){scanning=false;if(scanTimer){clearInterval(scanTimer);scanTimer=null;}if(scanStream){scanStream.getTracks().forEach(function(t){t.stop();});scanStream=null;}document.getElementById("cam-view").style.display="none";document.getElementById("scan-btn").textContent="Scan Barcode";document.getElementById("scan-status").textContent="";}
 function handleBarcode(code){
-  document.getElementById("scan-status").textContent="Scanned: "+code;
   var found=LIB.find(function(i){return i.pn.toUpperCase()===code;});
-  if(found){
-    addToBOL(found,1);
-    showToast("Found: "+found.desc);
-  }else{
-    showToast("New part: "+code+" - add description below");
-    document.getElementById("new-pn").value=code;
-    var cat="Other";
-    if(code.indexOf("E1-")===0)cat="Accessories";
-    else if(code.indexOf("E2-")===0)cat="Gaskets";
-    else if(code.indexOf("PM-")===0||code.indexOf("HC-")===0||code.indexOf("UF-")===0)cat="Fasteners";
-    else if(code.indexOf("FC-")===0||code.indexOf("TRIM")===0)cat="Trims";
-    else if(code.indexOf("P-")===0||code.indexOf("CW-")===0)cat="Profiles";
-    document.getElementById("new-cat").value=cat;
-    document.getElementById("nif").className="nif open";
-    document.getElementById("new-desc").focus();
-  }
+  if(found){addToBOL(found,1);showToast("Found: "+found.desc);}
+  else{document.getElementById("new-pn").value=code;document.getElementById("nif").className="nif open";document.getElementById("new-desc").focus();}
 }
 
-// ITEM LIBRARY
-function loadLib(){
-  try{
-    var s=localStorage.getItem("ega-lib");
-    if(s){JSON.parse(s).forEach(function(item){if(!LIB.find(function(i){return i.pn===item.pn;}))LIB.push(item);});}
-  }catch(e){}
-}
-
+// ── Library ────────────────────────────────────────────────────────
+function loadLib(){try{var s=localStorage.getItem("ega-lib");if(s){JSON.parse(s).forEach(function(item){if(!LIB.find(function(i){return i.pn===item.pn;}))LIB.push(item);});}}catch(e){}}
 function saveLib(){try{localStorage.setItem("ega-lib",JSON.stringify(LIB));}catch(e){}}
-
 function catColor(cat){return CC[cat]||"#6B7280";}
 
-function buildCatFilter(elId, callback){
-  var el=document.getElementById(elId);
-  if(!el)return;
-  el.innerHTML="";
+function buildCatFilter(elId,callback){
+  var el=document.getElementById(elId);if(!el)return;el.innerHTML="";
   var cats=["ALL"].concat(Object.keys(CC));
   cats.forEach(function(c){
-    var btn=document.createElement("div");
-    btn.className="cat-btn"+(c==="ALL"?" on":"");
-    btn.textContent=c;
+    var btn=document.createElement("div");btn.className="cat-btn"+(c==="ALL"?" on":"");btn.textContent=c;
     if(c!=="ALL"){btn.style.borderColor=catColor(c)+"55";btn.style.color=catColor(c);}
-    (function(cat,eid){
-      btn.addEventListener("click",function(){
-        document.querySelectorAll("#"+eid+" .cat-btn").forEach(function(b){b.className="cat-btn";});
-        this.className="cat-btn on";
-        var q=eid==="cat-filter"?document.getElementById("item-srch").value:document.getElementById("lib-srch").value;
-        callback(q,cat);
-      });
-    })(c,elId);
+    (function(cat,eid){btn.addEventListener("click",function(){document.querySelectorAll("#"+eid+" .cat-btn").forEach(function(b){b.className="cat-btn";});this.className="cat-btn on";var q=eid==="cat-filter"?document.getElementById("item-srch").value:document.getElementById("lib-srch").value;callback(q,cat);});})(c,elId);
     el.appendChild(btn);
   });
 }
-
 function filterItems(q,cat){renderLib(q||"",cat||"ALL");}
 function filterLib(q,cat){renderLibPage(q||"",cat||"ALL");}
 
 function renderLib(q,cat){
-  var el=document.getElementById("item-lib-list");
-  if(!el)return;
-  var items=LIB.filter(function(i){
-    var mq=!q||(i.pn.toLowerCase().indexOf(q.toLowerCase())>=0||i.desc.toLowerCase().indexOf(q.toLowerCase())>=0);
-    var mc=!cat||cat==="ALL"||(i.cat||"Other")===cat;
-    return mq&&mc;
-  }).slice(0,20);
+  var el=document.getElementById("item-lib-list");if(!el)return;
+  var items=LIB.filter(function(i){var mq=!q||(i.pn.toLowerCase().indexOf(q.toLowerCase())>=0||i.desc.toLowerCase().indexOf(q.toLowerCase())>=0);var mc=!cat||cat==="ALL"||(i.cat||"Other")===cat;return mq&&mc;}).slice(0,20);
   el.innerHTML="";
-  if(!items.length){
-    var msg=document.createElement("div");
-    msg.style.cssText="text-align:center;padding:12px;color:var(--dm);font-family:var(--mono);font-size:11px";
-    msg.textContent="No items found";
-    el.appendChild(msg);
-    return;
-  }
+  if(!items.length){var msg=document.createElement("div");msg.style.cssText="text-align:center;padding:12px;color:var(--dm);font-family:var(--mono);font-size:11px";msg.textContent="No items found";el.appendChild(msg);return;}
   items.forEach(function(item){
-    var col=catColor(item.cat||"Other");
-    var row=document.createElement("div");row.className="irow";
+    var col=catColor(item.cat||"Other");var row=document.createElement("div");row.className="irow";
     var pn=document.createElement("span");pn.className="ipn";pn.style.color=col;pn.textContent=item.pn;
     var desc=document.createElement("span");desc.className="idesc";desc.textContent=item.desc;
-    var unit=document.createElement("span");unit.className="iunit";
-    unit.style.cssText="background:"+col+"22;color:"+col;unit.textContent=item.unit;
+    var unit=document.createElement("span");unit.className="iunit";unit.style.cssText="background:"+col+"22;color:"+col;unit.textContent=item.unit;
     var add=document.createElement("button");add.className="iadd";add.textContent="+ ADD";
     (function(it){add.addEventListener("click",function(){addToBOL(it,1);showToast("Added: "+it.desc);});})(item);
-    row.appendChild(pn);row.appendChild(desc);row.appendChild(unit);row.appendChild(add);
-    el.appendChild(row);
+    row.appendChild(pn);row.appendChild(desc);row.appendChild(unit);row.appendChild(add);el.appendChild(row);
   });
 }
 
-var LIB_EDIT_MODE = false;
-
-function toggleEditMode(){
-  LIB_EDIT_MODE = !LIB_EDIT_MODE;
-  var btn = document.getElementById("edit-mode-btn");
-  if(btn){
-    btn.textContent = LIB_EDIT_MODE ? "Done Editing" : "Edit Items";
-    btn.style.color = LIB_EDIT_MODE ? "var(--gn)" : "var(--mu)";
-    btn.style.borderColor = LIB_EDIT_MODE ? "rgba(0,208,132,.4)" : "var(--bd2)";
-    btn.style.background = LIB_EDIT_MODE ? "rgba(0,208,132,.1)" : "var(--s3)";
-  }
-  var q = document.getElementById("lib-srch").value;
-  renderLibPage(q, "ALL");
-}
+function toggleEditMode(){LIB_EDIT_MODE=!LIB_EDIT_MODE;var btn=document.getElementById("edit-mode-btn");if(btn){btn.textContent=LIB_EDIT_MODE?"Done Editing":"Edit Items";btn.style.color=LIB_EDIT_MODE?"var(--gn)":"var(--mu)";}renderLibPage(document.getElementById("lib-srch").value,"ALL");}
 
 function renderLibPage(q,cat){
-  var el=document.getElementById("lib-list");
-  if(!el)return;
-  var items=LIB.filter(function(i){
-    var mq=!q||(i.pn.toLowerCase().indexOf(q.toLowerCase())>=0||i.desc.toLowerCase().indexOf(q.toLowerCase())>=0);
-    var mc=!cat||cat==="ALL"||(i.cat||"Other")===cat;
-    return mq&&mc;
-  });
+  var el=document.getElementById("lib-list");if(!el)return;
+  var items=LIB.filter(function(i){var mq=!q||(i.pn.toLowerCase().indexOf(q.toLowerCase())>=0||i.desc.toLowerCase().indexOf(q.toLowerCase())>=0);var mc=!cat||cat==="ALL"||(i.cat||"Other")===cat;return mq&&mc;});
   el.innerHTML="";
-
-  if(!items.length){
-    el.innerHTML="<div style='text-align:center;padding:12px;color:var(--dm);font-family:var(--mono);font-size:11px'>No items found</div>";
-    return;
-  }
-
-  items.forEach(function(item,idx){
-    var col=catColor(item.cat||"Other");
-    var globalIdx=LIB.findIndex(function(i){return i.pn===item.pn;});
-
+  if(!items.length){el.innerHTML="<div style='text-align:center;padding:12px;color:var(--dm);font-family:var(--mono);font-size:11px'>No items found</div>";return;}
+  items.forEach(function(item){
+    var col=catColor(item.cat||"Other");var globalIdx=LIB.findIndex(function(i){return i.pn===item.pn;});
     if(LIB_EDIT_MODE){
-      // EDIT MODE — show editable fields inline
-      var row=document.createElement("div");
-      row.style.cssText="background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:10px 12px;margin-bottom:6px";
-
-      // Row 1: Part number + Delete button
-      var r1=document.createElement("div");
-      r1.style.cssText="display:flex;gap:6px;align-items:center;margin-bottom:6px";
-      var pnInp=document.createElement("input");
-      pnInp.value=item.pn;
-      pnInp.style.cssText="flex:1;background:var(--s3);border:1px solid "+col+";border-radius:5px;color:"+col+";font-family:var(--mono);font-size:11px;font-weight:700;padding:5px 8px;outline:none;min-width:0";
-      pnInp.placeholder="Part Number";
-      var delBtn=document.createElement("button");
-      delBtn.textContent="Delete";
-      delBtn.style.cssText="padding:4px 10px;background:rgba(255,77,106,.1);border:1px solid rgba(255,77,106,.3);border-radius:5px;color:var(--rd);font-family:var(--mono);font-size:9px;cursor:pointer;white-space:nowrap;flex-shrink:0";
+      var row=document.createElement("div");row.style.cssText="background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:10px 12px;margin-bottom:6px";
+      var r1=document.createElement("div");r1.style.cssText="display:flex;gap:6px;align-items:center;margin-bottom:6px";
+      var pnInp=document.createElement("input");pnInp.value=item.pn;pnInp.style.cssText="flex:1;background:var(--s3);border:1px solid "+col+";border-radius:5px;color:"+col+";font-family:var(--mono);font-size:11px;font-weight:700;padding:5px 8px;outline:none;min-width:0";
+      var delBtn=document.createElement("button");delBtn.textContent="Delete";delBtn.style.cssText="padding:4px 10px;background:rgba(255,77,106,.1);border:1px solid rgba(255,77,106,.3);border-radius:5px;color:var(--rd);font-family:var(--mono);font-size:9px;cursor:pointer;flex-shrink:0";
       r1.appendChild(pnInp);r1.appendChild(delBtn);
-
-      // Row 2: Description
-      var descInp=document.createElement("input");
-      descInp.value=item.desc;
-      descInp.style.cssText="width:100%;background:var(--s3);border:1px solid var(--bd2);border-radius:5px;color:var(--tx);font-size:12px;padding:5px 8px;outline:none;margin-bottom:6px;display:block";
-      descInp.placeholder="Description";
-
-      // Row 3: Category + Unit + Save
-      var r3=document.createElement("div");
-      r3.style.cssText="display:flex;gap:6px;align-items:center";
-      var catSel=document.createElement("select");
-      catSel.style.cssText="flex:1;background:var(--s3);border:1px solid var(--bd2);border-radius:5px;color:var(--tx);font-family:var(--mono);font-size:10px;padding:4px 6px;outline:none;min-width:0";
-      ["Accessories","Gaskets","Fasteners","Materials","Trims","Profiles","Other"].forEach(function(c){
-        var o=document.createElement("option");o.value=c;o.textContent=c;
-        if(c===item.cat)o.selected=true;
-        catSel.appendChild(o);
-      });
-      var unitSel=document.createElement("select");
-      unitSel.style.cssText="width:70px;background:var(--s3);border:1px solid var(--bd2);border-radius:5px;color:var(--tx);font-family:var(--mono);font-size:10px;padding:4px 6px;outline:none;flex-shrink:0";
-      ["EA","FT","BX","TUBE","BAG","SET","LF"].forEach(function(u){
-        var o=document.createElement("option");o.value=u;o.textContent=u;
-        if(u===item.unit)o.selected=true;
-        unitSel.appendChild(o);
-      });
-      var saveBtn=document.createElement("button");
-      saveBtn.textContent="Save";
-      saveBtn.style.cssText="padding:4px 12px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);border-radius:5px;color:var(--bl);font-family:var(--mono);font-size:9px;cursor:pointer;white-space:nowrap;flex-shrink:0";
+      var descInp=document.createElement("input");descInp.value=item.desc;descInp.style.cssText="width:100%;background:var(--s3);border:1px solid var(--bd2);border-radius:5px;color:var(--tx);font-size:12px;padding:5px 8px;outline:none;margin-bottom:6px;display:block";
+      var r3=document.createElement("div");r3.style.cssText="display:flex;gap:6px;align-items:center";
+      var catSel=document.createElement("select");catSel.style.cssText="flex:1;background:var(--s3);border:1px solid var(--bd2);border-radius:5px;color:var(--tx);font-family:var(--mono);font-size:10px;padding:4px 6px;outline:none;min-width:0";
+      ["Accessories","Gaskets","Fasteners","Materials","Trims","Profiles","Other"].forEach(function(c){var o=document.createElement("option");o.value=c;o.textContent=c;if(c===item.cat)o.selected=true;catSel.appendChild(o);});
+      var unitSel=document.createElement("select");unitSel.style.cssText="width:70px;background:var(--s3);border:1px solid var(--bd2);border-radius:5px;color:var(--tx);font-family:var(--mono);font-size:10px;padding:4px 6px;outline:none;flex-shrink:0";
+      ["EA","FT","BX","TUBE","BAG","SET","LF"].forEach(function(u){var o=document.createElement("option");o.value=u;o.textContent=u;if(u===item.unit)o.selected=true;unitSel.appendChild(o);});
+      var saveBtn=document.createElement("button");saveBtn.textContent="Save";saveBtn.style.cssText="padding:4px 12px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);border-radius:5px;color:var(--bl);font-family:var(--mono);font-size:9px;cursor:pointer;flex-shrink:0";
       r3.appendChild(catSel);r3.appendChild(unitSel);r3.appendChild(saveBtn);
-
-      row.appendChild(r1);row.appendChild(descInp);row.appendChild(r3);
-      el.appendChild(row);
-
-      // Wire up Save
-      (function(gi,pni,di,ci,ui){
-        saveBtn.addEventListener("click",function(){
-          var newPn=pni.value.trim().toUpperCase();
-          var newDesc=di.value.trim().toUpperCase();
-          if(!newPn||!newDesc){showToast("Part number and description required");return;}
-          LIB[gi].pn=newPn;
-          LIB[gi].desc=newDesc;
-          LIB[gi].cat=ci.value;
-          LIB[gi].unit=ui.value;
-          saveLib();
-          showToast("Saved: "+newPn);
-          var q2=document.getElementById("lib-srch").value;
-          renderLibPage(q2,"ALL");
-          renderLib(q2,"ALL");
-        });
-      })(globalIdx,pnInp,descInp,catSel,unitSel);
-
-      // Wire up Delete
-      (function(gi2,pn2){
-        delBtn.addEventListener("click",function(){
-          if(!confirm("Delete "+pn2+" from library?"))return;
-          LIB.splice(gi2,1);
-          saveLib();
-          showToast("Deleted: "+pn2);
-          var q2=document.getElementById("lib-srch").value;
-          renderLibPage(q2,"ALL");
-          renderLib(q2,"ALL");
-        });
-      })(globalIdx,item.pn);
-
+      row.appendChild(r1);row.appendChild(descInp);row.appendChild(r3);el.appendChild(row);
+      (function(gi,pni,di,ci,ui){saveBtn.addEventListener("click",function(){var newPn=pni.value.trim().toUpperCase();var newDesc=di.value.trim().toUpperCase();if(!newPn||!newDesc)return;LIB[gi].pn=newPn;LIB[gi].desc=newDesc;LIB[gi].cat=ci.value;LIB[gi].unit=ui.value;saveLib();showToast("Saved: "+newPn);renderLibPage("","ALL");});})(globalIdx,pnInp,descInp,catSel,unitSel);
+      (function(gi2,pn2){delBtn.addEventListener("click",function(){if(!confirm("Delete "+pn2+"?"))return;LIB.splice(gi2,1);saveLib();showToast("Deleted");renderLibPage("","ALL");});})(globalIdx,item.pn);
     }else{
-      // VIEW MODE — clean read-only row
       var row=document.createElement("div");row.className="irow";
       var pn=document.createElement("span");pn.className="ipn";pn.style.color=col;pn.textContent=item.pn;
       var desc=document.createElement("span");desc.className="idesc";desc.textContent=item.desc;
-      var cat2=document.createElement("span");cat2.className="iunit";
-      cat2.style.cssText="background:"+col+"22;color:"+col;
-      cat2.textContent=(item.cat||"Other")+" / "+item.unit;
-      row.appendChild(pn);row.appendChild(desc);row.appendChild(cat2);
-      el.appendChild(row);
+      var cat2=document.createElement("span");cat2.className="iunit";cat2.style.cssText="background:"+col+"22;color:"+col;cat2.textContent=(item.cat||"Other")+" / "+item.unit;
+      row.appendChild(pn);row.appendChild(desc);row.appendChild(cat2);el.appendChild(row);
     }
   });
 }
 
-function toggleNIF(){
-  var f=document.getElementById("nif");
-  f.className=f.className.indexOf("open")>=0?"nif":"nif open";
-}
+function toggleNIF(){var f=document.getElementById("nif");f.className=f.className.indexOf("open")>=0?"nif":"nif open";}
 
 function addNewItem(){
   var pn=(document.getElementById("new-pn").value||"").trim().toUpperCase();
@@ -915,348 +550,316 @@ function addNewItem(){
   addToBOL(item,qty);
   ["new-pn","new-desc","new-qty"].forEach(function(id){document.getElementById(id).value="";});
   document.getElementById("nif").className="nif";
-  document.getElementById("scan-status").textContent="";
 }
 
 function importCSV(input){
-  var file=input.files[0];if(!file)return;
-  var name=file.name.toLowerCase();
-  showToast("Reading file...");
-
-  // Excel files (xlsx/xls) — use SheetJS binary reader
-  if(name.endsWith(".xlsx")||name.endsWith(".xls")){
-    var reader=new FileReader();
-    reader.onload=function(e){
-      try{
-        var wb=XLSX.read(e.target.result,{type:"array"});
-        var ws=wb.Sheets[wb.SheetNames[0]];
-        var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
-        processRows(rows);
-      }catch(err){
-        showToast("Error reading Excel file: "+err.message);
-        console.error(err);
-      }
-    };
-    reader.readAsArrayBuffer(file);
-
-  // CSV files — plain text reader
-  }else{
-    var reader2=new FileReader();
-    reader2.onload=function(e){
-      var lines=e.target.result.split("\n");
-      var rows=lines.map(function(l){return l.split(",");});
-      processRows(rows);
-    };
-    reader2.readAsText(file);
-  }
+  var file=input.files[0];if(!file)return;var name=file.name.toLowerCase();showToast("Reading file...");
+  if(name.endsWith(".xlsx")||name.endsWith(".xls")){var reader=new FileReader();reader.onload=function(e){try{var wb=XLSX.read(e.target.result,{type:"array"});var ws=wb.Sheets[wb.SheetNames[0]];var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});processRows(rows);}catch(err){showToast("Error: "+err.message);}};reader.readAsArrayBuffer(file);}
+  else{var reader2=new FileReader();reader2.onload=function(e){processRows(e.target.result.split("\n").map(function(l){return l.split(",");}));};reader2.readAsText(file);}
 }
-
 function processRows(rows){
-  var added=0;
-  var skipped=0;
-  // Auto-detect columns — find header row
-  var startRow=0;
-  var pnCol=0,descCol=1,catCol=2,unitCol=3;
-
-  // Try to find header row with Part Number / Description
-  for(var i=0;i<Math.min(5,rows.length);i++){
-    var r=rows[i];
-    for(var c=0;c<r.length;c++){
-      var cell=String(r[c]||"").toLowerCase().trim();
-      if(cell==="part number"||cell==="part #"||cell==="pn"||cell==="part no"||cell==="part no."){pnCol=c;startRow=i+1;}
-      if(cell==="description"||cell==="desc"||cell==="item description"){descCol=c;}
-      if(cell==="category"||cell==="cat"){catCol=c;}
-      if(cell==="unit"||cell==="uom"||cell==="unit of measure"){unitCol=c;}
-    }
-    if(startRow>0)break;
-  }
-
-  // Auto-detect category from part number prefix
-  function autocat(pn){
-    if(!pn)return"Other";
-    var p=pn.toUpperCase();
-    if(p.indexOf("E1-")===0)return"Accessories";
-    if(p.indexOf("E2-")===0)return"Gaskets";
-    if(p.indexOf("PM-")===0||p.indexOf("HC-")===0||p.indexOf("UF-")===0)return"Fasteners";
-    if(p.indexOf("FC-")===0||p.indexOf("TRIM")===0||p.indexOf("CAP")===0)return"Trims";
-    if(p.indexOf("P-")===0||p.indexOf("CW-")===0||p.indexOf("PA-")===0||p.indexOf("MU-")===0)return"Profiles";
-    if(p.indexOf("SHIM")===0||p.indexOf("CAULK")===0||p.indexOf("ANCHOR")===0||p.indexOf("SEALANT")===0)return"Materials";
-    return"Other";
-  }
-
-  // Auto-detect unit from description
-  function autounit(desc){
-    if(!desc)return"EA";
-    var d=desc.toUpperCase();
-    if(d.indexOf(" FT")>=0||d.indexOf("GASKET")>=0||d.indexOf("WEATHERSTRIP")>=0)return"FT";
-    if(d.indexOf(" BX")>=0||d.indexOf("BOX")>=0||d.indexOf("SHIM")>=0)return"BX";
-    if(d.indexOf("TUBE")>=0||d.indexOf("CAULK")>=0||d.indexOf("SEALANT")>=0)return"TUBE";
-    if(d.indexOf("BAG")>=0)return"BAG";
-    return"EA";
-  }
-
-  for(var ri=startRow;ri<rows.length;ri++){
-    var row=rows[ri];
-    if(!row||!row.length)continue;
-    var pn=String(row[pnCol]||"").trim().toUpperCase();
-    var desc=String(row[descCol]||"").trim().toUpperCase();
-
-    // Skip blank rows and header-like rows
-    if(!pn||!desc)continue;
-    if(pn==="PART NUMBER"||pn==="PART #"||pn==="PN"||pn==="PART NO")continue;
-
-    // Get or auto-detect category and unit
-    var cat=String(row[catCol]||"").trim()||autocat(pn);
-    var unit=String(row[unitCol]||"").trim()||autounit(desc);
-
-    // Validate category
-    var validCats=["Accessories","Gaskets","Fasteners","Materials","Trims","Profiles","Other"];
-    if(validCats.indexOf(cat)<0)cat=autocat(pn);
-    if(!unit||unit.length>6)unit=autounit(desc);
-
-    if(!LIB.find(function(i){return i.pn===pn;})){
-      LIB.push({pn:pn,desc:desc,cat:cat,unit:unit});
-      added++;
-    }else{
-      skipped++;
-    }
-  }
-
-  saveLib();
-  renderLibPage("","ALL");
-  renderLib("","ALL");
-  showToast("Imported "+added+" parts"+(skipped?" ("+skipped+" already existed)":""));
+  var added=0,startRow=0,pnCol=0,descCol=1,catCol=2,unitCol=3;
+  for(var i=0;i<Math.min(5,rows.length);i++){var r=rows[i];for(var c=0;c<r.length;c++){var cell=String(r[c]||"").toLowerCase().trim();if(cell==="part number"||cell==="pn"||cell==="part no"){pnCol=c;startRow=i+1;}if(cell==="description"||cell==="desc"){descCol=c;}if(cell==="category"||cell==="cat"){catCol=c;}if(cell==="unit"||cell==="uom"){unitCol=c;}}if(startRow>0)break;}
+  function ac(pn){var p=(pn||"").toUpperCase();if(p.indexOf("E1-")===0)return"Accessories";if(p.indexOf("E2-")===0)return"Gaskets";if(p.indexOf("PM-")===0||p.indexOf("HC-")===0||p.indexOf("UF-")===0)return"Fasteners";if(p.indexOf("FC-")===0||p.indexOf("TRIM")===0)return"Trims";if(p.indexOf("P-")===0||p.indexOf("CW-")===0)return"Profiles";if(p.indexOf("SHIM")===0||p.indexOf("CAULK")===0)return"Materials";return"Other";}
+  function au(d){d=(d||"").toUpperCase();if(d.indexOf("FT")>=0||d.indexOf("GASKET")>=0)return"FT";if(d.indexOf("BOX")>=0||d.indexOf("SHIM")>=0)return"BX";if(d.indexOf("TUBE")>=0||d.indexOf("CAULK")>=0)return"TUBE";return"EA";}
+  for(var ri=startRow;ri<rows.length;ri++){var row=rows[ri];if(!row||!row.length)continue;var pn=String(row[pnCol]||"").trim().toUpperCase();var desc=String(row[descCol]||"").trim().toUpperCase();if(!pn||!desc||pn==="PART NUMBER")continue;var cat=String(row[catCol]||"").trim()||ac(pn);var unit=String(row[unitCol]||"").trim()||au(desc);var validCats=["Accessories","Gaskets","Fasteners","Materials","Trims","Profiles","Other"];if(validCats.indexOf(cat)<0)cat=ac(pn);if(!unit||unit.length>6)unit=au(desc);if(!LIB.find(function(i){return i.pn===pn;})){LIB.push({pn:pn,desc:desc,cat:cat,unit:unit});added++;}}
+  saveLib();renderLibPage("","ALL");renderLib("","ALL");showToast("Imported "+added+" parts");
 }
 
-// ADD TO BOL
+// ── Items ──────────────────────────────────────────────────────────
+// addToBOL — each item carries palletNum for assignment
 function addToBOL(item,qty){
   var idx=ST.items.findIndex(function(i){return i.pn===item.pn;});
   if(idx>=0){ST.items[idx].qty+=qty;}
-  else{ST.items.push({pn:item.pn,desc:item.desc,cat:item.cat||"Other",unit:item.unit||"EA",qty:qty});}
+  else{ST.items.push({pn:item.pn,desc:item.desc,cat:item.cat||"Other",unit:item.unit||"EA",qty:qty,palletNum:""});}
   renderAddedItems();
 }
 
+// renderAddedItems — grouped by pallet, with pallet selector per item
 function renderAddedItems(){
   var el=document.getElementById("added-items-list");
   var cnt=document.getElementById("items-cnt");
   cnt.textContent=ST.items.length;
   el.innerHTML="";
   if(!ST.items.length){
-    var msg=document.createElement("div");
-    msg.style.cssText="text-align:center;padding:16px;color:var(--dm);font-family:var(--mono);font-size:11px";
-    msg.textContent="No items added yet";
-    el.appendChild(msg);return;
+    var msg=document.createElement("div");msg.style.cssText="text-align:center;padding:16px;color:var(--dm);font-family:var(--mono);font-size:11px";msg.textContent="No items added yet";el.appendChild(msg);return;
   }
+
+  // Group items by palletNum for display
+  var groups={};var order=[];
   ST.items.forEach(function(item,idx){
-    var col=catColor(item.cat);
-    var row=document.createElement("div");row.className="bol-item";
-    var info=document.createElement("div");info.className="bi-info";
-    var pn=document.createElement("div");pn.className="bi-pn";pn.textContent=item.pn;
-    var desc=document.createElement("div");desc.className="bi-desc";desc.textContent=item.desc;
-    info.appendChild(pn);info.appendChild(desc);
-    var cat=document.createElement("span");cat.style.cssText="font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:10px;flex-shrink:0;background:"+col+"22;color:"+col;cat.textContent=item.cat;
-    var qc=document.createElement("div");
-    qc.style.cssText="display:flex;align-items:center;gap:6px;flex-shrink:0";
-    var qlbl=document.createElement("span");
-    qlbl.style.cssText="font-family:var(--mono);font-size:9px;color:var(--dm)";
-    qlbl.textContent="QTY:";
-    var qi=document.createElement("input");
-    qi.type="number";qi.value=item.qty;qi.min=1;
-    qi.style.cssText="width:70px;text-align:center;background:var(--s3);border:1px solid var(--bl);border-radius:6px;color:var(--tx);font-family:var(--mono);font-size:14px;font-weight:700;padding:5px 4px;outline:none";
-    var qu=document.createElement("span");
-    qu.style.cssText="font-family:var(--mono);font-size:10px;color:var(--mu);min-width:26px";
-    qu.textContent=item.unit;
-    var del=document.createElement("button");del.className="qdel";del.innerHTML="&#10005;";
-    qc.appendChild(qlbl);qc.appendChild(qi);qc.appendChild(qu);
-    row.appendChild(info);row.appendChild(cat);row.appendChild(qc);row.appendChild(del);
-    el.appendChild(row);
-    (function(i){
-      qi.oninput=function(){ST.items[i].qty=Math.max(1,parseInt(this.value)||1);};
-      qi.onblur=function(){if(!this.value||parseInt(this.value)<1){this.value=1;ST.items[i].qty=1;}};
-      del.onclick=function(){ST.items.splice(i,1);renderAddedItems();};
-    })(idx);
+    var key=item.palletNum||"__unassigned__";
+    if(!groups[key]){groups[key]=[];order.push(key);}
+    groups[key].push({item:item,idx:idx});
+  });
+  // De-dup order
+  order=order.filter(function(v,i){return order.indexOf(v)===i;});
+
+  order.forEach(function(key){
+    // Group header
+    if(ST.pallets.length>0){
+      var ghdr=document.createElement("div");ghdr.className="plt-group-hdr";
+      var icon=document.createElement("span");icon.textContent="📦";
+      var lbl=document.createElement("span");lbl.textContent=key==="__unassigned__"?"Unassigned Items":key;
+      lbl.style.fontWeight="700";
+      var cnt2=document.createElement("span");cnt2.style.cssText="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--mu)";cnt2.textContent=groups[key].length+" item"+(groups[key].length!==1?"s":"");
+      ghdr.appendChild(icon);ghdr.appendChild(lbl);ghdr.appendChild(cnt2);
+      el.appendChild(ghdr);
+    }
+
+    groups[key].forEach(function(entry){
+      var item=entry.item;var idx=entry.idx;var col=catColor(item.cat);
+      var card=document.createElement("div");card.className="bol-item";
+
+      // Top: info
+      var main=document.createElement("div");main.className="bi-main";
+      var info=document.createElement("div");info.className="bi-info";
+      var pn=document.createElement("div");pn.className="bi-pn";pn.style.color=col;pn.textContent=item.pn;
+      var desc=document.createElement("div");desc.className="bi-desc";desc.textContent=item.desc;
+      var catBadge=document.createElement("span");catBadge.style.cssText="font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:10px;flex-shrink:0;background:"+col+"22;color:"+col;catBadge.textContent=item.cat;
+      info.appendChild(pn);info.appendChild(desc);
+      main.appendChild(info);main.appendChild(catBadge);
+      card.appendChild(main);
+
+      // Bottom: qty + pallet + delete
+      var bot=document.createElement("div");bot.className="bi-bottom";
+
+      // Qty control
+      var qlbl=document.createElement("span");qlbl.style.cssText="font-family:var(--mono);font-size:9px;color:var(--dm)";qlbl.textContent="QTY:";
+      var qi=document.createElement("input");qi.type="number";qi.value=item.qty;qi.min=1;qi.className="qinp";
+      var qu=document.createElement("span");qu.className="qunit";qu.textContent=item.unit;
+
+      // Pallet selector — only show if pallets are selected
+      if(ST.pallets.length>0){
+        var psel=document.createElement("select");psel.className="psel";
+        var defOpt=document.createElement("option");defOpt.value="";defOpt.textContent="Assign to pallet...";psel.appendChild(defOpt);
+        ST.pallets.forEach(function(p){
+          var o=document.createElement("option");o.value=p.num;o.textContent=p.num+(p.frames&&p.frames.length?" ("+p.frames.length+"fr)":p.desc?" / "+p.desc:"");
+          if(item.palletNum===p.num)o.selected=true;
+          psel.appendChild(o);
+        });
+        (function(i){psel.onchange=function(){ST.items[i].palletNum=this.value;renderAddedItems();};})(idx);
+        bot.appendChild(psel);
+      }
+
+      // Delete
+      var del=document.createElement("button");del.className="qdel";del.innerHTML="&#10005;";
+
+      bot.appendChild(qlbl);bot.appendChild(qi);bot.appendChild(qu);bot.appendChild(del);
+      card.appendChild(bot);
+      el.appendChild(card);
+
+      (function(i){
+        qi.oninput=function(){ST.items[i].qty=Math.max(1,parseInt(this.value)||1);};
+        qi.onblur=function(){if(!this.value||parseInt(this.value)<1){this.value=1;ST.items[i].qty=1;}};
+        del.onclick=function(){ST.items.splice(i,1);renderAddedItems();};
+      })(idx);
+    });
   });
 }
 
-// SIGNATURE
-var sigCtx=null,sigDrawing=false;
-function initSig(){
-  var c=document.getElementById("sig-canvas");if(!c)return;
-  c.width=c.offsetWidth||340;c.height=120;
-  sigCtx=c.getContext("2d");
-  sigCtx.strokeStyle="#00d084";sigCtx.lineWidth=2;sigCtx.lineCap="round";
-  function pos(e){var r=c.getBoundingClientRect();var s=e.touches?e.touches[0]:e;return{x:s.clientX-r.left,y:s.clientY-r.top};}
-  c.addEventListener("mousedown",function(e){sigDrawing=true;var p=pos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);e.preventDefault();});
-  c.addEventListener("touchstart",function(e){sigDrawing=true;var p=pos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);e.preventDefault();},{passive:false});
-  c.addEventListener("mousemove",function(e){if(!sigDrawing)return;var p=pos(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();e.preventDefault();});
-  c.addEventListener("touchmove",function(e){if(!sigDrawing)return;var p=pos(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();e.preventDefault();},{passive:false});
-  c.addEventListener("mouseup",function(){sigDrawing=false;ST.sig=c.toDataURL();});
-  c.addEventListener("touchend",function(){sigDrawing=false;ST.sig=c.toDataURL();});
+function showSearchDrop(q){
+  var drop=document.getElementById("srch-drop");if(!q||!q.trim()){drop.style.display="none";return;}
+  var matches=LIB.filter(function(i){return i.pn.toUpperCase().indexOf(q.toUpperCase())>=0||i.desc.toUpperCase().indexOf(q.toUpperCase())>=0;}).slice(0,12);
+  if(!matches.length){drop.style.display="none";return;}
+  drop.innerHTML="";
+  matches.forEach(function(item){
+    var d=document.createElement("div");d.style.cssText="padding:10px 12px;cursor:pointer;border-bottom:1px solid #1e2a3e;display:flex;justify-content:space-between;align-items:center";
+    var left=document.createElement("div");
+    var pn2=document.createElement("div");pn2.style.cssText="font-family:var(--mono);font-size:11px;font-weight:700;color:"+catColor(item.cat||"Other");pn2.textContent=item.pn;
+    var desc2=document.createElement("div");desc2.style.cssText="font-size:12px;color:var(--tx);margin-top:2px";desc2.textContent=item.desc;
+    left.appendChild(pn2);left.appendChild(desc2);
+    var right=document.createElement("button");right.style.cssText="background:rgba(59,130,246,.15);color:var(--bl);border:1px solid rgba(59,130,246,.3);border-radius:5px;padding:5px 12px;font-family:var(--mono);font-size:10px;cursor:pointer;white-space:nowrap";right.textContent="+ ADD";
+    (function(it){right.addEventListener("click",function(e){e.stopPropagation();addToBOL(it,1);showToast("Added: "+it.desc);drop.style.display="none";document.getElementById("item-srch").value="";});d.addEventListener("click",function(){addToBOL(it,1);showToast("Added: "+it.desc);drop.style.display="none";document.getElementById("item-srch").value="";});})(item);
+    d.appendChild(left);d.appendChild(right);drop.appendChild(d);
+  });
+  drop.style.display="block";
 }
+
+function manualEntry(){
+  var code=prompt("Type the part number or description:");if(!code||!code.trim())return;var q=code.trim().toUpperCase();
+  var found=LIB.find(function(i){return i.pn.toUpperCase()===q;});
+  if(found){addToBOL(found,1);showToast("Added: "+found.desc);}
+  else{var matches=LIB.filter(function(i){return i.pn.toUpperCase().indexOf(q)>=0||i.desc.toUpperCase().indexOf(q)>=0;});
+    if(matches.length===1){addToBOL(matches[0],1);showToast("Added: "+matches[0].desc);}
+    else if(matches.length>1){document.getElementById("item-srch").value=code.trim();filterItems(code.trim());showSearchDrop(code.trim());}
+    else{document.getElementById("new-pn").value=q;document.getElementById("nif").className="nif open";document.getElementById("new-desc").focus();}
+  }
+}
+
+// ── Signature ──────────────────────────────────────────────────────
+var sigCtx=null,sigDrawing=false;
+function initSig(){var c=document.getElementById("sig-canvas");if(!c)return;c.width=c.offsetWidth||340;c.height=120;sigCtx=c.getContext("2d");sigCtx.strokeStyle="#00d084";sigCtx.lineWidth=2;sigCtx.lineCap="round";function pos(e){var r=c.getBoundingClientRect();var s=e.touches?e.touches[0]:e;return{x:s.clientX-r.left,y:s.clientY-r.top};}c.addEventListener("mousedown",function(e){sigDrawing=true;var p=pos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);e.preventDefault();});c.addEventListener("touchstart",function(e){sigDrawing=true;var p=pos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);e.preventDefault();},{passive:false});c.addEventListener("mousemove",function(e){if(!sigDrawing)return;var p=pos(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();e.preventDefault();});c.addEventListener("touchmove",function(e){if(!sigDrawing)return;var p=pos(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();e.preventDefault();},{passive:false});c.addEventListener("mouseup",function(){sigDrawing=false;ST.sig=c.toDataURL();});c.addEventListener("touchend",function(){sigDrawing=false;ST.sig=c.toDataURL();});}
 function clearSig(){if(sigCtx){var c=document.getElementById("sig-canvas");sigCtx.clearRect(0,0,c.width,c.height);}ST.sig=null;}
 
-// REVIEW
+// ── Review ─────────────────────────────────────────────────────────
 function buildReview(){
-  var el=document.getElementById("review-content");if(!el)return;
+  var el=document.getElementById("review-content");if(!el)return;el.innerHTML="";
   var tf=ST.pallets.reduce(function(s,p){return s+(p.frames?p.frames.length:0);},0);
-  el.innerHTML="";
-  function addSH(txt){var d=document.createElement("div");d.className="sum-hdr";d.textContent=txt;el.appendChild(d);}
-  function addSR(k,v){
-    var d=document.createElement("div");d.className="sum-row";
-    var dk=document.createElement("span");dk.className="sum-key";dk.textContent=k;
-    var dv=document.createElement("span");dv.textContent=v;
-    d.appendChild(dk);d.appendChild(dv);el.appendChild(d);
-  }
-  addSH("Shipment");
-  addSR("BOL Number",ST.bolNum);addSR("Ship Date",ST.shipDate);
-  addSR("Ship From",ST.shipFrom);addSR("Ship To",ST.shipTo||"Not set");
-  addSR("Carrier",ST.carrier||"Not set");addSR("Driver",ST.driver||"Not set");
-  addSR("Truck / Trailer",(ST.truckNum||"-")+" / "+(ST.trailerNum||"-"));
-  addSR("Freight Terms",ST.ft.toUpperCase());
-  if(ST.specInst)addSR("Special Inst.",ST.specInst);
-  if(ST.pallets.length){
-    addSH("Pallets ("+ST.pallets.length+") - "+tf+" Frames");
-    ST.pallets.forEach(function(p,i){
-      addSR("Item "+(i+1)+" - "+p.num,p.frames&&p.frames.length?p.frames.length+" frames":p.desc||"Custom");
-      if(p.frames&&p.frames.length){
-        var d=document.createElement("div");
-        d.style.cssText="font-size:10px;color:var(--mu);font-family:var(--mono);padding:2px 0 5px 8px;line-height:1.7";
-        d.textContent=p.frames.join(", ");el.appendChild(d);
+  function addSH(txt,col){var d=document.createElement("div");d.className="sum-hdr";if(col)d.style.color=col;d.textContent=txt;el.appendChild(d);}
+  function addSR(k,v){var d=document.createElement("div");d.className="sum-row";var dk=document.createElement("span");dk.className="sum-key";dk.textContent=k;var dv=document.createElement("span");dv.textContent=v;d.appendChild(dk);d.appendChild(dv);el.appendChild(d);}
+  addSH("Shipment");addSR("BOL Number",ST.bolNum);addSR("Ship Date",ST.shipDate);addSR("Carrier",ST.carrier||"-");addSR("Driver",ST.driver||"-");addSR("Freight Terms",ST.ft.toUpperCase());if(ST.specInst)addSR("Special Inst.",ST.specInst);
+  if(ST.pallets.length){addSH("Pallets ("+ST.pallets.length+") — "+tf+" Frames");ST.pallets.forEach(function(p){addSR(p.num,(p.frames&&p.frames.length?p.frames.join(", "):p.desc||"Accessories pallet"));}); }
+  if(ST.items.length){
+    // Show items grouped by pallet
+    var byPallet={};var unassigned=[];
+    ST.items.forEach(function(item){if(item.palletNum){if(!byPallet[item.palletNum])byPallet[item.palletNum]=[];byPallet[item.palletNum].push(item);}else{unassigned.push(item);}});
+    ST.pallets.forEach(function(p){
+      if(byPallet[p.num]&&byPallet[p.num].length){
+        addSH("Items → "+p.num,"var(--bl)");
+        byPallet[p.num].forEach(function(item){addSR(item.pn+" - "+item.desc,item.qty+" "+item.unit);});
       }
     });
-  }
-  if(ST.items.length){
-    var cats={};
-    ST.items.forEach(function(item){var c=item.cat||"Other";if(!cats[c])cats[c]=[];cats[c].push(item);});
-    Object.keys(cats).forEach(function(cat){
-      addSH(cat+" ("+cats[cat].length+" items)");
-      cats[cat].forEach(function(item){addSR(item.pn+" - "+item.desc,item.qty+" "+item.unit);});
-    });
+    if(unassigned.length){addSH("Unassigned Items","var(--am)");unassigned.forEach(function(item){addSR(item.pn+" - "+item.desc,item.qty+" "+item.unit);});}
   }
 }
 
-// GENERATE + DOWNLOAD PDF
-function downloadPDF(){
-  showToast("Generating PDF...");
-  saveBOL();
-  setTimeout(function(){
-    try{doPDF();}
-    catch(err){console.error(err);showToast("PDF error - using print");window.print();}
-  },200);
+// ── History ────────────────────────────────────────────────────────
+function loadHist(){try{var h=localStorage.getItem("ega-bol-hist");if(h)HI=JSON.parse(h);}catch(e){}}
+function renderHistPage(){
+  var el=document.getElementById("hist-list");if(!el)return;
+  if(!HI.length){el.innerHTML="<div style='text-align:center;padding:20px;color:var(--dm);font-family:var(--mono);font-size:11px'>No BOLs created yet.</div>";return;}
+  el.innerHTML="";
+  var clearBtn=document.createElement("button");clearBtn.style.cssText="width:100%;padding:10px;background:rgba(255,77,106,.08);border:1px solid rgba(255,77,106,.3);border-radius:8px;color:var(--rd);font-family:var(--mono);font-size:10px;cursor:pointer;margin-bottom:12px";clearBtn.textContent="Clear All BOL History";
+  clearBtn.addEventListener("click",function(){if(!confirm("Clear all BOL history?"))return;HI=[];try{localStorage.removeItem("ega-bol-hist");}catch(e){}renderHistPage();});
+  el.appendChild(clearBtn);
+  HI.forEach(function(b){
+    var card=document.createElement("div");card.className="bol-hist-card";
+    var num=document.createElement("div");num.className="bh-num";num.textContent=b.bolNum;
+    var badge=document.createElement("span");badge.className="sbadge "+(b.status==="DELIVERED"?"s-d":b.status==="IN TRANSIT"?"s-t":"s-p");badge.style.marginLeft="8px";badge.textContent=b.status||"PENDING";num.appendChild(badge);
+    var info=document.createElement("div");info.className="bh-info";info.innerHTML=(b.date||"-")+" / "+(b.carrier||"-")+" / "+(b.driver||"-")+"<br>"+b.palletCount+" pallets / "+b.frameCount+" frames / "+b.itemCount+" items";
+    var btns=document.createElement("div");btns.style.cssText="display:flex;gap:6px;margin-top:8px";
+    var d=document.createElement("button");d.className="action-btn";d.style.color="var(--gn)";d.textContent="Mark Delivered";
+    var r=document.createElement("button");r.className="action-btn";r.style.color="var(--bl)";r.textContent="Reprint PDF";
+    (function(bol){d.onclick=function(){bol.status="DELIVERED";try{localStorage.setItem("ega-bol-hist",JSON.stringify(HI));}catch(e){}renderHistPage();};r.onclick=function(){reprintPDF(bol);};})(b);
+    btns.appendChild(d);btns.appendChild(r);card.appendChild(num);card.appendChild(info);card.appendChild(btns);el.appendChild(card);
+  });
 }
+
+// ── PDF Generation ─────────────────────────────────────────────────
+function downloadPDF(){showToast("Generating PDF...");saveBOL();setTimeout(function(){try{doPDF();}catch(err){console.error(err);showToast("PDF error: "+err.message);}},200);}
 
 function saveBOL(){
   var tf=ST.pallets.reduce(function(s,p){return s+(p.frames?p.frames.length:0);},0);
-  var entry={bolNum:ST.bolNum,date:ST.shipDate,shipTo:ST.shipTo,carrier:ST.carrier,
-    driver:ST.driver,truckNum:ST.truckNum,trailerNum:ST.trailerNum,
-    ft:ST.ft,specInst:ST.specInst,
-    palletCount:ST.pallets.length,frameCount:tf,itemCount:ST.items.length,
-    pallets:JSON.parse(JSON.stringify(ST.pallets)),
-    items:JSON.parse(JSON.stringify(ST.items)),
-    sig:ST.sig,status:"PENDING",ts:new Date().toISOString()};
-  HI.unshift(entry);
-  try{localStorage.setItem("ega-bol-hist",JSON.stringify(HI));}catch(e){}
-var palletNums = ST.pallets.map(function(p){return p.num;}).join(",");
-var params=new URLSearchParams({
-  action:"bol",
-  bolNum:ST.bolNum,
-  shipDate:ST.shipDate,
-  shipTo:ST.shipTo,
-  carrier:ST.carrier,
-  driver:ST.driver,
-  palletCount:ST.pallets.length,
-  frameCount:tf,
-  palletNums:palletNums,
-  status:"PENDING"
-});
-var img=new Image();img.src=WH+"?"+params.toString();
+  var entry={bolNum:ST.bolNum,date:ST.shipDate,shipTo:ST.shipTo,carrier:ST.carrier,driver:ST.driver,truckNum:ST.truckNum,trailerNum:ST.trailerNum,scac:ST.scac,proNum:ST.proNum,ft:ST.ft,specInst:ST.specInst,palletCount:ST.pallets.length,frameCount:tf,itemCount:ST.items.length,pallets:JSON.parse(JSON.stringify(ST.pallets)),items:JSON.parse(JSON.stringify(ST.items)),sig:ST.sig,status:"PENDING",ts:new Date().toISOString()};
+  HI.unshift(entry);try{localStorage.setItem("ega-bol-hist",JSON.stringify(HI));}catch(e){}
+  var palletNums=ST.pallets.map(function(p){return p.num;}).join(",");
+  var img=new Image();img.src=WH+"?"+new URLSearchParams({action:"bol",bolNum:ST.bolNum,shipDate:ST.shipDate,carrier:ST.carrier,driver:ST.driver,palletCount:ST.pallets.length,frameCount:tf,palletNums:palletNums,status:"PENDING"}).toString();
 }
 
 function doPDF(){
   var jsPDF=window.jspdf?window.jspdf.jsPDF:null;
-  if(!jsPDF){showToast("PDF library loading - try again");return;}
+  if(!jsPDF){showToast("PDF library loading — try again in 2 seconds");return;}
   var entry=HI[0];if(!entry)return;
   var doc=new jsPDF({orientation:"portrait",unit:"mm",format:"letter"});
-  var pw=doc.internal.pageSize.getWidth();
-  var m=14;var y=12;
-  // Title
+  var pw=doc.internal.pageSize.getWidth();var m=14;var y=12;
+
+  // ── Title ─────────────────────────────────────────────────────
   doc.setFontSize(13);doc.setFont("helvetica","bold");
   doc.text("BILL OF LADING - SHORT FORM - NOT NEGOTIABLE",pw/2,y,{align:"center"});
   y+=4;doc.setFontSize(8);doc.setFont("helvetica","normal");
-  doc.text("Page 1 of 1",pw/2,y,{align:"center"});
-  y+=5;
-  // Header table
-  doc.setFontSize(8);
-  var ht=[
-    [["SHIP FROM","Eastern Glass & Aluminum","4274 Shackleford Rd., Norcross, GA 30093","678-355-9010"],
-     ["Bill of Lading Number: "+entry.bolNum,"","Date: "+entry.date,""]],
-    [["SHIP TO",entry.shipTo||"","",""],
-     ["Carrier Name: "+(entry.carrier||"EGA"),"Trailer: "+(entry.trailerNum||"-"),"Truck: "+(entry.truckNum||"-"),""]],
-    [["THIRD PARTY FREIGHT CHARGES BILL TO","Eastern Glass & Aluminum","4274 Shackleford Rd., Norcross, GA 30093","678-355-9010"],
-     ["SCAC: "+(entry.scac||""),"Pro Number: "+(entry.proNum||""),"",""]],
-  ];
+  doc.text("Page 1 of 1",pw/2,y,{align:"center"});y+=5;
+
+  // ── Header boxes ──────────────────────────────────────────────
   var cw=(pw-m*2)/2;
+  var ht=[
+    [["SHIP FROM","Eastern Glass & Aluminum","4274 Shackleford Rd., Norcross, GA 30093","Tel: 678-355-9010"],["Bill of Lading Number: "+entry.bolNum,"","Date: "+entry.date,""]],
+    [["SHIP TO",entry.shipTo||"","",""],["Carrier: "+(entry.carrier||"EGA"),"Trailer #: "+(entry.trailerNum||"-"),"Truck #: "+(entry.truckNum||"-"),"Driver: "+(entry.driver||"-")]],
+    [["THIRD PARTY FREIGHT CHARGES BILL TO","Eastern Glass & Aluminum","4274 Shackleford Rd., Norcross, GA 30093",""],["SCAC: "+(entry.scac||""),"Pro Number: "+(entry.proNum||""),"",""]],
+  ];
   ht.forEach(function(pair){
-    var left=pair[0],right=pair[1];
-    var sh=Math.max(left.length,right.length)*4+4;
+    var left=pair[0],right=pair[1];var sh=Math.max(left.length,right.length)*4+4;
     doc.rect(m,y,cw,sh);doc.rect(m+cw,y,cw,sh);
-    if(left[0].toUpperCase()===left[0]&&left[0].length<30){
-      doc.setFillColor(200,200,200);doc.rect(m,y,cw,5,"F");
-      doc.setFont("helvetica","bold");doc.text(left[0],m+cw/2,y+3.5,{align:"center"});
-      left=left.slice(1);
-    }
+    if(left[0].toUpperCase()===left[0]&&left[0].length<30){doc.setFillColor(200,200,200);doc.rect(m,y,cw,5,"F");doc.setFont("helvetica","bold");doc.text(left[0],m+cw/2,y+3.5,{align:"center"});left=left.slice(1);}
     doc.setFont("helvetica","normal");
     left.forEach(function(t,i){if(t)doc.text(t,m+2,y+6+i*3.5);});
     right.forEach(function(t,i){if(t)doc.text(t,m+cw+2,y+3+i*4);});
     y+=sh;
   });
-  // Special instructions
-  if(entry.specInst){
-    doc.rect(m,y,pw-m*2,6);
-    doc.setFont("helvetica","normal");doc.setFontSize(8);
-    doc.text("Special Instructions: "+entry.specInst,m+2,y+4);
-    y+=6;
-  }
-  // Freight terms
-  doc.rect(m,y,pw-m*2,6);
-  doc.setFont("helvetica","normal");
+
+  if(entry.specInst){doc.rect(m,y,pw-m*2,6);doc.setFont("helvetica","normal");doc.setFontSize(8);doc.text("Special Instructions: "+entry.specInst,m+2,y+4);y+=6;}
+  doc.rect(m,y,pw-m*2,6);doc.setFont("helvetica","normal");
   doc.text("Freight Charge Terms:  Prepaid ["+(entry.ft==="prepaid"?"X":" ")+"]   Collect ["+(entry.ft==="collect"?"X":" ")+"]   3rd Party ["+(entry.ft==="3rd"?"X":" ")+"]   Invoice [ ]",m+2,y+4);
   y+=6;
-  // Customer order section
+
+  // ── Customer Order table ───────────────────────────────────────
   doc.setFillColor(200,200,200);doc.rect(m,y,pw-m*2,5,"F");
-  doc.setFont("helvetica","bold");doc.text("CUSTOMER ORDER INFORMATION",pw/2,y+3.5,{align:"center"});
-  y+=5;
+  doc.setFont("helvetica","bold");doc.text("CUSTOMER ORDER INFORMATION",pw/2,y+3.5,{align:"center"});y+=5;
   doc.autoTable({startY:y,
-    head:[["Customer Order No.","# of Packages","Weight","Pallet/Slip","Additional Info"]],
-    body:[["Job #20230013",entry.palletCount+entry.items.length,"","Y  N","BNA Concourse A - "+entry.frameCount+" Frames"],["Grand Total","","","",""]],
-    theme:"grid",headStyles:{fillColor:[220,220,220],textColor:[0,0,0],fontSize:7,fontStyle:"bold"},
-    bodyStyles:{fontSize:8},margin:{left:m,right:m}});
+    head:[["Customer Order No.","# Packages","Weight","Pallet/Slip","Additional Info"]],
+    body:[["Job #20230013",entry.palletCount+entry.items.length,"","Y  N","BNA Concourse A — "+entry.frameCount+" Frames"],["Grand Total","","","",""]],
+    theme:"grid",headStyles:{fillColor:[220,220,220],textColor:[0,0,0],fontSize:7,fontStyle:"bold"},bodyStyles:{fontSize:8},margin:{left:m,right:m}});
   y=doc.lastAutoTable.finalY;
-  // Carrier section header
+
+  // ── Carrier Information header ─────────────────────────────────
   doc.setFillColor(200,200,200);doc.rect(m,y,pw-m*2,5,"F");
-  doc.setFont("helvetica","bold");doc.text("CARRIER INFORMATION",pw/2,y+3.5,{align:"center"});
-  y+=5;
-  // Build commodity rows
+  doc.setFont("helvetica","bold");doc.text("CARRIER INFORMATION",pw/2,y+3.5,{align:"center"});y+=5;
+
+  // ── Build commodity rows — items grouped by pallet ─────────────
   var rows=[];var n=1;
-  entry.pallets.forEach(function(p){
-    var desc=p.num+(p.frames&&p.frames.length?" - CW FRAMES: "+p.frames.join(", "):p.desc?" - "+p.desc:" - ACCESSORIES PALLET");
-    rows.push([n++,"",1,"Pallet","","",desc,"",""]);
+
+  // Map items to pallets
+  var byPallet={};var unassigned=[];
+  (entry.items||[]).forEach(function(item){
+    if(item.palletNum){if(!byPallet[item.palletNum])byPallet[item.palletNum]=[];byPallet[item.palletNum].push(item);}
+    else{unassigned.push(item);}
   });
-  var cats={};
-  entry.items.forEach(function(item){var c=item.cat||"Other";if(!cats[c])cats[c]=[];cats[c].push(item);});
-  Object.keys(cats).forEach(function(cat){
-    cats[cat].forEach(function(item){rows.push([n++,"",item.qty,item.unit,"","",item.pn+" - "+item.desc,"",""]);});
+
+  // For each pallet: pallet row, then its assigned items indented
+  (entry.pallets||[]).forEach(function(p){
+    var desc=p.num;
+    if(p.frames&&p.frames.length){desc+=" — CW FRAMES: "+p.frames.join(", ");}
+    else if(p.desc){desc+=" — "+p.desc;}
+    else{desc+=" — ACCESSORIES PALLET";}
+    // Pallet row — bold
+    rows.push({data:[n++,1,"Pallet","",desc,"",""],isPallet:true});
+    // Items assigned to this pallet
+    if(byPallet[p.num]){
+      byPallet[p.num].forEach(function(item){
+        rows.push({data:[n++,item.qty,item.unit,"","  "+item.pn+" — "+item.desc,"",""],isPallet:false});
+      });
+    }
   });
-  while(rows.length<10)rows.push([n++,"","","Pallet","","","","",""]);
-  doc.autoTable({startY:y,
-    head:[["Item","Type","Qty","Type","Weight","HM(X)","Commodity Description","NMFC No.","Class"]],
-    body:rows,theme:"grid",
-    headStyles:{fillColor:[220,220,220],textColor:[0,0,0],fontSize:7,fontStyle:"bold"},
-    bodyStyles:{fontSize:7,cellPadding:1.5},
-    columnStyles:{0:{cellWidth:8,halign:"center"},1:{cellWidth:10,halign:"center"},2:{cellWidth:8,halign:"center"},3:{cellWidth:10,halign:"center"},4:{cellWidth:12,halign:"center"},5:{cellWidth:10,halign:"center"},6:{cellWidth:"auto"},7:{cellWidth:14,halign:"center"},8:{cellWidth:10,halign:"center"}},
-    margin:{left:m,right:m}});
+
+  // Unassigned items at bottom
+  if(unassigned.length){
+    unassigned.forEach(function(item){
+      rows.push({data:[n++,item.qty,item.unit,"",item.pn+" — "+item.desc,"",""],isPallet:false});
+    });
+  }
+
+  // Fill to minimum 10 rows
+  while(rows.length<10){rows.push({data:[n++,"","","","","",""],isPallet:false});}
+
+  doc.autoTable({
+    startY:y,
+    // HM(X) REMOVED — 7 columns only
+    head:[["Item","Qty","Type","Weight","Commodity Description","NMFC No.","Class"]],
+    body:rows.map(function(r){return r.data;}),
+    theme:"grid",
+    headStyles:{fillColor:[220,220,220],textColor:[0,0,0],fontSize:7,fontStyle:"bold",halign:"center"},
+    bodyStyles:{fontSize:7,cellPadding:2,lineWidth:0.2,lineColor:[160,160,160]},
+    columnStyles:{
+      0:{cellWidth:12,halign:"center",lineWidth:0.35,lineColor:[0,0,0]}, // Item — wider + clear borders
+      1:{cellWidth:18,halign:"center"},  // Qty — wide enough for any number
+      2:{cellWidth:14,halign:"center"},  // Type
+      3:{cellWidth:14,halign:"center"},  // Weight
+      4:{cellWidth:"auto"},             // Commodity Description — fills remaining space
+      5:{cellWidth:20,halign:"center"},  // NMFC No.
+      6:{cellWidth:12,halign:"center"}   // Class
+    },
+    didParseCell:function(data){
+      // Bold pallet rows
+      if(data.section==="body"&&rows[data.row]&&rows[data.row].isPallet){
+        data.cell.styles.fontStyle="bold";
+        data.cell.styles.fillColor=[240,245,255];
+      }
+    },
+    margin:{left:m,right:m}
+  });
   y=doc.lastAutoTable.finalY+4;
-  // Signature section
+
+  // ── Signature section ──────────────────────────────────────────
   if(y>220){doc.addPage();y=14;}
   var hw=(pw-m*2)/2;
   doc.rect(m,y,hw-2,28);doc.rect(m+hw,y,hw-2,28);
@@ -1267,195 +870,41 @@ function doPDF(){
   doc.setFont("helvetica","bold");doc.text("DRIVER ACKNOWLEDGMENT",m+hw+2,y+4);
   doc.setFont("helvetica","normal");doc.text("Contents received in apparent good order",m+hw+2,y+9);
   doc.line(m+hw+2,y+20,pw-m-2,y+20);doc.text("Driver Signature",m+hw+2,y+25);
-  // Add digital signature if exists
   if(entry.sig){try{doc.addImage(entry.sig,"PNG",m+2,y+10,hw-6,10);}catch(e){}}
   y+=32;
   doc.setFontSize(7);doc.setFont("helvetica","italic");
-  doc.text("Note: Liability limitation for loss or damage may be applicable. See 49 USC 14706(c)(1)(A) and (B).",m,y);
-  // Save
+  doc.text("Note: Liability limitation for loss or damage in connection with interstate transportation may be applicable. See 49 U.S.C. 14706(c)(1)(A) and (B).",m,y);
+
   var fname=entry.bolNum+(entry.date?"-"+entry.date:"")+".pdf";
-  doc.save(fname);
-  showToast("Downloaded: "+fname);
-  // Reset UI
+  doc.save(fname);showToast("Downloaded: "+fname);
   setTimeout(function(){resetBOL();},500);
-}
-
-// HISTORY
-function loadHist(){try{var h=localStorage.getItem("ega-bol-hist");if(h)HI=JSON.parse(h);}catch(e){}}
-
-function renderHistPage(){
-  var el=document.getElementById("hist-list");if(!el)return;
-  if(!HI.length){
-    el.innerHTML="<div style='text-align:center;padding:20px;color:var(--dm);font-family:var(--mono);font-size:11px'>No BOLs created yet.</div>";
-    return;
-  }
-  el.innerHTML="";
-  // Clear all button
-  var clearBtn=document.createElement("button");
-  clearBtn.style.cssText="width:100%;padding:10px;background:rgba(255,77,106,.08);border:1px solid rgba(255,77,106,.3);border-radius:8px;color:var(--rd);font-family:var(--mono);font-size:10px;cursor:pointer;margin-bottom:12px;letter-spacing:.06em";
-  clearBtn.textContent="🗑 Clear All BOL History";
-  clearBtn.addEventListener("click",function(){
-    if(!confirm("Clear all BOL history from this device? This does not affect Google Sheets."))return;
-    HI=[];
-    try{localStorage.removeItem("ega-bol-hist");}catch(e){}
-    renderHistPage();
-    showToast("BOL history cleared");
-  });
-  el.appendChild(clearBtn);
-  HI.forEach(function(b){
-    var card=document.createElement("div");card.className="bol-hist-card";
-    var num=document.createElement("div");num.className="bh-num";num.textContent=b.bolNum;
-    var badge=document.createElement("span");badge.className="sbadge "+(b.status==="DELIVERED"?"s-d":b.status==="IN TRANSIT"?"s-t":"s-p");
-    badge.style.marginLeft="8px";badge.textContent=b.status||"PENDING";
-    num.appendChild(badge);
-    var info=document.createElement("div");info.className="bh-info";
-    info.innerHTML=(b.date||"-")+" / To: "+(b.shipTo||"-")+"<br>"+"Carrier: "+(b.carrier||"-")+" / "+(b.driver||"-")+"<br>"+b.palletCount+" pallets / "+b.frameCount+" frames / "+b.itemCount+" items";
-    var btns=document.createElement("div");btns.style.cssText="display:flex;gap:6px;margin-top:8px";
-    var d=document.createElement("button");d.className="action-btn";d.style.color="var(--gn)";d.textContent="Mark Delivered";
-    var r=document.createElement("button");r.className="action-btn";r.style.color="var(--bl)";r.textContent="Reprint PDF";
-    (function(bol){
-      d.onclick=function(){bol.status="DELIVERED";try{localStorage.setItem("ega-bol-hist",JSON.stringify(HI));}catch(e){}renderHistPage();showToast(bol.bolNum+" marked Delivered");};
-      r.onclick=function(){reprintPDF(bol);};
-    })(b);
-    btns.appendChild(d);btns.appendChild(r);
-    card.appendChild(num);card.appendChild(info);card.appendChild(btns);
-    el.appendChild(card);
-  });
 }
 
 function reprintPDF(entry){
   HI.unshift(entry);
-  Object.assign(ST,{bolNum:entry.bolNum,shipDate:entry.date,shipTo:entry.shipTo,
-    carrier:entry.carrier,driver:entry.driver,truckNum:entry.truckNum,
-    trailerNum:entry.trailerNum,ft:entry.ft||"prepaid",specInst:entry.specInst||"",
-    pallets:entry.pallets||[],items:entry.items||[],sig:entry.sig||null});
+  Object.assign(ST,{bolNum:entry.bolNum,shipDate:entry.date,shipTo:entry.shipTo||"",carrier:entry.carrier||"",driver:entry.driver||"",truckNum:entry.truckNum||"",trailerNum:entry.trailerNum||"",ft:entry.ft||"prepaid",specInst:entry.specInst||"",pallets:entry.pallets||[],items:entry.items||[],sig:entry.sig||null});
   try{doPDF();}catch(e){showToast("PDF error");console.error(e);}
 }
 
 function resetBOL(){
-  ST={step:1,bolNum:"",shipDate:"",
-    shipFrom:"Eastern Glass & Aluminum, 4274 Shackleford Rd., Norcross, GA 30093",
-    shipTo:"",carrier:"",driver:"",truckNum:"",trailerNum:"",
-    proNum:"",scac:"",ft:"prepaid",specInst:"",pallets:[],items:[],sig:null};
-  ["ship-to","carrier","driver","truck-num","trailer-num","pro-num","scac","spec-inst"].forEach(function(id){
-    var el=document.getElementById(id);if(el)el.value="";
-  });
+  ST={step:1,bolNum:"",shipDate:"",shipFrom:"Eastern Glass & Aluminum, 4274 Shackleford Rd., Norcross, GA 30093",shipTo:"",carrier:"",driver:"",truckNum:"",trailerNum:"",proNum:"",scac:"",ft:"prepaid",specInst:"",pallets:[],items:[],sig:null};
+  ["ship-to","carrier","driver","truck-num","trailer-num","pro-num","scac","spec-inst"].forEach(function(id){var el=document.getElementById(id);if(el)el.value="";});
   document.getElementById("ship-date").valueAsDate=new Date();
-  setFT("prepaid");
-  genBolNum();
-  loadPallets();
+  setFT("prepaid");genBolNum();loadPallets();
   document.getElementById("bbar").innerHTML='<button class="btn btn-back" id="btn-back" onclick="prevStep()" style="display:none">Back</button><button class="btn btn-next" id="btn-next" onclick="nextStep()">Next: Pallets</button>';
-  goStep(1);
-  goPg("new");
-}
-
-function manualEntry(){
-  var code=prompt("Type the part number or description:");
-  if(!code||!code.trim())return;
-  var q=code.trim().toUpperCase();
-  var found=LIB.find(function(i){return i.pn.toUpperCase()===q;});
-  if(found){
-    addToBOL(found,1);
-    showToast("Added: "+found.desc);
-  }else{
-    // Try partial match
-    var matches=LIB.filter(function(i){
-      return i.pn.toUpperCase().indexOf(q)>=0||i.desc.toUpperCase().indexOf(q)>=0;
-    });
-    if(matches.length===1){
-      addToBOL(matches[0],1);
-      showToast("Added: "+matches[0].desc);
-    }else if(matches.length>1){
-      showToast(matches.length+" matches - see search results below");
-      document.getElementById("item-srch").value=code.trim();
-      filterItems(code.trim());
-      showSearchDrop(code.trim());
-    }else{
-      // New part - open the add form
-      document.getElementById("new-pn").value=q;
-      document.getElementById("nif").className="nif open";
-      document.getElementById("new-desc").focus();
-      showToast("New part "+q+" - add description below");
-    }
-  }
-}
-
-function showSearchDrop(q){
-  var drop=document.getElementById("srch-drop");
-  if(!q||!q.trim()){drop.style.display="none";return;}
-  var matches=LIB.filter(function(i){
-    return i.pn.toUpperCase().indexOf(q.toUpperCase())>=0||i.desc.toUpperCase().indexOf(q.toUpperCase())>=0;
-  }).slice(0,12);
-  if(!matches.length){drop.style.display="none";return;}
-  drop.innerHTML="";
-  matches.forEach(function(item){
-    var d=document.createElement("div");
-    d.style.cssText="padding:10px 12px;cursor:pointer;border-bottom:1px solid #1e2a3e;display:flex;justify-content:space-between;align-items:center";
-    d.addEventListener("mouseenter",function(){this.style.background="#1e2a3e";});
-    d.addEventListener("mouseleave",function(){this.style.background="";});
-    var left=document.createElement("div");
-    var pn=document.createElement("div");
-    pn.style.cssText="font-family:var(--mono);font-size:11px;font-weight:700;color:"+catColor(item.cat||"Other");
-    pn.textContent=item.pn;
-    var desc=document.createElement("div");
-    desc.style.cssText="font-size:12px;color:var(--tx);margin-top:2px";
-    desc.textContent=item.desc;
-    left.appendChild(pn);left.appendChild(desc);
-    var right=document.createElement("button");
-    right.style.cssText="background:rgba(59,130,246,.15);color:var(--bl);border:1px solid rgba(59,130,246,.3);border-radius:5px;padding:5px 12px;font-family:var(--mono);font-size:10px;cursor:pointer;white-space:nowrap";
-    right.textContent="+ ADD";
-    (function(it){
-      right.addEventListener("click",function(e){
-        e.stopPropagation();
-        addToBOL(it,1);
-        showToast("Added: "+it.desc);
-        drop.style.display="none";
-        document.getElementById("item-srch").value="";
-      });
-      d.addEventListener("click",function(){
-        addToBOL(it,1);
-        showToast("Added: "+it.desc);
-        drop.style.display="none";
-        document.getElementById("item-srch").value="";
-      });
-    })(item);
-    d.appendChild(left);d.appendChild(right);
-    drop.appendChild(d);
-  });
-  drop.style.display="block";
+  goStep(1);goPg("new");
 }
 
 function clearImported(){
-  if(!confirm("Remove all imported parts? Pre-loaded YKK AP parts will be kept."))return;
-  // Remove only the saved (imported) entries from localStorage
+  if(!confirm("Remove all imported parts?"))return;
   try{localStorage.removeItem("ega-lib");}catch(e){}
-  // Rebuild LIB from original only (reload page to reset to defaults)
-  var defaultPNs=["E1-3949","E1-3945","E1-3946","E1-3954","E1-3955","E1-3953",
-    "E2-0070","E2-0725","E2-3841","E2-7004","PM-1006SS","HC-1220SS","UF-0808-SS",
-    "HILTI","SHIM-050","CAULK-WHT","CAULK-BLK","CAULK-GRY","CAULK-CLR",
-    "FC-LEFT","FC-RIGHT","FC-HEAD","FC-HORZ","FC-SILL","FC-9IN",
-    "STARTER","SILL-ADP","CORNER-KEY","THERM-BRK","ANCHOR-BLT"];
-  // Remove non-default items from LIB array
-  for(var i=LIB.length-1;i>=0;i--){
-    if(defaultPNs.indexOf(LIB[i].pn)<0){LIB.splice(i,1);}
-  }
-  renderLibPage("","ALL");
-  renderLib("","ALL");
-  showToast("Cleared imported parts — "+LIB.length+" default parts remain");
+  var defaults=["E1-3949","E1-3945","E1-3946","E1-3954","E1-3955","E1-3953","E2-0070","E2-0725","E2-3841","E2-7004","PM-1006SS","HC-1220SS","UF-0808-SS","HILTI","SHIM-050","SHIM-052","SHIM-053","CAULK-WHT","CAULK-BLK","CAULK-GRY","CAULK-CLR","FC-LEFT","FC-RIGHT","FC-HEAD","FC-HORZ","FC-SILL","FC-9IN","STARTER","SILL-ADP","CORNER-KEY","THERM-BRK","ANCHOR-BLT","CAST-NYLON-12","CAST-NYLON-6","BNA-TRIMS-001","BNA-TOOLS-001","BNA-ACC-001"];
+  for(var i=LIB.length-1;i>=0;i--){if(defaults.indexOf(LIB[i].pn)<0)LIB.splice(i,1);}
+  renderLibPage("","ALL");renderLib("","ALL");showToast("Cleared imported parts");
 }
+function clearAllLib(){if(!confirm("Reset library to defaults?"))return;try{localStorage.removeItem("ega-lib");}catch(e){}location.reload();}
 
-function clearAllLib(){
-  if(!confirm("Reset library to factory defaults? All imported parts will be removed."))return;
-  try{localStorage.removeItem("ega-lib");}catch(e){}
-  location.reload();
-}
-
-function showToast(msg){
-  var t=document.getElementById("toast");
-  t.textContent=msg;t.classList.add("show");
-  setTimeout(function(){t.classList.remove("show");},2400);
-}
-
+function showToast(msg){var t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(function(){t.classList.remove("show");},2400);}
 </script>
 </body>
 </html>
