@@ -718,7 +718,36 @@ function buildReview(){
 function loadHist(){try{var h=localStorage.getItem("ega-bol-hist");if(h)HI=JSON.parse(h);}catch(e){}}
 function renderHistPage(){
   var el=document.getElementById("hist-list");if(!el)return;
-  if(!HI.length){el.innerHTML="<div style='text-align:center;padding:20px;color:var(--dm);font-family:var(--mono);font-size:11px'>No BOLs created yet.</div>";return;}
+  el.innerHTML="<div style='padding:12px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--mu)'>Loading from Google Sheets...</div>";
+  // Try to load from Sheets first
+  fetch(WH+"?action=bolhistory")
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data.bols&&data.bols.length){
+        // Merge with localStorage — Sheets is source of truth
+        data.bols.forEach(function(b){
+          // Parse items from JSON if available
+          if(b.itemsJson){try{b.items=JSON.parse(decodeURIComponent(b.itemsJson));}catch(e){b.items=[];}}
+          else{b.items=[];}
+          // Parse pallets from palletNums
+          if(!b.pallets&&b.palletNums){
+            b.pallets=b.palletNums.split(",").filter(Boolean).map(function(n){return{num:n.trim(),frames:[]};});
+          }
+        });
+        HI=data.bols;
+        try{localStorage.setItem("ega-bol-hist",JSON.stringify(HI.slice(0,50)));}catch(e){}
+      }
+      renderHistList(el);
+    })
+    .catch(function(){
+      // Fall back to localStorage
+      renderHistList(el);
+    });
+}
+
+function renderHistList(el){
+  el.innerHTML="";
+  if(!HI.length){el.innerHTML="<div style='text-align:center;padding:20px;color:var(--dm);font-family:var(--mono);font-size:11px'>No BOLs found.<br><span style="font-size:10px">BOLs are saved to Google Sheets automatically when downloaded.</span></div>";return;}
   el.innerHTML="";
   var clearBtn=document.createElement("button");clearBtn.style.cssText="width:100%;padding:10px;background:rgba(255,77,106,.08);border:1px solid rgba(255,77,106,.3);border-radius:8px;color:var(--rd);font-family:var(--mono);font-size:10px;cursor:pointer;margin-bottom:12px";clearBtn.textContent="Clear All BOL History";
   clearBtn.addEventListener("click",function(){if(!confirm("Clear all BOL history?"))return;HI=[];try{localStorage.removeItem("ega-bol-hist");}catch(e){}renderHistPage();});
@@ -731,7 +760,13 @@ function renderHistPage(){
     var btns=document.createElement("div");btns.style.cssText="display:flex;gap:6px;margin-top:8px";
     var d=document.createElement("button");d.className="action-btn";d.style.color="var(--gn)";d.textContent="Mark Delivered";
     var r=document.createElement("button");r.className="action-btn";r.style.color="var(--bl)";r.textContent="Reprint PDF";
-    (function(bol){d.onclick=function(){bol.status="DELIVERED";try{localStorage.setItem("ega-bol-hist",JSON.stringify(HI));}catch(e){}renderHistPage();};r.onclick=function(){reprintPDF(bol);};})(b);
+    (function(bol){d.onclick=function(){
+  bol.status="DELIVERED";
+  try{localStorage.setItem("ega-bol-hist",JSON.stringify(HI.slice(0,50)));}catch(e){}
+  // Update Sheets
+  var img=new Image();img.src=WH+"?"+new URLSearchParams({action:"updatebolstatus",bolNum:bol.bolNum,status:"DELIVERED"}).toString();
+  renderHistPage();
+};r.onclick=function(){reprintPDF(bol);};})(b);
     btns.appendChild(d);btns.appendChild(r);card.appendChild(num);card.appendChild(info);card.appendChild(btns);el.appendChild(card);
   });
 }
@@ -741,10 +776,31 @@ function downloadPDF(){showToast("Generating PDF...");saveBOL();setTimeout(funct
 
 function saveBOL(){
   var tf=ST.pallets.reduce(function(s,p){return s+(p.frames?p.frames.length:0);},0);
-  var entry={bolNum:ST.bolNum,date:ST.shipDate,shipTo:ST.shipTo,carrier:ST.carrier,driver:ST.driver,truckNum:ST.truckNum,trailerNum:ST.trailerNum,scac:ST.scac,proNum:ST.proNum,ft:ST.ft,specInst:ST.specInst,palletCount:ST.pallets.length,frameCount:tf,itemCount:ST.items.length,pallets:JSON.parse(JSON.stringify(ST.pallets)),items:JSON.parse(JSON.stringify(ST.items)),sig:ST.sig,status:"PENDING",ts:new Date().toISOString()};
-  HI.unshift(entry);try{localStorage.setItem("ega-bol-hist",JSON.stringify(HI));}catch(e){}
+  var entry={bolNum:ST.bolNum,date:ST.shipDate,shipTo:ST.shipTo,carrier:ST.carrier,
+    driver:ST.driver,truckNum:ST.truckNum,trailerNum:ST.trailerNum,scac:ST.scac,
+    proNum:ST.proNum,ft:ST.ft,specInst:ST.specInst,
+    palletCount:ST.pallets.length,frameCount:tf,itemCount:ST.items.length,
+    pallets:JSON.parse(JSON.stringify(ST.pallets)),
+    items:JSON.parse(JSON.stringify(ST.items)),
+    sig:ST.sig,status:"PENDING",ts:new Date().toISOString()};
+  // Save to localStorage
+  HI.unshift(entry);
+  try{localStorage.setItem("ega-bol-hist",JSON.stringify(HI.slice(0,50)));}catch(e){}
+  // Save to Google Sheets via GET (full data via POST)
   var palletNums=ST.pallets.map(function(p){return p.num;}).join(",");
-  var img=new Image();img.src=WH+"?"+new URLSearchParams({action:"bol",bolNum:ST.bolNum,shipDate:ST.shipDate,carrier:ST.carrier,driver:ST.driver,palletCount:ST.pallets.length,frameCount:tf,palletNums:palletNums,status:"PENDING"}).toString();
+  var itemsJson="";try{itemsJson=JSON.stringify(ST.items);}catch(e){}
+  // Send basic info via image beacon
+  var img=new Image();
+  img.src=WH+"?"+new URLSearchParams({
+    action:"bol",bolNum:ST.bolNum,shipDate:ST.shipDate,
+    shipTo:ST.shipTo,carrier:ST.carrier,driver:ST.driver,
+    truckNum:ST.truckNum,trailerNum:ST.trailerNum,
+    ft:ST.ft,specInst:ST.specInst,
+    palletCount:ST.pallets.length,frameCount:tf,
+    itemCount:ST.items.length,palletNums:palletNums,
+    itemsJson:encodeURIComponent(itemsJson),
+    status:"PENDING"
+  }).toString();
 }
 
 function doPDF(){
