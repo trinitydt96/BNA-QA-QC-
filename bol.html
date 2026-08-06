@@ -810,128 +810,224 @@ function doPDF(){
   if(!jsPDF){showToast("PDF library loading — try again in 2 seconds");return;}
   var entry=HI[0];if(!entry)return;
   var doc=new jsPDF({orientation:"portrait",unit:"mm",format:"letter"});
-  var pw=doc.internal.pageSize.getWidth();var m=14;var y=12;
+  var pw=doc.internal.pageSize.getWidth();
+  var ph=doc.internal.pageSize.getHeight();
+  var m=14;var y=12;
 
-  // ── Title ─────────────────────────────────────────────────────
+  // ── Pre-process items grouped by pallet ────────────────────────
+  var byPallet={};var unassigned=[];
+  (entry.items||[]).forEach(function(item){
+    if(item.palletNum){
+      if(!byPallet[item.palletNum])byPallet[item.palletNum]=[];
+      byPallet[item.palletNum].push(item);
+    } else { unassigned.push(item); }
+  });
+
+  // ══════════════════════════════════════════════════════════════
+  // PAGE 1 — BOL Header + Pallet Summary
+  // ══════════════════════════════════════════════════════════════
   doc.setFontSize(13);doc.setFont("helvetica","bold");
   doc.text("BILL OF LADING - SHORT FORM - NOT NEGOTIABLE",pw/2,y,{align:"center"});
-  y+=4;doc.setFontSize(8);doc.setFont("helvetica","normal");
-  doc.text("Page 1 of 1",pw/2,y,{align:"center"});y+=5;
+  y+=5;doc.setFontSize(8);doc.setFont("helvetica","normal");
 
-  // ── Header boxes ──────────────────────────────────────────────
+  // ── Header address boxes ───────────────────────────────────────
   var cw=(pw-m*2)/2;
   var ht=[
-    [["SHIP FROM","Eastern Glass & Aluminum","4274 Shackleford Rd., Norcross, GA 30093","Tel: 678-355-9010"],["Bill of Lading Number: "+entry.bolNum,"","Date: "+entry.date,""]],
-    [["SHIP TO",entry.shipTo||"","",""],["Carrier: "+(entry.carrier||"EGA"),"Trailer #: "+(entry.trailerNum||"-"),"Truck #: "+(entry.truckNum||"-"),"Driver: "+(entry.driver||"-")]],
-    [["THIRD PARTY FREIGHT CHARGES BILL TO","Eastern Glass & Aluminum","4274 Shackleford Rd., Norcross, GA 30093",""],["SCAC: "+(entry.scac||""),"Pro Number: "+(entry.proNum||""),"",""]],
+    [["SHIP FROM","Eastern Glass & Aluminum","4274 Shackleford Rd., Norcross, GA 30093","Tel: 678-355-9010"],
+     ["BOL #: "+entry.bolNum,"Date: "+entry.date,"",""]],
+    [["SHIP TO",entry.shipTo||"","",""],
+     ["Carrier: "+(entry.carrier||"EGA"),"Driver: "+(entry.driver||"-"),"Trailer: "+(entry.trailerNum||"-"),"Truck: "+(entry.truckNum||"-")]],
+    [["THIRD PARTY FREIGHT CHARGES BILL TO","Eastern Glass & Aluminum","4274 Shackleford Rd., Norcross, GA 30093",""],
+     ["SCAC: "+(entry.scac||"—"),"Pro No: "+(entry.proNum||"—"),"",""]],
   ];
   ht.forEach(function(pair){
-    var left=pair[0],right=pair[1];var sh=Math.max(left.length,right.length)*4+4;
+    var left=pair[0].slice(),right=pair[1];
+    var isHdr=left[0].toUpperCase()===left[0]&&left[0].length<35;
+    var sh=(Math.max(isHdr?left.length-1:left.length,right.filter(Boolean).length))*3.8+6;
     doc.rect(m,y,cw,sh);doc.rect(m+cw,y,cw,sh);
-    if(left[0].toUpperCase()===left[0]&&left[0].length<30){doc.setFillColor(200,200,200);doc.rect(m,y,cw,5,"F");doc.setFont("helvetica","bold");doc.text(left[0],m+cw/2,y+3.5,{align:"center"});left=left.slice(1);}
-    doc.setFont("helvetica","normal");
-    left.forEach(function(t,i){if(t)doc.text(t,m+2,y+6+i*3.5);});
-    right.forEach(function(t,i){if(t)doc.text(t,m+cw+2,y+3+i*4);});
+    if(isHdr){
+      doc.setFillColor(210,210,210);doc.rect(m,y,cw,5,"F");
+      doc.setFont("helvetica","bold");doc.setFontSize(7);
+      doc.text(left[0],m+cw/2,y+3.5,{align:"center"});
+      left=left.slice(1);
+    }
+    doc.setFont("helvetica","normal");doc.setFontSize(8);
+    left.forEach(function(t,i){if(t)doc.text(t,m+2,y+6.5+i*3.8);});
+    right.forEach(function(t,i){if(t)doc.text(t,m+cw+2,y+3.5+i*3.8);});
     y+=sh;
   });
 
-  if(entry.specInst){doc.rect(m,y,pw-m*2,6);doc.setFont("helvetica","normal");doc.setFontSize(8);doc.text("Special Instructions: "+entry.specInst,m+2,y+4);y+=6;}
-  doc.rect(m,y,pw-m*2,6);doc.setFont("helvetica","normal");
-  doc.text("Freight Charge Terms:  Prepaid ["+(entry.ft==="prepaid"?"X":" ")+"]   Collect ["+(entry.ft==="collect"?"X":" ")+"]   3rd Party ["+(entry.ft==="3rd"?"X":" ")+"]   Invoice [ ]",m+2,y+4);
+  // Freight terms + special instructions
+  if(entry.specInst){
+    doc.rect(m,y,pw-m*2,6);doc.setFontSize(8);
+    doc.text("Special Instructions: "+entry.specInst,m+2,y+4);y+=6;
+  }
+  doc.rect(m,y,pw-m*2,6);
+  doc.text("Freight Terms:  Prepaid ["+(entry.ft==="prepaid"?"X":" ")+"]   Collect ["+(entry.ft==="collect"?"X":" ")+"]   3rd Party ["+(entry.ft==="3rd"?"X":" ")+"]",m+2,y+4);
   y+=6;
 
-  // ── Customer Order table ───────────────────────────────────────
-  doc.setFillColor(200,200,200);doc.rect(m,y,pw-m*2,5,"F");
-  doc.setFont("helvetica","bold");doc.text("CUSTOMER ORDER INFORMATION",pw/2,y+3.5,{align:"center"});y+=5;
-  doc.autoTable({startY:y,
-    head:[["Customer Order No.","# Packages","Weight","Pallet/Slip","Additional Info"]],
-    body:[["Job #20230013",entry.palletCount+entry.items.length,"","Y  N","BNA Concourse A — "+entry.frameCount+" Frames"],["Grand Total","","","",""]],
-    theme:"grid",headStyles:{fillColor:[220,220,220],textColor:[0,0,0],fontSize:7,fontStyle:"bold"},bodyStyles:{fontSize:8},margin:{left:m,right:m}});
-  y=doc.lastAutoTable.finalY;
+  // ── PAGE 1 PALLET SUMMARY TABLE ────────────────────────────────
+  // One row per pallet — carrier sees the high-level list here
+  doc.setFillColor(30,42,62);doc.rect(m,y,pw-m*2,6,"F");
+  doc.setFont("helvetica","bold");doc.setFontSize(8);
+  doc.setTextColor(255,255,255);
+  doc.text("SHIPMENT SUMMARY — "+entry.palletCount+" PALLET(S)  |  "+entry.frameCount+" FRAME(S)  |  SEE PAGE 2 FOR CONTENTS",pw/2,y+4,{align:"center"});
+  doc.setTextColor(0,0,0);y+=6;
 
-  // ── Carrier Information header ─────────────────────────────────
-  doc.setFillColor(200,200,200);doc.rect(m,y,pw-m*2,5,"F");
-  doc.setFont("helvetica","bold");doc.text("CARRIER INFORMATION",pw/2,y+3.5,{align:"center"});y+=5;
-
-  // ── Build commodity rows — items grouped by pallet ─────────────
-  var rows=[];var n=1;
-
-  // Map items to pallets
-  var byPallet={};var unassigned=[];
-  (entry.items||[]).forEach(function(item){
-    if(item.palletNum){if(!byPallet[item.palletNum])byPallet[item.palletNum]=[];byPallet[item.palletNum].push(item);}
-    else{unassigned.push(item);}
+  var summaryRows=[];
+  (entry.pallets||[]).forEach(function(p,idx){
+    var contents="";
+    if(p.frames&&p.frames.length){
+      contents="CW FRAMES ("+p.frames.length+"): "+p.frames.join(", ");
+    } else if(byPallet[p.num]&&byPallet[p.num].length){
+      contents="ACCESSORIES ("+byPallet[p.num].length+" item type"+(byPallet[p.num].length!==1?"s":"")+")";
+    } else if(p.desc){
+      contents=p.desc;
+    } else {
+      contents="ACCESSORIES PALLET";
+    }
+    summaryRows.push([idx+1, p.num, contents, 1, "Pallet", "", ""]);
   });
+  if(unassigned.length){
+    summaryRows.push(["—", "UNASSIGNED ITEMS", unassigned.length+" item type(s) not assigned to a pallet", "", "", "", ""]);
+  }
+  while(summaryRows.length<6)summaryRows.push(["","","","","","",""]);
 
-  // For each pallet: pallet row, then its assigned items indented
+  doc.autoTable({startY:y,
+    head:[["#","Pallet ID","Contents / Description","Qty","Type","Weight","Class"]],
+    body:summaryRows,theme:"grid",
+    headStyles:{fillColor:[46,85,150],textColor:[255,255,255],fontSize:7,fontStyle:"bold",halign:"center"},
+    bodyStyles:{fontSize:8,cellPadding:2.5},
+    columnStyles:{
+      0:{cellWidth:8,halign:"center"},
+      1:{cellWidth:32,fontStyle:"bold"},
+      2:{cellWidth:"auto"},
+      3:{cellWidth:10,halign:"center"},
+      4:{cellWidth:14,halign:"center"},
+      5:{cellWidth:16,halign:"center"},
+      6:{cellWidth:12,halign:"center"}
+    },
+    didParseCell:function(data){
+      if(data.section==="body"&&data.column.index===1&&data.cell.raw){
+        data.cell.styles.textColor=[29,78,216];
+      }
+    },
+    margin:{left:m,right:m}});
+  y=doc.lastAutoTable.finalY+4;
+
+  // ── Freight terms box ──────────────────────────────────────────
+  doc.setFontSize(7);doc.setFont("helvetica","normal");
+  doc.setFillColor(245,245,245);doc.rect(m,y,pw-m*2,8,"F");doc.rect(m,y,pw-m*2,8);
+  doc.text("RECEIVED by the carrier the property described above, in apparent good order, contents and condition of contents of packages unknown.",m+2,y+3);
+  doc.text("(See 49 U.S.C. § 14706 — carrier liability may apply)",m+2,y+6.5);
+  y+=10;
+
+  // ── Signature section (bottom of page 1) ──────────────────────
+  if(y>230){doc.addPage();y=14;}
+  var hw=(pw-m*2)/2;
+  doc.rect(m,y,hw-2,26);doc.rect(m+hw,y,hw-2,26);
+  doc.setFontSize(8);doc.setFont("helvetica","bold");
+  doc.text("SHIPPER SIGNATURE",m+2,y+4);
+  doc.setFont("helvetica","normal");doc.text("Eastern Glass & Aluminum",m+2,y+8.5);
+  doc.line(m+2,y+18,m+hw-4,y+18);doc.text("Signature / Date: "+entry.date,m+2,y+23);
+  doc.setFont("helvetica","bold");doc.text("DRIVER / CARRIER ACKNOWLEDGMENT",m+hw+2,y+4);
+  doc.setFont("helvetica","normal");doc.text("Contents received in apparent good order",m+hw+2,y+8.5);
+  if(entry.sig){try{doc.addImage(entry.sig,"PNG",m+hw+2,y+10,hw-8,8);}catch(e){}}
+  doc.line(m+hw+2,y+18,pw-m-2,y+18);doc.text("Driver Signature",m+hw+2,y+23);
+  y+=30;
+
+  // ══════════════════════════════════════════════════════════════
+  // PAGE 2+ — DETAILED CONTENTS PER PALLET
+  // ══════════════════════════════════════════════════════════════
+  doc.addPage();y=12;
+
+  // Page 2 mini-header
+  doc.setFontSize(9);doc.setFont("helvetica","bold");
+  doc.text("DETAILED PACKING LIST — "+entry.bolNum+" — "+entry.date,pw/2,y,{align:"center"});
+  y+=4;doc.setFontSize(7);doc.setFont("helvetica","normal");
+  doc.text("Carrier: "+(entry.carrier||"—")+"   Driver: "+(entry.driver||"—")+"   Ship To: "+(entry.shipTo||"—"),pw/2,y,{align:"center"});
+  y+=6;
+
+  // One section per pallet
   (entry.pallets||[]).forEach(function(p){
-    var desc=p.num;
-    if(p.frames&&p.frames.length){desc+=" — CW FRAMES: "+p.frames.join(", ");}
-    else if(p.desc){desc+=" — "+p.desc;}
-    else{desc+=" — ACCESSORIES PALLET";}
-    // Pallet row — bold
-    rows.push({data:[n++,1,"Pallet","",desc,"",""],isPallet:true});
-    // Items assigned to this pallet
-    if(byPallet[p.num]){
-      byPallet[p.num].forEach(function(item){
-        rows.push({data:[n++,item.qty,item.unit,"","  "+item.pn+" — "+item.desc,"",""],isPallet:false});
+    // Pallet header bar
+    if(y>240){doc.addPage();y=12;}
+    doc.setFillColor(30,42,62);doc.rect(m,y,pw-m*2,7,"F");
+    doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(255,255,255);
+    var pltHdr=p.num;
+    if(p.frames&&p.frames.length)pltHdr+="  —  "+p.frames.length+" CW FRAME(S)";
+    else if(p.desc)pltHdr+="  —  "+p.desc;
+    else pltHdr+="  —  ACCESSORIES PALLET";
+    doc.text(pltHdr,m+3,y+5);
+    doc.setTextColor(0,0,0);y+=7;
+
+    // Frames list (if frame pallet)
+    if(p.frames&&p.frames.length){
+      var frameText=p.frames.join(", ");
+      var lines=doc.splitTextToSize(frameText,pw-m*2-4);
+      doc.setFont("helvetica","normal");doc.setFontSize(7);
+      doc.setFillColor(240,245,255);doc.rect(m,y,pw-m*2,lines.length*4+3,"F");doc.rect(m,y,pw-m*2,lines.length*4+3);
+      lines.forEach(function(line,li){doc.text(line,m+2,y+3.5+li*4);});
+      y+=lines.length*4+5;
+    }
+
+    // Items table for this pallet
+    var palletItems=byPallet[p.num]||[];
+    if(palletItems.length){
+      var itemRows=palletItems.map(function(item,i){
+        return [i+1, item.qty, item.unit, item.pn, item.desc, "", ""];
       });
+      doc.autoTable({startY:y,
+        head:[["#","Qty","Unit","Part Number","Description","NMFC No.","Class"]],
+        body:itemRows,theme:"grid",
+        headStyles:{fillColor:[100,120,150],textColor:[255,255,255],fontSize:7,fontStyle:"bold"},
+        bodyStyles:{fontSize:7.5,cellPadding:2},
+        columnStyles:{
+          0:{cellWidth:8,halign:"center"},
+          1:{cellWidth:14,halign:"center"},
+          2:{cellWidth:12,halign:"center"},
+          3:{cellWidth:28,fontStyle:"bold"},
+          4:{cellWidth:"auto"},
+          5:{cellWidth:18,halign:"center"},
+          6:{cellWidth:12,halign:"center"}
+        },
+        margin:{left:m,right:m}});
+      y=doc.lastAutoTable.finalY+6;
+    } else if(!p.frames||!p.frames.length){
+      // Empty accessories pallet — show placeholder
+      doc.setFontSize(7);doc.setFont("helvetica","italic");doc.setTextColor(150,150,150);
+      doc.text("No items assigned to this pallet",m+3,y+4);doc.setTextColor(0,0,0);y+=10;
+    } else {
+      y+=4;
     }
   });
 
-  // Unassigned items at bottom
+  // Unassigned items section (if any)
   if(unassigned.length){
-    unassigned.forEach(function(item){
-      rows.push({data:[n++,item.qty,item.unit,"",item.pn+" — "+item.desc,"",""],isPallet:false});
-    });
+    if(y>220){doc.addPage();y=12;}
+    doc.setFillColor(200,150,50);doc.rect(m,y,pw-m*2,7,"F");
+    doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(255,255,255);
+    doc.text("UNASSIGNED ITEMS ("+unassigned.length+" type"+(unassigned.length!==1?"s":"")+")",m+3,y+5);
+    doc.setTextColor(0,0,0);y+=7;
+    var uRows=unassigned.map(function(item,i){return [i+1,item.qty,item.unit,item.pn,item.desc,"",""];});
+    doc.autoTable({startY:y,
+      head:[["#","Qty","Unit","Part Number","Description","NMFC No.","Class"]],
+      body:uRows,theme:"grid",
+      headStyles:{fillColor:[160,100,20],textColor:[255,255,255],fontSize:7,fontStyle:"bold"},
+      bodyStyles:{fontSize:7.5,cellPadding:2},
+      columnStyles:{0:{cellWidth:8,halign:"center"},1:{cellWidth:14,halign:"center"},2:{cellWidth:12,halign:"center"},3:{cellWidth:28,fontStyle:"bold"},4:{cellWidth:"auto"},5:{cellWidth:18,halign:"center"},6:{cellWidth:12,halign:"center"}},
+      margin:{left:m,right:m}});
+    y=doc.lastAutoTable.finalY+6;
   }
 
-  // Fill to minimum 10 rows
-  while(rows.length<10){rows.push({data:[n++,"","","","","",""],isPallet:false});}
-
-  doc.autoTable({
-    startY:y,
-    // HM(X) REMOVED — 7 columns only
-    head:[["Item","Qty","Type","Weight","Commodity Description","NMFC No.","Class"]],
-    body:rows.map(function(r){return r.data;}),
-    theme:"grid",
-    headStyles:{fillColor:[220,220,220],textColor:[0,0,0],fontSize:7,fontStyle:"bold",halign:"center"},
-    bodyStyles:{fontSize:7,cellPadding:2,lineWidth:0.2,lineColor:[160,160,160]},
-    columnStyles:{
-      0:{cellWidth:12,halign:"center",lineWidth:0.35,lineColor:[0,0,0]}, // Item — wider + clear borders
-      1:{cellWidth:18,halign:"center"},  // Qty — wide enough for any number
-      2:{cellWidth:14,halign:"center"},  // Type
-      3:{cellWidth:14,halign:"center"},  // Weight
-      4:{cellWidth:"auto"},             // Commodity Description — fills remaining space
-      5:{cellWidth:20,halign:"center"},  // NMFC No.
-      6:{cellWidth:12,halign:"center"}   // Class
-    },
-    didParseCell:function(data){
-      // Bold pallet rows
-      if(data.section==="body"&&rows[data.row]&&rows[data.row].isPallet){
-        data.cell.styles.fontStyle="bold";
-        data.cell.styles.fillColor=[240,245,255];
-      }
-    },
-    margin:{left:m,right:m}
-  });
-  y=doc.lastAutoTable.finalY+4;
-
-  // ── Signature section ──────────────────────────────────────────
-  if(y>220){doc.addPage();y=14;}
-  var hw=(pw-m*2)/2;
-  doc.rect(m,y,hw-2,28);doc.rect(m+hw,y,hw-2,28);
-  doc.setFontSize(8);doc.setFont("helvetica","bold");
-  doc.text("SHIPPER SIGNATURE",m+2,y+4);
-  doc.setFont("helvetica","normal");doc.text("Eastern Glass & Aluminum",m+2,y+9);
-  doc.line(m+2,y+20,m+hw-4,y+20);doc.text("Signature / Date: "+entry.date,m+2,y+25);
-  doc.setFont("helvetica","bold");doc.text("DRIVER ACKNOWLEDGMENT",m+hw+2,y+4);
-  doc.setFont("helvetica","normal");doc.text("Contents received in apparent good order",m+hw+2,y+9);
-  doc.line(m+hw+2,y+20,pw-m-2,y+20);doc.text("Driver Signature",m+hw+2,y+25);
-  if(entry.sig){try{doc.addImage(entry.sig,"PNG",m+2,y+10,hw-6,10);}catch(e){}}
-  y+=32;
-  doc.setFontSize(7);doc.setFont("helvetica","italic");
-  doc.text("Note: Liability limitation for loss or damage in connection with interstate transportation may be applicable. See 49 U.S.C. 14706(c)(1)(A) and (B).",m,y);
+  // Page numbers
+  var totalPages=doc.internal.getNumberOfPages();
+  for(var pg=1;pg<=totalPages;pg++){
+    doc.setPage(pg);
+    doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(120,120,120);
+    doc.text("Page "+pg+" of "+totalPages+" — "+entry.bolNum,pw/2,ph-6,{align:"center"});
+    doc.setTextColor(0,0,0);
+  }
 
   var fname=entry.bolNum+(entry.date?"-"+entry.date:"")+".pdf";
   doc.save(fname);showToast("Downloaded: "+fname);
