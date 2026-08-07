@@ -378,12 +378,42 @@ function onProjectChange(val){
 function genBolNum(){var n="BNA-SHP-"+String(HI.length+1).padStart(3,"0");document.getElementById("bol-num").value=n;document.getElementById("bol-badge").textContent=n;ST.bolNum=n;}
 
 // ── Pallet loading ─────────────────────────────────────────────────
+function mergePallets(pltList){
+  // Normalize pallet nums and merge duplicates client-side
+  var merged={};var order=[];
+  pltList.forEach(function(p){
+    // Normalize: remove spaces, uppercase, fix PTL→PLT
+    var key=String(p.num||"").replace(/\s+/g,"").toUpperCase().replace(/PTL/g,"PLT");
+    if(!key)return;
+    if(!merged[key]){
+      merged[key]={num:key,frames:[],by:p.by||"",date:p.date||"",status:p.status||"PACKED"};
+      order.push(key);
+    }
+    // Merge frames
+    (p.frames||[]).forEach(function(f){
+      var fid=String(f).trim();
+      if(fid&&merged[key].frames.indexOf(fid)<0)merged[key].frames.push(fid);
+    });
+    // Keep most recent packer
+    if(p.by)merged[key].by=p.by;
+    if(p.date)merged[key].date=p.date;
+  });
+  return order.sort().map(function(k){return merged[k];});
+}
+
 function loadPallets(){
   var el=document.getElementById("plt-select-list");
   el.innerHTML="<div style='padding:12px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--mu)'>Loading pallets...</div>";
   fetch(WH+"?action=pallets")
     .then(function(r){return r.json();})
-    .then(function(data){if(data.pallets&&data.pallets.length)renderPalletCards(el,data.pallets);else loadPalletsLocal(el);})
+    .then(function(data){
+      if(data.pallets&&data.pallets.length){
+        var merged=mergePallets(data.pallets);
+        renderPalletCards(el,merged);
+      } else {
+        loadPalletsLocal(el);
+      }
+    })
     .catch(function(){loadPalletsLocal(el);});
 }
 function loadPalletsLocal(el){
