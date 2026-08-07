@@ -1146,8 +1146,8 @@ function doPDF(){
     // No items and no accessories — frame-only pallet, skip table entirely
 
     // Page number at bottom
-    doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(120,120,120);
-    doc.text(entry.bolNum+" — "+p.num,pw/2,ph-6,{align:"center"});
+    doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(150,150,150);
+    doc.text(entry.bolNum+" | "+p.num,m,ph-5);
     doc.setTextColor(0,0,0);
   });
 
@@ -1173,8 +1173,9 @@ function doPDF(){
   var totalPages=doc.internal.getNumberOfPages();
   for(var pg=1;pg<=totalPages;pg++){
     doc.setPage(pg);
-    doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(120,120,120);
-    doc.text("Page "+pg+" of "+totalPages+" — "+entry.bolNum,pw/2,ph-6,{align:"center"});
+    doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(150,150,150);
+    doc.text("Page "+pg+" of "+totalPages,pw-m,ph-5,{align:"right"});
+    doc.text(entry.bolNum,m,ph-5);
     doc.setTextColor(0,0,0);
   }
 
