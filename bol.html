@@ -172,20 +172,20 @@ select.inp option{background:var(--s2)}
       <div id="sel-plts-list"></div>
     </div>
   </div>
-  <!-- STEP 3: ITEMS -->
+  <!-- STEP 3: ITEMS — fill each pallet -->
   <div id="step3" style="display:none">
+    <!-- Active pallet selector -->
+    <div class="box" id="pallet-picker-box">
+      <div class="box-t">Select Pallet to Fill</div>
+      <div id="pallet-tabs" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:2px"></div>
+    </div>
+    <!-- Active pallet contents + item add -->
     <div class="box">
-      <div class="box-t">Add Items</div>
-      <!-- Pallet assignment tip -->
-      <div id="plt-tip" style="display:none;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-family:var(--mono);font-size:10px;color:var(--bl);line-height:1.8">
-        &#128230; <b>Pallet tip:</b> Each item can be assigned to a specific pallet below. Accessories for the same pallet will be grouped together in the PDF.
+      <div class="box-t" style="display:flex;justify-content:space-between;align-items:center">
+        <span>Adding to: <span id="active-plt-label" style="color:var(--bl);font-weight:700">—</span></span>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--mu)" id="active-plt-sys"></span>
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <button class="scan-btn" id="scan-btn" onclick="startScan()" style="flex:1;margin-bottom:0;padding:12px 8px">&#128247; Scan Barcode</button>
-        <button class="scan-btn" onclick="manualEntry()" style="flex:1;margin-bottom:0;padding:12px 8px;border-color:var(--am);color:var(--am)">&#9997; Type Part #</button>
-      </div>
-      <video id="cam-view" autoplay playsinline></video>
-      <div id="scan-status" style="font-family:var(--mono);font-size:10px;text-align:center;color:var(--am);min-height:18px;padding:2px 0"></div>
+      <!-- Search bar -->
       <div style="position:relative;margin-bottom:6px">
         <input class="srch" id="item-srch" placeholder="Search part # or description..." type="text" style="margin-bottom:0">
         <div id="srch-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a2436;border:1px solid #3a5070;border-radius:8px;max-height:200px;overflow-y:auto;z-index:500;margin-top:2px;box-shadow:0 4px 16px rgba(0,0,0,.5)"></div>
@@ -203,12 +203,18 @@ select.inp option{background:var(--s2)}
           <div class="fg"><div class="lbl">Unit</div><select class="inp" id="new-unit"><option>EA</option><option>FT</option><option>BX</option><option>TUBE</option><option>BAG</option><option>SET</option><option>LF</option></select></div>
           <div class="fg"><div class="lbl">Qty</div><input class="inp" id="new-qty" type="number" placeholder="1" min="1"></div>
         </div>
-        <button onclick="addNewItem()" style="width:100%;padding:10px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border:none;border-radius:8px;font-family:var(--head);font-size:13px;font-weight:600;cursor:pointer;letter-spacing:.06em;text-transform:uppercase">Save to Library + Add to BOL</button>
+        <button onclick="addNewItem()" style="width:100%;padding:10px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border:none;border-radius:8px;font-family:var(--head);font-size:13px;font-weight:600;cursor:pointer;letter-spacing:.06em;text-transform:uppercase">Save to Library + Add to Pallet</button>
       </div>
     </div>
+    <!-- Current pallet items list -->
     <div class="box">
-      <div class="box-t">Items on This BOL <span class="cnt" id="items-cnt">0</span></div>
+      <div class="box-t">Items in This Pallet <span class="cnt" id="items-cnt">0</span></div>
       <div id="added-items-list"></div>
+    </div>
+    <!-- All pallets summary -->
+    <div class="box" id="all-pallets-summary" style="display:none">
+      <div class="box-t">All Pallets Summary</div>
+      <div id="all-pallets-content"></div>
     </div>
   </div>
   <!-- STEP 4: REVIEW -->
@@ -336,10 +342,9 @@ function goStep(n){
   var next=document.getElementById("btn-next");
   back.style.display=n>1?"block":"none";
   if(n===3){
-    // Show pallet tip if pallets selected
-    var tip=document.getElementById("plt-tip");
-    if(tip)tip.style.display=ST.pallets.length>0?"block":"none";
+    buildPalletTabs();
     renderAddedItems();
+    renderAllPalletsSummary();
   }
   if(n===4){next.className="btn btn-pdf";next.textContent="Download PDF";next.onclick=downloadPDF;buildReview();initSig();}
   else if(n===3){next.className="btn btn-next";next.textContent="Review BOL";next.onclick=nextStep;}
@@ -567,94 +572,147 @@ function processRows(rows){
 }
 
 // ── Items ──────────────────────────────────────────────────────────
-// addToBOL — each item carries palletNum for assignment
-function addToBOL(item,qty){
-  var idx=ST.items.findIndex(function(i){return i.pn===item.pn;});
-  if(idx>=0){ST.items[idx].qty+=qty;}
-  else{ST.items.push({pn:item.pn,desc:item.desc,cat:item.cat||"Other",unit:item.unit||"EA",qty:qty,palletNum:""});}
-  renderAddedItems();
+// Active pallet tracking
+var ACTIVE_PLT = "";
+
+function buildPalletTabs(){
+  var el=document.getElementById("pallet-tabs");
+  if(!el)return;
+  el.innerHTML="";
+  if(!ST.pallets.length){
+    el.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--mu)">No pallets selected — go back to Step 2</div>';
+    return;
+  }
+  // Default to first pallet
+  if(!ACTIVE_PLT||!ST.pallets.find(function(p){return p.num===ACTIVE_PLT;})){
+    ACTIVE_PLT=ST.pallets[0].num;
+  }
+  ST.pallets.forEach(function(p){
+    var btn=document.createElement("button");
+    btn.style.cssText="padding:8px 14px;border-radius:8px;font-family:var(--mono);font-size:10px;cursor:pointer;border:2px solid "+(p.num===ACTIVE_PLT?"var(--bl)":"var(--bd2)")+";background:"+(p.num===ACTIVE_PLT?"rgba(59,130,246,.15)":"var(--s2)")+";color:"+(p.num===ACTIVE_PLT?"var(--bl)":"var(--mu)")+";font-weight:"+(p.num===ACTIVE_PLT?"700":"400");
+    var itemCount=(ST.palletItems[p.num]||[]).length;
+    btn.innerHTML="📦 "+p.num+(itemCount?"<span style='margin-left:5px;background:var(--bl);color:#fff;border-radius:8px;padding:1px 6px;font-size:9px'>"+itemCount+"</span>":"");
+    (function(pnum){btn.onclick=function(){ACTIVE_PLT=pnum;buildPalletTabs();renderAddedItems();renderAllPalletsSummary();};})(p.num);
+    el.appendChild(btn);
+  });
+  // Update active pallet label
+  var lbl=document.getElementById("active-plt-label");
+  var sys=document.getElementById("active-plt-sys");
+  var activePlt=ST.pallets.find(function(p){return p.num===ACTIVE_PLT;});
+  if(lbl)lbl.textContent=ACTIVE_PLT||"—";
+  if(sys&&activePlt){
+    var info=activePlt.frames&&activePlt.frames.length?"Frame Pallet — "+activePlt.frames.length+" frames":activePlt.desc||"Accessories Pallet";
+    sys.textContent=info;
+  }
 }
 
-// renderAddedItems — grouped by pallet, with pallet selector per item
+// addToBOL — adds to the currently active pallet
+function addToBOL(item,qty){
+  if(!ACTIVE_PLT){showToast("Select a pallet tab above first");return;}
+  if(!ST.palletItems)ST.palletItems={};
+  if(!ST.palletItems[ACTIVE_PLT])ST.palletItems[ACTIVE_PLT]=[];
+  var arr=ST.palletItems[ACTIVE_PLT];
+  var idx=arr.findIndex(function(i){return i.pn===item.pn;});
+  if(idx>=0){arr[idx].qty+=qty;}
+  else{arr.push({pn:item.pn,desc:item.desc,cat:item.cat||"Other",unit:item.unit||"EA",qty:qty,palletNum:ACTIVE_PLT});}
+  // Keep ST.items in sync (flat list for save/PDF)
+  syncItemsFlat();
+  renderAddedItems();
+  renderAllPalletsSummary();
+  buildPalletTabs();
+}
+
+function syncItemsFlat(){
+  ST.items=[];
+  if(!ST.palletItems)return;
+  Object.keys(ST.palletItems).forEach(function(pnum){
+    (ST.palletItems[pnum]||[]).forEach(function(item){
+      ST.items.push(Object.assign({},item,{palletNum:pnum}));
+    });
+  });
+}
+
 function renderAddedItems(){
   var el=document.getElementById("added-items-list");
   var cnt=document.getElementById("items-cnt");
-  cnt.textContent=ST.items.length;
+  if(!ST.palletItems)ST.palletItems={};
+  var arr=ST.palletItems[ACTIVE_PLT]||[];
+  cnt.textContent=arr.length;
   el.innerHTML="";
-  if(!ST.items.length){
-    var msg=document.createElement("div");msg.style.cssText="text-align:center;padding:16px;color:var(--dm);font-family:var(--mono);font-size:11px";msg.textContent="No items added yet";el.appendChild(msg);return;
+
+  if(!ACTIVE_PLT){
+    el.innerHTML='<div style="text-align:center;padding:16px;color:var(--dm);font-family:var(--mono);font-size:11px">Select a pallet above to start adding items</div>';
+    return;
+  }
+  if(!arr.length){
+    el.innerHTML='<div style="text-align:center;padding:16px;color:var(--dm);font-family:var(--mono);font-size:11px">No items in '+ACTIVE_PLT+' yet<br><span style="font-size:10px">Search or browse the library above to add parts</span></div>';
+    return;
   }
 
-  // Group items by palletNum for display
-  var groups={};var order=[];
-  ST.items.forEach(function(item,idx){
-    var key=item.palletNum||"__unassigned__";
-    if(!groups[key]){groups[key]=[];order.push(key);}
-    groups[key].push({item:item,idx:idx});
+  arr.forEach(function(item,idx){
+    var col=catColor(item.cat);
+    var card=document.createElement("div");card.className="bol-item";
+
+    var main=document.createElement("div");main.className="bi-main";
+    var info=document.createElement("div");info.className="bi-info";
+    var pn=document.createElement("div");pn.className="bi-pn";pn.style.color=col;pn.textContent=item.pn;
+    var desc=document.createElement("div");desc.className="bi-desc";desc.textContent=item.desc;
+    var catBadge=document.createElement("span");catBadge.style.cssText="font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:10px;flex-shrink:0;background:"+col+"22;color:"+col;catBadge.textContent=item.cat;
+    info.appendChild(pn);info.appendChild(desc);
+    main.appendChild(info);main.appendChild(catBadge);
+    card.appendChild(main);
+
+    var bot=document.createElement("div");bot.className="bi-bottom";
+    var qlbl=document.createElement("span");qlbl.style.cssText="font-family:var(--mono);font-size:9px;color:var(--dm)";qlbl.textContent="QTY:";
+    var qi=document.createElement("input");qi.type="number";qi.value=item.qty;qi.min=1;qi.className="qinp";
+    var qu=document.createElement("span");qu.className="qunit";qu.textContent=item.unit;
+    var del=document.createElement("button");del.className="qdel";del.innerHTML="&#10005;";
+    bot.appendChild(qlbl);bot.appendChild(qi);bot.appendChild(qu);bot.appendChild(del);
+    card.appendChild(bot);
+    el.appendChild(card);
+
+    (function(i,pnum){
+      qi.oninput=function(){ST.palletItems[pnum][i].qty=Math.max(1,parseInt(this.value)||1);syncItemsFlat();renderAllPalletsSummary();};
+      qi.onblur=function(){if(!this.value||parseInt(this.value)<1){this.value=1;ST.palletItems[pnum][i].qty=1;}};
+      del.onclick=function(){ST.palletItems[pnum].splice(i,1);syncItemsFlat();renderAddedItems();buildPalletTabs();renderAllPalletsSummary();};
+    })(idx,ACTIVE_PLT);
   });
-  // De-dup order
-  order=order.filter(function(v,i){return order.indexOf(v)===i;});
+}
 
-  order.forEach(function(key){
-    // Group header
-    if(ST.pallets.length>0){
-      var ghdr=document.createElement("div");ghdr.className="plt-group-hdr";
-      var icon=document.createElement("span");icon.textContent="📦";
-      var lbl=document.createElement("span");lbl.textContent=key==="__unassigned__"?"Unassigned Items":key;
-      lbl.style.fontWeight="700";
-      var cnt2=document.createElement("span");cnt2.style.cssText="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--mu)";cnt2.textContent=groups[key].length+" item"+(groups[key].length!==1?"s":"");
-      ghdr.appendChild(icon);ghdr.appendChild(lbl);ghdr.appendChild(cnt2);
-      el.appendChild(ghdr);
+function renderAllPalletsSummary(){
+  var box=document.getElementById("all-pallets-summary");
+  var el=document.getElementById("all-pallets-content");
+  if(!box||!el)return;
+  if(!ST.palletItems||!Object.keys(ST.palletItems).length){box.style.display="none";return;}
+  var hasAny=Object.keys(ST.palletItems).some(function(k){return ST.palletItems[k].length>0;});
+  if(!hasAny){box.style.display="none";return;}
+  box.style.display="block";
+  el.innerHTML="";
+  ST.pallets.forEach(function(p){
+    var items=ST.palletItems[p.num]||[];
+    var sec=document.createElement("div");
+    sec.style.cssText="margin-bottom:10px;border:1px solid var(--bd2);border-radius:8px;overflow:hidden";
+    var hdr=document.createElement("div");
+    hdr.style.cssText="background:var(--s3);padding:8px 12px;display:flex;justify-content:space-between;align-items:center";
+    var hdrL=document.createElement("span");hdrL.style.cssText="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--bl)";hdrL.textContent="📦 "+p.num;
+    var hdrR=document.createElement("span");hdrR.style.cssText="font-family:var(--mono);font-size:9px;color:var(--mu)";
+    var frameInfo=p.frames&&p.frames.length?p.frames.length+" frames":p.desc||"";
+    hdrR.textContent=(frameInfo?frameInfo+" · ":"")+items.length+" item type"+(items.length!==1?"s":"");
+    hdr.appendChild(hdrL);hdr.appendChild(hdrR);sec.appendChild(hdr);
+    if(items.length){
+      items.forEach(function(item,ri){
+        var row=document.createElement("div");
+        row.style.cssText="display:flex;justify-content:space-between;padding:5px 12px;border-top:1px solid var(--s3);font-size:11px;"+(ri%2===0?"background:var(--s1)":"background:var(--s2)");
+        var l=document.createElement("span");l.style.cssText="font-family:var(--mono);font-size:10px;color:"+catColor(item.cat);l.textContent=item.pn+" — "+item.desc;
+        var r=document.createElement("span");r.style.cssText="font-family:var(--mono);font-size:10px;color:var(--gn);font-weight:700";r.textContent=item.qty+" "+item.unit;
+        row.appendChild(l);row.appendChild(r);sec.appendChild(row);
+      });
+    } else if(p.frames&&p.frames.length){
+      var frow=document.createElement("div");frow.style.cssText="padding:6px 12px;font-size:10px;color:var(--mu);border-top:1px solid var(--s3)";frow.textContent=p.frames.join(", ");sec.appendChild(frow);
+    } else {
+      var erow=document.createElement("div");erow.style.cssText="padding:8px 12px;font-family:var(--mono);font-size:10px;color:var(--dm);border-top:1px solid var(--s3)";erow.textContent="No items added yet";sec.appendChild(erow);
     }
-
-    groups[key].forEach(function(entry){
-      var item=entry.item;var idx=entry.idx;var col=catColor(item.cat);
-      var card=document.createElement("div");card.className="bol-item";
-
-      // Top: info
-      var main=document.createElement("div");main.className="bi-main";
-      var info=document.createElement("div");info.className="bi-info";
-      var pn=document.createElement("div");pn.className="bi-pn";pn.style.color=col;pn.textContent=item.pn;
-      var desc=document.createElement("div");desc.className="bi-desc";desc.textContent=item.desc;
-      var catBadge=document.createElement("span");catBadge.style.cssText="font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:10px;flex-shrink:0;background:"+col+"22;color:"+col;catBadge.textContent=item.cat;
-      info.appendChild(pn);info.appendChild(desc);
-      main.appendChild(info);main.appendChild(catBadge);
-      card.appendChild(main);
-
-      // Bottom: qty + pallet + delete
-      var bot=document.createElement("div");bot.className="bi-bottom";
-
-      // Qty control
-      var qlbl=document.createElement("span");qlbl.style.cssText="font-family:var(--mono);font-size:9px;color:var(--dm)";qlbl.textContent="QTY:";
-      var qi=document.createElement("input");qi.type="number";qi.value=item.qty;qi.min=1;qi.className="qinp";
-      var qu=document.createElement("span");qu.className="qunit";qu.textContent=item.unit;
-
-      // Pallet selector — only show if pallets are selected
-      if(ST.pallets.length>0){
-        var psel=document.createElement("select");psel.className="psel";
-        var defOpt=document.createElement("option");defOpt.value="";defOpt.textContent="Assign to pallet...";psel.appendChild(defOpt);
-        ST.pallets.forEach(function(p){
-          var o=document.createElement("option");o.value=p.num;o.textContent=p.num+(p.frames&&p.frames.length?" ("+p.frames.length+"fr)":p.desc?" / "+p.desc:"");
-          if(item.palletNum===p.num)o.selected=true;
-          psel.appendChild(o);
-        });
-        (function(i){psel.onchange=function(){ST.items[i].palletNum=this.value;renderAddedItems();};})(idx);
-        bot.appendChild(psel);
-      }
-
-      // Delete
-      var del=document.createElement("button");del.className="qdel";del.innerHTML="&#10005;";
-
-      bot.appendChild(qlbl);bot.appendChild(qi);bot.appendChild(qu);bot.appendChild(del);
-      card.appendChild(bot);
-      el.appendChild(card);
-
-      (function(i){
-        qi.oninput=function(){ST.items[i].qty=Math.max(1,parseInt(this.value)||1);};
-        qi.onblur=function(){if(!this.value||parseInt(this.value)<1){this.value=1;ST.items[i].qty=1;}};
-        del.onclick=function(){ST.items.splice(i,1);renderAddedItems();};
-      })(idx);
-    });
+    el.appendChild(sec);
   });
 }
 
@@ -778,12 +836,14 @@ function downloadPDF(){showToast("Generating PDF...");saveBOL();setTimeout(funct
 
 function saveBOL(){
   var tf=ST.pallets.reduce(function(s,p){return s+(p.frames?p.frames.length:0);},0);
+  syncItemsFlat();
   var entry={bolNum:ST.bolNum,date:ST.shipDate,shipTo:ST.shipTo,carrier:ST.carrier,
     driver:ST.driver,truckNum:ST.truckNum,trailerNum:ST.trailerNum,scac:ST.scac,
     proNum:ST.proNum,ft:ST.ft,specInst:ST.specInst,
     palletCount:ST.pallets.length,frameCount:tf,itemCount:ST.items.length,
     pallets:JSON.parse(JSON.stringify(ST.pallets)),
     items:JSON.parse(JSON.stringify(ST.items)),
+    palletItems:JSON.parse(JSON.stringify(ST.palletItems||{})),
     sig:ST.sig,status:"PENDING",ts:new Date().toISOString()};
   // Save to localStorage
   HI.unshift(entry);
@@ -937,87 +997,132 @@ function doPDF(){
   y+=30;
 
   // ══════════════════════════════════════════════════════════════
-  // PAGE 2+ — DETAILED CONTENTS PER PALLET
+  // PAGE 2+ — EGA ACCESSORIES PALLET PACKAGING SHEETS
+  // One page per pallet matching the EGA pallet packaging format
   // ══════════════════════════════════════════════════════════════
-  doc.addPage();y=12;
+  var palletItems=entry.palletItems||{};
+  // Rebuild byPallet from palletItems if available, else fall back to items[]
+  if(Object.keys(palletItems).length===0){
+    (entry.items||[]).forEach(function(item){
+      if(item.palletNum){if(!byPallet[item.palletNum])byPallet[item.palletNum]=[];byPallet[item.palletNum].push(item);}
+      else{unassigned.push(item);}
+    });
+  } else {
+    Object.keys(palletItems).forEach(function(pnum){
+      byPallet[pnum]=palletItems[pnum]||[];
+    });
+  }
 
-  // Page 2 mini-header
-  doc.setFontSize(9);doc.setFont("helvetica","bold");
-  doc.text("DETAILED PACKING LIST — "+entry.bolNum+" — "+entry.date,pw/2,y,{align:"center"});
-  y+=4;doc.setFontSize(7);doc.setFont("helvetica","normal");
-  doc.text("Carrier: "+(entry.carrier||"—")+"   Driver: "+(entry.driver||"—")+"   Ship To: "+(entry.shipTo||"—"),pw/2,y,{align:"center"});
-  y+=6;
-
-  // One section per pallet
   (entry.pallets||[]).forEach(function(p){
-    // Pallet header bar
-    if(y>240){doc.addPage();y=12;}
-    doc.setFillColor(30,42,62);doc.rect(m,y,pw-m*2,7,"F");
-    doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(255,255,255);
-    var pltHdr=p.num;
-    if(p.frames&&p.frames.length)pltHdr+="  —  "+p.frames.length+" CW FRAME(S)";
-    else if(p.desc)pltHdr+="  —  "+p.desc;
-    else pltHdr+="  —  ACCESSORIES PALLET";
-    doc.text(pltHdr,m+3,y+5);
-    doc.setTextColor(0,0,0);y+=7;
+    doc.addPage();
+    var py=m;var bw=pw-m*2;
 
-    // Frames list (if frame pallet)
+    // ── EGA logo area + title ─────────────────────────────────
+    doc.setFillColor(255,255,255);
+    doc.rect(m,py,bw,12,"F");doc.rect(m,py,bw,12);
+    // EGA logo text (bold blue)
+    doc.setFont("helvetica","bold");doc.setFontSize(16);
+    doc.setTextColor(0,80,180);doc.text("EGA",m+6,py+8);
+    doc.setTextColor(0,0,0);doc.setFontSize(13);
+    doc.text("ACCESSORIES PALLET PACKAGING",m+26,py+8);
+    py+=12;
+
+    // ── Info rows: PROJECT / PALLET# / ELV ───────────────────
+    var infoRows=[
+      ["PROJECT NAME:", "BNA"],
+      ["PALLET #:", p.num+(p.desc?" — "+p.desc:"")],
+      ["ELV / SYSTEM:", p.frames&&p.frames.length?"See frame list below":
+        (p.desc&&p.desc.indexOf("CW")>=0?p.desc:"CW1.1 + CW1.2")]
+    ];
+    infoRows.forEach(function(ir){
+      doc.rect(m,py,bw/3,8);doc.rect(m+bw/3,py,bw*2/3,8);
+      doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(0,0,0);
+      doc.text(ir[0],m+3,py+5.5);
+      doc.setFont("helvetica","bold");doc.setFontSize(10);
+      // Highlight system in yellow-ish
+      if(ir[0].indexOf("ELV")>=0||ir[0].indexOf("PALLET")>=0){
+        doc.setFillColor(255,255,150);doc.rect(m+bw/3,py,bw*2/3,8,"F");doc.rect(m+bw/3,py,bw*2/3,8);
+      }
+      doc.text(String(ir[1]),m+bw/3+4,py+5.5);
+      py+=8;
+    });
+    py+=4;
+
+    // ── Frame list (if this is a frame pallet) ────────────────
     if(p.frames&&p.frames.length){
-      var frameText=p.frames.join(", ");
-      var lines=doc.splitTextToSize(frameText,pw-m*2-4);
-      doc.setFont("helvetica","normal");doc.setFontSize(7);
-      doc.setFillColor(240,245,255);doc.rect(m,y,pw-m*2,lines.length*4+3,"F");doc.rect(m,y,pw-m*2,lines.length*4+3);
-      lines.forEach(function(line,li){doc.text(line,m+2,y+3.5+li*4);});
-      y+=lines.length*4+5;
+      doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setFillColor(220,230,245);
+      doc.rect(m,py,bw,6,"F");doc.rect(m,py,bw,6);
+      doc.text("CURTAINWALL FRAMES ON THIS PALLET",m+3,py+4.5);
+      py+=6;
+      var frameLines=doc.splitTextToSize(p.frames.join("    "),bw-6);
+      var flh=frameLines.length*4+4;
+      doc.setFillColor(245,248,255);doc.rect(m,py,bw,flh,"F");doc.rect(m,py,bw,flh);
+      doc.setFont("helvetica","normal");doc.setFontSize(8);
+      frameLines.forEach(function(fl,fi){doc.text(fl,m+3,py+4+fi*4);});
+      py+=flh+4;
     }
 
-    // Items table for this pallet
-    var palletItems=byPallet[p.num]||[];
-    if(palletItems.length){
-      var itemRows=palletItems.map(function(item,i){
-        return [i+1, item.qty, item.unit, item.pn, item.desc, "", ""];
+    // ── Items table ───────────────────────────────────────────
+    var pItems=byPallet[p.num]||[];
+    if(pItems.length){
+      var iRows=pItems.map(function(item,i){
+        return [item.pn||"—", item.desc, item.qty+" "+item.unit];
       });
-      doc.autoTable({startY:y,
-        head:[["#","Qty","Unit","Part Number","Description","NMFC No.","Class"]],
-        body:itemRows,theme:"grid",
-        headStyles:{fillColor:[100,120,150],textColor:[255,255,255],fontSize:7,fontStyle:"bold"},
-        bodyStyles:{fontSize:7.5,cellPadding:2},
+      // Fill to minimum rows so table looks complete
+      while(iRows.length<20)iRows.push(["","",""]);
+
+      doc.autoTable({startY:py,
+        head:[["PART NUMBER","DESCRIPTION","QTY"]],
+        body:iRows,theme:"grid",
+        headStyles:{fillColor:[30,42,62],textColor:[255,255,255],fontSize:9,fontStyle:"bold",halign:"center",cellPadding:3},
+        bodyStyles:{fontSize:9,cellPadding:3,lineWidth:0.3,lineColor:[180,180,180]},
         columnStyles:{
-          0:{cellWidth:8,halign:"center"},
-          1:{cellWidth:14,halign:"center"},
-          2:{cellWidth:12,halign:"center"},
-          3:{cellWidth:28,fontStyle:"bold"},
-          4:{cellWidth:"auto"},
-          5:{cellWidth:18,halign:"center"},
-          6:{cellWidth:12,halign:"center"}
+          0:{cellWidth:35},
+          1:{cellWidth:"auto"},
+          2:{cellWidth:22,halign:"center",fontStyle:"bold"}
+        },
+        didParseCell:function(data){
+          if(data.section==="body"&&data.row%2===0&&data.cell.raw){
+            data.cell.styles.fillColor=[250,252,255];
+          }
         },
         margin:{left:m,right:m}});
-      y=doc.lastAutoTable.finalY+6;
+      py=doc.lastAutoTable.finalY;
     } else if(!p.frames||!p.frames.length){
-      // Empty accessories pallet — show placeholder
-      doc.setFontSize(7);doc.setFont("helvetica","italic");doc.setTextColor(150,150,150);
-      doc.text("No items assigned to this pallet",m+3,y+4);doc.setTextColor(0,0,0);y+=10;
-    } else {
-      y+=4;
+      // No items — show empty table
+      var emptyRows=[];for(var ei=0;ei<20;ei++)emptyRows.push(["","",""]);
+      doc.autoTable({startY:py,
+        head:[["PART NUMBER","DESCRIPTION","QTY"]],
+        body:emptyRows,theme:"grid",
+        headStyles:{fillColor:[30,42,62],textColor:[255,255,255],fontSize:9,fontStyle:"bold",halign:"center",cellPadding:3},
+        bodyStyles:{fontSize:9,cellPadding:3,lineWidth:0.3,lineColor:[180,180,180]},
+        columnStyles:{0:{cellWidth:35},1:{cellWidth:"auto"},2:{cellWidth:22,halign:"center"}},
+        margin:{left:m,right:m}});
+      py=doc.lastAutoTable.finalY;
     }
+
+    // Page number at bottom
+    doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(120,120,120);
+    doc.text(entry.bolNum+" — "+p.num,pw/2,ph-6,{align:"center"});
+    doc.setTextColor(0,0,0);
   });
 
-  // Unassigned items section (if any)
+  // Unassigned items — only add page if there are any
   if(unassigned.length){
-    if(y>220){doc.addPage();y=12;}
-    doc.setFillColor(200,150,50);doc.rect(m,y,pw-m*2,7,"F");
-    doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(255,255,255);
-    doc.text("UNASSIGNED ITEMS ("+unassigned.length+" type"+(unassigned.length!==1?"s":"")+")",m+3,y+5);
-    doc.setTextColor(0,0,0);y+=7;
-    var uRows=unassigned.map(function(item,i){return [i+1,item.qty,item.unit,item.pn,item.desc,"",""];});
-    doc.autoTable({startY:y,
-      head:[["#","Qty","Unit","Part Number","Description","NMFC No.","Class"]],
-      body:uRows,theme:"grid",
-      headStyles:{fillColor:[160,100,20],textColor:[255,255,255],fontSize:7,fontStyle:"bold"},
-      bodyStyles:{fontSize:7.5,cellPadding:2},
-      columnStyles:{0:{cellWidth:8,halign:"center"},1:{cellWidth:14,halign:"center"},2:{cellWidth:12,halign:"center"},3:{cellWidth:28,fontStyle:"bold"},4:{cellWidth:"auto"},5:{cellWidth:18,halign:"center"},6:{cellWidth:12,halign:"center"}},
+    doc.addPage();var uy=m;
+    doc.setFont("helvetica","bold");doc.setFontSize(13);
+    doc.setFillColor(200,150,0);doc.rect(m,uy,pw-m*2,10,"F");doc.rect(m,uy,pw-m*2,10);
+    doc.setTextColor(255,255,255);doc.text("UNASSIGNED ITEMS — NOT ASSIGNED TO ANY PALLET",pw/2,uy+7,{align:"center"});
+    doc.setTextColor(0,0,0);uy+=12;
+    var uRows2=unassigned.map(function(item){return [item.pn||"—",item.desc,item.qty+" "+item.unit];});
+    while(uRows2.length<15)uRows2.push(["","",""]);
+    doc.autoTable({startY:uy,
+      head:[["PART NUMBER","DESCRIPTION","QTY"]],
+      body:uRows2,theme:"grid",
+      headStyles:{fillColor:[160,100,0],textColor:[255,255,255],fontSize:9,fontStyle:"bold",halign:"center",cellPadding:3},
+      bodyStyles:{fontSize:9,cellPadding:3},
+      columnStyles:{0:{cellWidth:35},1:{cellWidth:"auto"},2:{cellWidth:22,halign:"center",fontStyle:"bold"}},
       margin:{left:m,right:m}});
-    y=doc.lastAutoTable.finalY+6;
   }
 
   // Page numbers
@@ -1041,7 +1146,8 @@ function reprintPDF(entry){
 }
 
 function resetBOL(){
-  ST={step:1,bolNum:"",shipDate:"",shipFrom:"Eastern Glass & Aluminum, 4274 Shackleford Rd., Norcross, GA 30093",shipTo:"",carrier:"",driver:"",truckNum:"",trailerNum:"",proNum:"",scac:"",ft:"prepaid",specInst:"",pallets:[],items:[],sig:null};
+  ST={step:1,bolNum:"",shipDate:"",shipFrom:"Eastern Glass & Aluminum, 4274 Shackleford Rd., Norcross, GA 30093",shipTo:"",carrier:"",driver:"",truckNum:"",trailerNum:"",proNum:"",scac:"",ft:"prepaid",specInst:"",pallets:[],items:[],palletItems:{},sig:null};
+  ACTIVE_PLT="";
   ["ship-to","carrier","driver","truck-num","trailer-num","pro-num","scac","spec-inst"].forEach(function(id){var el=document.getElementById(id);if(el)el.value="";});
   document.getElementById("ship-date").valueAsDate=new Date();
   setFT("prepaid");genBolNum();loadPallets();
