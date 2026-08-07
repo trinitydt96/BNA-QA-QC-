@@ -1142,18 +1142,8 @@ function doPDF(){
         },
         margin:{left:m,right:m}});
       py=doc.lastAutoTable.finalY;
-    } else {
-      // No items assigned — empty table for manual fill (accessories pallets)
-      var emptyRows2=[];for(var ei=0;ei<25;ei++)emptyRows2.push(["","",""]);
-      doc.autoTable({startY:py,
-        head:[["PART NUMBER","DESCRIPTION","QTY"]],
-        body:emptyRows2,theme:"grid",
-        headStyles:{fillColor:[30,42,62],textColor:[255,255,255],fontSize:9,fontStyle:"bold",halign:"center",cellPadding:3},
-        bodyStyles:{fontSize:9,cellPadding:4,lineWidth:0.3,lineColor:[180,180,180],minCellHeight:8},
-        columnStyles:{0:{cellWidth:35},1:{cellWidth:"auto"},2:{cellWidth:22,halign:"center"}},
-        margin:{left:m,right:m}});
-      py=doc.lastAutoTable.finalY;
     }
+    // No items and no accessories — frame-only pallet, skip table entirely
 
     // Page number at bottom
     doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(120,120,120);
