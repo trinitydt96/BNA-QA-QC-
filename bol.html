@@ -862,7 +862,20 @@ function renderHistList(el){
 }
 
 // ── PDF Generation ─────────────────────────────────────────────────
-function downloadPDF(){showToast("Generating PDF...");saveBOL();setTimeout(function(){try{doPDF();}catch(err){console.error(err);showToast("PDF error: "+err.message);}},200);}
+function downloadPDF(){
+  // Always capture latest Step 1 values before generating
+  ST.bolNum   = (document.getElementById("bol-num")     &&document.getElementById("bol-num").value.trim())    ||ST.bolNum;
+  ST.shipDate = (document.getElementById("ship-date")   &&document.getElementById("ship-date").value)          ||ST.shipDate;
+  ST.shipTo   = (document.getElementById("ship-to")     &&document.getElementById("ship-to").value.trim())     ||ST.shipTo;
+  ST.carrier  = (document.getElementById("carrier")     &&document.getElementById("carrier").value.trim())     ||ST.carrier;
+  ST.driver   = (document.getElementById("driver")      &&document.getElementById("driver").value.trim())      ||ST.driver;
+  ST.truckNum = (document.getElementById("truck-num")   &&document.getElementById("truck-num").value.trim())   ||ST.truckNum;
+  ST.trailerNum=(document.getElementById("trailer-num") &&document.getElementById("trailer-num").value.trim()) ||ST.trailerNum;
+  ST.specInst = (document.getElementById("spec-inst")   &&document.getElementById("spec-inst").value.trim())   ||ST.specInst;
+  showToast("Generating PDF...");
+  saveBOL();
+  setTimeout(function(){try{doPDF();}catch(err){console.error(err);showToast("PDF error: "+err.message);}},200);
+}
 
 function saveBOL(){
   var tf=ST.pallets.reduce(function(s,p){return s+(p.frames?p.frames.length:0);},0);
@@ -970,7 +983,9 @@ function doPDF(){
     if(p.frames&&p.frames.length){
       contents="CW FRAMES ("+p.frames.length+"): "+p.frames.join(", ");
     } else if(byPallet[p.num]&&byPallet[p.num].length){
-      contents="ACCESSORIES ("+byPallet[p.num].length+" item type"+(byPallet[p.num].length!==1?"s":"")+")";
+      var itemCount=byPallet[p.num].length;
+      contents="ACCESSORIES — "+itemCount+" item type"+(itemCount!==1?"s":"");
+      if(p.desc)contents+=" ("+p.desc+")";
     } else if(p.desc){
       contents=p.desc;
     } else {
@@ -1054,15 +1069,22 @@ function doPDF(){
     doc.setFont("helvetica","bold");doc.setFontSize(16);
     doc.setTextColor(0,80,180);doc.text("EGA",m+6,py+8);
     doc.setTextColor(0,0,0);doc.setFontSize(13);
-    doc.text("ACCESSORIES PALLET PACKAGING",m+26,py+8);
+    // Title intentionally blank — left empty next to EGA logo
     py+=12;
 
     // ── Info rows: PROJECT / PALLET# / ELV ───────────────────
+    // Derive ELV/SYSTEM from frame IDs (e.g. "CW1.1-F1L1" → "CW1.1")
+    var sysSet={};
+    (p.frames||[]).forEach(function(fid){
+      var m2=fid.match(/^(CW[\d.]+)/i);
+      if(m2)sysSet[m2[1].toUpperCase()]=1;
+    });
+    var sysLabel=Object.keys(sysSet).sort().join(" + ")||( p.desc&&p.desc.trim()?p.desc.trim():"");
+    var palletLabel=p.num+(p.desc&&!p.frames.length?" — "+p.desc:"");
     var infoRows=[
       ["PROJECT NAME:", "BNA"],
-      ["PALLET #:", p.num+(p.desc?" — "+p.desc:"")],
-      ["ELV / SYSTEM:", p.frames&&p.frames.length?"See frame list below":
-        (p.desc&&p.desc.indexOf("CW")>=0?p.desc:"CW1.1 + CW1.2")]
+      ["PALLET #:", palletLabel],
+      ["ELV / SYSTEM:", "See frame list below"]
     ];
     infoRows.forEach(function(ir){
       doc.rect(m,py,bw/3,8);doc.rect(m+bw/3,py,bw*2/3,8);
@@ -1080,16 +1102,18 @@ function doPDF(){
 
     // ── Frame list (if this is a frame pallet) ────────────────
     if(p.frames&&p.frames.length){
-      doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setFillColor(220,230,245);
-      doc.rect(m,py,bw,6,"F");doc.rect(m,py,bw,6);
+      doc.setFont("helvetica","bold");doc.setFontSize(8);
+      doc.setFillColor(220,230,245);doc.rect(m,py,bw,6,"F");doc.rect(m,py,bw,6);
       doc.text("CURTAINWALL FRAMES ON THIS PALLET",m+3,py+4.5);
       py+=6;
-      var frameLines=doc.splitTextToSize(p.frames.join("    "),bw-6);
-      var flh=frameLines.length*4+4;
-      doc.setFillColor(245,248,255);doc.rect(m,py,bw,flh,"F");doc.rect(m,py,bw,flh);
-      doc.setFont("helvetica","normal");doc.setFontSize(8);
-      frameLines.forEach(function(fl,fi){doc.text(fl,m+3,py+4+fi*4);});
-      py+=flh+4;
+      var fRowH=7;var fTotalH=p.frames.length*fRowH+2;
+      doc.setFillColor(245,248,255);doc.rect(m,py,bw,fTotalH,"F");doc.rect(m,py,bw,fTotalH);
+      doc.setFont("helvetica","bold");doc.setFontSize(9);
+      p.frames.forEach(function(fid,fi){
+        doc.text((fi+1)+".  "+fid.trim(),m+5,py+5+fi*fRowH);
+        if(fi<p.frames.length-1){doc.setDrawColor(200,215,235);doc.line(m,py+fRowH*(fi+1),m+bw,py+fRowH*(fi+1));doc.setDrawColor(0,0,0);}
+      });
+      py+=fTotalH+5;
     }
 
     // ── Items table ───────────────────────────────────────────
@@ -1118,14 +1142,14 @@ function doPDF(){
         },
         margin:{left:m,right:m}});
       py=doc.lastAutoTable.finalY;
-    } else if(!p.frames||!p.frames.length){
-      // No items — show empty table
-      var emptyRows=[];for(var ei=0;ei<20;ei++)emptyRows.push(["","",""]);
+    } else {
+      // No items assigned — empty table for manual fill (accessories pallets)
+      var emptyRows2=[];for(var ei=0;ei<25;ei++)emptyRows2.push(["","",""]);
       doc.autoTable({startY:py,
         head:[["PART NUMBER","DESCRIPTION","QTY"]],
-        body:emptyRows,theme:"grid",
+        body:emptyRows2,theme:"grid",
         headStyles:{fillColor:[30,42,62],textColor:[255,255,255],fontSize:9,fontStyle:"bold",halign:"center",cellPadding:3},
-        bodyStyles:{fontSize:9,cellPadding:3,lineWidth:0.3,lineColor:[180,180,180]},
+        bodyStyles:{fontSize:9,cellPadding:4,lineWidth:0.3,lineColor:[180,180,180],minCellHeight:8},
         columnStyles:{0:{cellWidth:35},1:{cellWidth:"auto"},2:{cellWidth:22,halign:"center"}},
         margin:{left:m,right:m}});
       py=doc.lastAutoTable.finalY;
