@@ -310,6 +310,10 @@ function showStatus(f,st){
       +"<input class='inp' id='pkg-n' placeholder='Your full name' type='text'></div>"
       +"<div class='fg' style='margin-bottom:8px'><div class='lbl'>Pack Date</div>"
       +"<input class='inp' id='pkg-d' type='date'></div>"
+      +"<div class='fg' style='margin-bottom:8px'><div class='lbl'>Packaging Photos <span style='color:var(--mu);font-size:10px'>(frame / pallet / label)</span></div>"
+      +"<button class='photo-btn' id='pkg-pb' type='button' onclick='document.getElementById(\"pkg-pf\").click()'>&#128247; Take / Add Photos</button>"
+      +"<input type='file' id='pkg-pf' accept='image/*' capture='environment' multiple style='display:none'>"
+      +"<div class='photo-thumbs' id='pkg-pt'></div></div>"
       +"<div class='sstbar' id='pkg-s'></div>";
     wrap.appendChild(pf);
     setTimeout(function(){
@@ -319,6 +323,9 @@ function showStatus(f,st){
       if(pd)pd.valueAsDate=new Date();
       if(pp)pp.addEventListener("input",updPkgBtn);
       if(pn)pn.addEventListener("input",updPkgBtn);
+      // Wire up packaging photo input
+      var pkgPf=document.getElementById("pkg-pf");
+      if(pkgPf){pkgPf.addEventListener("change",function(){handlePkgPhotoSelect(this.files);});}
       document.getElementById("bb-pkg").style.display="flex";
       document.getElementById("bb-qa").style.display="none";
     },50);
@@ -332,6 +339,34 @@ function showStatus(f,st){
     wrap.innerHTML=mkCard(bg,col,shipped?"[S]":"[B]",tt,sb,
       [["Frame ID",f.id],["Pallet",st.palletNum||"-"],
        ["Packed By",st.packedBy||"-"],["Pack Date",st.packDate||"-"]]);
+
+    // If not shipped, show photo upload option for missing packaging photos
+    if(!shipped){
+      var photoAdd=document.createElement("div");
+      photoAdd.style.cssText="background:var(--s1);border:1px solid var(--bd2);border-radius:12px;padding:14px;margin-top:10px";
+      photoAdd.innerHTML=""
+        +"<div style='font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:10px'>Packaging Photos</div>"
+        +"<button class='photo-btn' id='retro-pb' type='button'>&#128247; Add Packaging Photos</button>"
+        +"<input type='file' id='retro-pf' accept='image/*' capture='environment' multiple style='display:none'>"
+        +"<div class='photo-thumbs' id='retro-pt' style='margin-top:8px'></div>"
+        +"<div id='retro-msg' style='font-family:var(--mono);font-size:10px;color:var(--mu);min-height:20px;padding:6px 0;text-align:center'></div>"
+        +"<button id='retro-submit' style='display:none;width:100%;margin-top:8px;padding:10px;border-radius:8px;font-family:var(--head);font-size:13px;font-weight:700;cursor:pointer;border:none;background:#00d084;color:#000;letter-spacing:.05em'>UPLOAD PHOTOS</button>";
+      wrap.appendChild(photoAdd);
+
+      // Wire up after DOM settles
+      setTimeout(function(){
+        var pb=document.getElementById("retro-pb");
+        var pf=document.getElementById("retro-pf");
+        var submitBtn=document.getElementById("retro-submit");
+        if(pb&&pf){
+          pb.addEventListener("click",function(){pf.click();});
+          pf.addEventListener("change",function(){handleRetroPkgPhotos(this.files,f);});
+        }
+        if(submitBtn){
+          submitBtn.addEventListener("click",function(){uploadRetroPkgPhotos(f);});
+        }
+      },50);
+    }
   }
   sa.appendChild(wrap);
 
@@ -487,6 +522,140 @@ function updPkgBtn(){
   else{btn.textContent="Enter pallet + name";btn.style.background="linear-gradient(135deg,#5a7090,#3a4f6a)";}
 }
 
+var pkgPhotoFiles=[];
+
+function handlePkgPhotoSelect(files){
+  if(!files||!files.length)return;
+  var remaining=5-pkgPhotoFiles.length;
+  if(remaining<=0){showToast("Maximum 5 photos reached");return;}
+  var toProcess=Math.min(files.length,remaining);
+  for(var i=0;i<toProcess;i++){
+    (function(file){
+      var reader=new FileReader();
+      reader.onload=function(e){
+        compressImage(e.target.result,function(compressed){
+          pkgPhotoFiles.push(compressed);
+          renderPkgThumbs();
+        });
+      };
+      reader.readAsDataURL(file);
+    })(files[i]);
+  }
+  document.getElementById("pkg-pf").value="";
+}
+
+function renderPkgThumbs(){
+  var el=document.getElementById("pkg-pt");
+  if(!el)return;
+  el.innerHTML="";
+  pkgPhotoFiles.forEach(function(src,idx){
+    var thumb=document.createElement("div");
+    thumb.className="photo-thumb";
+    var img=document.createElement("img");
+    img.src=src;
+    var del=document.createElement("button");
+    del.className="pdel";
+    del.innerHTML="&#10005;";
+    del.addEventListener("click",function(e){
+      e.stopPropagation();
+      pkgPhotoFiles.splice(idx,1);
+      renderPkgThumbs();
+    });
+    thumb.appendChild(img);
+    thumb.appendChild(del);
+    el.appendChild(thumb);
+  });
+  var pb=document.getElementById("pkg-pb");
+  if(pb){pb.textContent=pkgPhotoFiles.length>=5?"5/5 photos added":"\u{1F4F7} Take / Add Photos ("+pkgPhotoFiles.length+"/5)";}
+}
+
+var retroPhotoFiles=[];
+
+function handleRetroPkgPhotos(files, frame){
+  if(!files||!files.length)return;
+  var remaining=5-retroPhotoFiles.length;
+  if(remaining<=0){showToast("Maximum 5 photos");return;}
+  var toProcess=Math.min(files.length,remaining);
+  for(var i=0;i<toProcess;i++){
+    (function(file){
+      var reader=new FileReader();
+      reader.onload=function(e){
+        compressImage(e.target.result,function(compressed){
+          retroPhotoFiles.push(compressed);
+          renderRetroThumbs(frame);
+        });
+      };
+      reader.readAsDataURL(file);
+    })(files[i]);
+  }
+  document.getElementById("retro-pf").value="";
+}
+
+function renderRetroThumbs(frame){
+  var el=document.getElementById("retro-pt");
+  var msg=document.getElementById("retro-msg");
+  var submitBtn=document.getElementById("retro-submit");
+  if(!el)return;
+  el.innerHTML="";
+  retroPhotoFiles.forEach(function(src,idx){
+    var thumb=document.createElement("div");
+    thumb.className="photo-thumb";
+    var img=document.createElement("img");
+    img.src=src;
+    var del=document.createElement("button");
+    del.className="pdel";
+    del.innerHTML="&#10005;";
+    del.addEventListener("click",function(e){
+      e.stopPropagation();
+      retroPhotoFiles.splice(idx,1);
+      renderRetroThumbs(frame);
+    });
+    thumb.appendChild(img);
+    thumb.appendChild(del);
+    el.appendChild(thumb);
+  });
+  var pb=document.getElementById("retro-pb");
+  if(pb)pb.textContent=retroPhotoFiles.length>=5?"5/5 photos added":"\u{1F4F7} Add More Photos ("+retroPhotoFiles.length+"/5)";
+  if(msg)msg.textContent=retroPhotoFiles.length>0?retroPhotoFiles.length+" photo(s) ready to upload":"";
+  if(submitBtn)submitBtn.style.display=retroPhotoFiles.length>0?"block":"none";
+}
+
+function uploadRetroPkgPhotos(frame){
+  if(!retroPhotoFiles.length){showToast("No photos to upload");return;}
+  var msg=document.getElementById("retro-msg");
+  var submitBtn=document.getElementById("retro-submit");
+  if(msg)msg.style.color="var(--am)";
+  if(msg)msg.textContent="Uploading "+retroPhotoFiles.length+" photo(s)...";
+  if(submitBtn){submitBtn.disabled=true;submitBtn.textContent="Uploading...";}
+
+  uploadPhotosWithRetry(frame.id,"packaging-retro",new Date().toISOString().split("T")[0],retroPhotoFiles,0,
+    function(ok){
+      if(ok){
+        showToast(frame.id+" — photos uploaded");
+        retroPhotoFiles=[];
+        // Hide the entire photo section — clearly done, no confusion
+        var photoSection=document.getElementById("retro-pb");
+        if(photoSection&&photoSection.parentNode){
+          var section=photoSection.parentNode;
+          section.innerHTML="<div style='text-align:center;padding:12px;font-family:var(--mono);font-size:11px;color:var(--gn);letter-spacing:.06em'>&#10003; PACKAGING PHOTOS UPLOADED</div>";
+        }
+      } else {
+        if(msg){msg.style.color="var(--rd)";msg.textContent="Upload failed — check connection and try again";}
+        if(submitBtn){submitBtn.disabled=false;submitBtn.textContent="RETRY UPLOAD";}
+        showToast("Photo upload failed - try again");
+      }
+    }
+  );
+}
+
+function resetPkgPhotos(){
+  pkgPhotoFiles=[];
+  var el=document.getElementById("pkg-pt");
+  if(el)el.innerHTML="";
+  var pb=document.getElementById("pkg-pb");
+  if(pb)pb.textContent="\u{1F4F7} Take / Add Photos";
+}
+
 function doSubmitPkg(){
   var p=document.getElementById("pkg-p");
   var n=document.getElementById("pkg-n");
@@ -509,11 +678,18 @@ function doSubmitPkg(){
   setTimeout(function(){
     if(ps){ps.className="sstbar ok";ps.textContent="Packed "+SF.id+" on "+rec.palletNum;}
     showToast("Packed "+SF.id+" — "+rec.palletNum);
+    // Upload packaging photos if any were taken
+    if(pkgPhotoFiles.length>0){
+      uploadPhotosWithRetry(SF.id, rec.packedBy, rec.packDate, pkgPhotoFiles, 0, function(ok){
+        if(!ok){showToast("⚠️ Packaging photos failed - retake for "+SF.id);}
+      });
+    }
     setTimeout(function(){
       document.getElementById("si").value="";
-      document.getElementById("sa").innerHTML="<div style='text-align:center;padding:40px;color:var(--mu);font-family:var(--mono);font-size:11px;line-height:2'><span style='font-size:32px'>📦</span><br><b style='font-size:14px;color:#00d084'>"+SF.id+" PACKED</b><br><span style='color:var(--mu)'>Pallet: "+rec.palletNum+" / "+rec.packedBy+"</span><br><br>Search next frame</div>";
+      document.getElementById("sa").innerHTML="<div style='text-align:center;padding:40px;color:var(--mu);font-family:var(--mono);font-size:11px;line-height:2'><span style='font-size:32px'>&#128230;</span><br><b style='font-size:14px;color:#00d084'>"+SF.id+" PACKED</b><br><span style='color:var(--mu)'>Pallet: "+rec.palletNum+" / "+rec.packedBy+"</span><br><br>Search next frame</div>";
       document.getElementById("bb-pkg").style.display="none";
       SF=null;
+      resetPkgPhotos();
     },2000);
   },1500);
 }
@@ -687,34 +863,78 @@ function doSubmitQA(){
   // Send main QA/QC data via GET (Image beacon - fast, no CORS issues)
   var img=new Image();img.src=WH+"?"+new URLSearchParams(rec).toString();
 
-  // Send photos separately via POST (base64 data too large for URL/GET)
+  // Send photos via POST — wait for result before navigating away
   if(photoFiles.length>0){
-    sst.textContent="Saving photos...";
-    fetch(WH,{
-      method:"POST",
-      headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({
-        action:"photos",
-        frameId:SF.id,
-        inspector:insp,
-        date:document.getElementById("f-date").value,
-        photos:photoFiles
-      })
-    }).catch(function(err){console.log("Photo upload error (non-blocking):",err);});
-  }
-
-  setTimeout(function(){
-    sst.className="sstbar ok";
-    sst.textContent="Saved - "+SF.id+" "+ov+(photoFiles.length?" ("+photoFiles.length+" photos)":"");
-    showToast(SF.id+" - "+ov);
+    sst.textContent="Uploading "+photoFiles.length+" photo(s)...";
+    uploadPhotosWithRetry(SF.id, insp, document.getElementById("f-date").value, photoFiles, 0,
+      function(ok){
+        if(ok){
+          sst.className="sstbar ok";
+          sst.textContent="Saved - "+SF.id+" "+ov+" ("+photoFiles.length+" photos uploaded)";
+        } else {
+          sst.className="sstbar sv";
+          sst.textContent="QA saved but PHOTOS FAILED — retake photos for "+SF.id;
+          showToast("⚠️ Photos not uploaded - retake for "+SF.id);
+          // Store failed frame in localStorage so inspector can retry
+          try{
+            var failed=JSON.parse(localStorage.getItem("bna-photo-retry")||"[]");
+            if(failed.indexOf(SF.id)<0) failed.push(SF.id);
+            localStorage.setItem("bna-photo-retry", JSON.stringify(failed));
+          }catch(e){}
+        }
+        showToast(SF.id+" - "+ov);
+        setTimeout(function(){
+          goPg("scan");
+          document.getElementById("si").value="";
+          document.getElementById("sa").innerHTML="<div style='text-align:center;padding:40px;color:var(--mu);font-family:var(--mono);font-size:11px'>Submitted - search next frame</div>";
+          SF=null;
+          resetPhotos();
+        },2000);
+      }
+    );
+  } else {
     setTimeout(function(){
-      goPg("scan");
-      document.getElementById("si").value="";
-      document.getElementById("sa").innerHTML="<div style='text-align:center;padding:40px;color:var(--mu);font-family:var(--mono);font-size:11px'>Submitted - search next frame</div>";
-      SF=null;
-      resetPhotos();
-    },1500);
-  },1500);
+      sst.className="sstbar ok";
+      sst.textContent="Saved - "+SF.id+" "+ov;
+      showToast(SF.id+" - "+ov);
+      setTimeout(function(){
+        goPg("scan");
+        document.getElementById("si").value="";
+        document.getElementById("sa").innerHTML="<div style='text-align:center;padding:40px;color:var(--mu);font-family:var(--mono);font-size:11px'>Submitted - search next frame</div>";
+        SF=null;
+        resetPhotos();
+      },1500);
+    },1000);
+  }
+}
+
+function uploadPhotosWithRetry(frameId, insp, date, photos, attempt, cb){
+  var MAX=3;
+  fetch(WH,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify({action:"photos",frameId:frameId,inspector:insp,date:date,photos:photos})
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(data && data.result==="ok" && data.photoCount>0){
+      cb(true);
+    } else {
+      if(attempt<MAX-1){
+        setTimeout(function(){uploadPhotosWithRetry(frameId,insp,date,photos,attempt+1,cb);},2000);
+      } else {
+        cb(false);
+      }
+    }
+  })
+  .catch(function(err){
+    console.log("Photo upload attempt "+(attempt+1)+" failed:",err);
+    if(attempt<MAX-1){
+      setTimeout(function(){uploadPhotosWithRetry(frameId,insp,date,photos,attempt+1,cb);},2000);
+    } else {
+      cb(false);
+    }
+  });
 }
 
 function doReset(){
