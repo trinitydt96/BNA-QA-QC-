@@ -553,7 +553,11 @@ function makeSecs(){
       +"</div><div class='sc-pct' id='sp-"+sec.id+"' style='color:"+sec.color+"'>0%</div></div>"
       +"<div class='sb' id='sb-"+sec.id+"'>"+body
       +"<div class='pw'><div class='pr'><span>PROGRESS</span><span id='pt-"+sec.id+"'>0/"+sec.items.length+"</span></div>"
-      +"<div class='pb'><div class='pf' id='pf-"+sec.id+"' style='width:0%;background:"+sec.color+"'></div></div></div>"
+      +"<div class='pb'><div class='pf' id='pf-"+sec.id+"' style='width:0%;background:"+sec.color+"'></div></div>"
+      +"<div style='display:flex;align-items:center;gap:8px;margin-top:8px'>"
+      +"<button class='sec-save-btn' id='ssb-"+sec.id+"' onclick=\"saveSec('"+sec.id+"')\" style='flex:1;padding:7px 10px;border-radius:6px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;cursor:pointer;border:1px solid rgba(255,255,255,.15);background:var(--s3);color:var(--mu);text-transform:uppercase'>SAVE</button>"
+      +"<div class='sec-save-msg' id='ssm-"+sec.id+"' style='font-family:var(--mono);font-size:9px;color:var(--gn);min-width:80px;text-align:right'></div>"
+      +"</div></div>"
       +"</div>";
     el.appendChild(d);
     // Add header click listener
@@ -732,6 +736,32 @@ function doReset(){
   updSecs();updOvr();goPg("scan");showToast("Reset done");
 }
 
+function saveSec(secId){
+  var insp=document.getElementById("f-insp").value.trim();
+  if(!insp){showToast("Enter inspector name first");document.getElementById("f-insp").focus();return;}
+  if(!SF){showToast("No frame selected");return;}
+  // Find items in this section
+  var sec=SC.find(function(s){return s.id===secId;});
+  if(!sec)return;
+  var checked=0;
+  sec.items.forEach(function(i){if(CK[i.id])checked++;});
+  if(!checked){showToast("Mark at least one item first");return;}
+  // Save checkpoint to localStorage
+  var key="bna-sec-"+SF.id+"-"+secId;
+  var checkpoint={frameId:SF.id,secId:secId,inspector:insp,ts:new Date().toISOString(),checks:{}};
+  sec.items.forEach(function(i){checkpoint.checks[i.id]=CK[i.id]||"";});
+  try{localStorage.setItem(key,JSON.stringify(checkpoint));}catch(e){}
+  // Visual feedback on the button
+  var btn=document.getElementById("ssb-"+secId);
+  var msg=document.getElementById("ssm-"+secId);
+  if(btn){btn.style.background="rgba(0,208,132,.15)";btn.style.color="var(--gn)";btn.style.borderColor="rgba(0,208,132,.4)";btn.textContent="SAVED";}
+  if(msg){msg.textContent=insp+" / "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}
+  showToast("Section saved - "+sec.title);
+  // Reset button style after 2s
+  setTimeout(function(){
+    if(btn){btn.style.background="var(--s3)";btn.style.color="var(--mu)";btn.style.borderColor="rgba(255,255,255,.15)";btn.textContent="SAVE";}
+  },2000);
+}
 function saveHist(){try{localStorage.setItem("bna-h8",JSON.stringify(HI.slice(0,80)));}catch(e){}}
 function loadHist(){
   try{
