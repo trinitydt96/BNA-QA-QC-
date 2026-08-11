@@ -162,11 +162,13 @@ select.inp option{background:var(--s2)}
   </div>
   <div class="sstbar" id="sst"></div>
 </div>
-<div class="pg" id="p-hist"><div style="display:flex;justify-content:space-between;align-items:center;padding:0 0 10px 0">
+<div class="pg" id="p-hist"><div class="box">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:0 0 10px 0">
     <div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu)">Local Session History</div>
     <button onclick="clearHist()" style="font-family:var(--mono);font-size:9px;padding:4px 10px;border-radius:6px;background:rgba(255,77,106,.1);border:1px solid rgba(255,77,106,.3);color:#ff4d6a;cursor:pointer">Clear History</button>
   </div>
-  <div id="hl"></div></div>
+  <div id="hl"></div>
+</div></div>
 <div class="pg" id="p-plt"><div class="box"><div class="lbl" style="margin-bottom:8px">Pallet Manager</div><div id="pl" style="color:var(--mu);font-family:var(--mono);font-size:11px">No packed frames yet.</div></div></div>
 <div class="bbar" id="bb-qa" style="display:none"><button class="btn btn-back" onclick="goPg('scan')">Back</button><button class="btn btn-sub" id="sub-btn" onclick="doSubmitQA()" disabled>Submit QA/QC</button></div>
 <div class="bbar" id="bb-pkg" style="display:none"><button class="btn btn-back" onclick="goPg('scan')">Back</button><button class="btn btn-pkg" id="pkg-btn" onclick="doSubmitPkg()" disabled>Fill details first</button></div>
