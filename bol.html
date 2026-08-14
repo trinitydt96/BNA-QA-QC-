@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BNA BOL System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+        }
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        button.secondary {
+            background: #757575;
+        }
+        button.secondary:hover {
+            background: #616161;
+        }
+        #palletList {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+        .pallet-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        .pallet-item h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        .frame-list {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .frame-list li {
+            margin-bottom: 5px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 4px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+        .error {
+            color: #d32f2f;
+        }
+        .success {
+            color: #388e3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 BNA Bill of Lading System</h1>
+        
+        <div class="section">
+            <label>BOL Number:</label>
+            <input type="text" id="bolNum" placeholder="e.g., BNA-SHP-008" value="BNA-SHP-">
+            
+            <label>Date:</label>
+            <input type="date" id="date">
+            
+            <div class="row">
+                <div>
+                    <label>Ship To:</label>
+                    <input type="text" id="shipTo" placeholder="Destination" value="Nashville International Airport, 801 McGavock Pike, Nashville, TN 37217">
+                </div>
+                <div>
+                    <label>Carrier Name:</label>
+                    <input type="text" id="carrier" value="EGA">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div>
+                    <label>Trailer #:</label>
+                    <input type="text" id="trailerNum" placeholder="Trailer number">
+                </div>
+                <div>
+                    <label>Truck #:</label>
+                    <input type="text" id="truckNum" placeholder="Truck number">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div>
+                    <label>SCAC:</label>
+                    <input type="text" id="scac" placeholder="SCAC code">
+                </div>
+                <div>
+                    <label>Pro Number:</label>
+                    <input type="text" id="proNum" placeholder="Pro number">
+                </div>
+            </div>
+            
+            <label>Special Instructions:</label>
+            <textarea id="specInst" placeholder="Special instructions"></textarea>
+            
+            <label>Freight Terms:</label>
+            <select id="ft">
+                <option value="prepaid">Prepaid</option>
+                <option value="collect">Collect</option>
+                <option value="3rd">3rd Party</option>
+            </select>
+        </div>
+
+        <div class="section">
+            <h2>Pallets</h2>
+            <div id="palletList"></div>
+            <button onclick="addPallet()">+ Add Pallet</button>
+        </div>
+
+        <div class="section">
+            <button onclick="saveBOL()">💾 Save BOL</button>
+            <button class="secondary" onclick="loadBOL()">📂 Load BOL</button>
+            <button class="secondary" onclick="resetBOL()">🔄 Reset</button>
+            <button onclick="doPDF()">📄 Export to PDF</button>
+        </div>
+    </div>
+
+    <script>
+        var HI = []; // History/Current BOL data
+
+        // Set today's date
+        document.getElementById('date').valueAsDate = new Date();
+
+        function addPallet() {
+            var palNum = prompt("Enter Pallet Number (e.g., BNA-PLT-014):");
+            if (!palNum) return;
+            
+            var entry = HI[0] || {};
+            if (!entry.pallets) entry.pallets = [];
+            
+            entry.pallets.push({
+                num: palNum,
+                frames: []
+            });
+            
+            HI[0] = entry;
+            renderPallets();
+        }
+
+        function addFrame(idx) {
+            var frameId = prompt("Enter Frame ID (e.g., CW1.2-F7L2):");
+            if (!frameId) return;
+            
+            var entry = HI[0];
+            if (!entry.pallets[idx]) return;
+            
+            if (!entry.pallets[idx].frames) {
+                entry.pallets[idx].frames = [];
+            }
+            
+            entry.pallets[idx].frames.push(frameId);
+            renderPallets();
+        }
+
+        function removePallet(idx) {
+            if (confirm("Remove this pallet?")) {
+                HI[0].pallets.splice(idx, 1);
+                renderPallets();
+            }
+        }
+
+        function removeFrame(palletIdx, frameIdx) {
+            HI[0].pallets[palletIdx].frames.splice(frameIdx, 1);
+            renderPallets();
+        }
+
+        function renderPallets() {
+            var entry = HI[0] || {};
+            var html = "";
+            
+            if (!entry.pallets || entry.pallets.length === 0) {
+                document.getElementById('palletList').innerHTML = "<p>No pallets added yet.</p>";
+                return;
+            }
+            
+            entry.pallets.forEach(function(pallet, idx) {
+                html += '<div class="pallet-item">';
+                html += '<h3>' + pallet.num + '</h3>';
+                
+                if (pallet.frames && pallet.frames.length > 0) {
+                    html += '<ul class="frame-list">';
+                    pallet.frames.forEach(function(frame, fIdx) {
+                        html += '<li>' + frame + ' <button style="background:#d32f2f; padding:2px 10px; margin-left:10px;" onclick="removeFrame(' + idx + ',' + fIdx + ')">Remove</button></li>';
+                    });
+                    html += '</ul>';
+                }
+                
+                html += '<button onclick="addFrame(' + idx + ')">+ Add Frame</button> ';
+                html += '<button class="secondary" onclick="removePallet(' + idx + ')">Remove Pallet</button>';
+                html += '</div>';
+            });
+            
+            document.getElementById('palletList').innerHTML = html;
+        }
+
+        function saveBOL() {
+            var entry = {
+                bolNum: document.getElementById('bolNum').value,
+                date: document.getElementById('date').value,
+                shipTo: document.getElementById('shipTo').value,
+                carrier: document.getElementById('carrier').value,
+                trailerNum: document.getElementById('trailerNum').value,
+                truckNum: document.getElementById('truckNum').value,
+                scac: document.getElementById('scac').value,
+                proNum: document.getElementById('proNum').value,
+                specInst: document.getElementById('specInst').value,
+                ft: document.getElementById('ft').value,
+                pallets: HI[0] ? HI[0].pallets : []
+            };
+            
+            // Calculate frame count
+            var frameCount = 0;
+            if (entry.pallets) {
+                entry.pallets.forEach(function(p) {
+                    if (p.frames) frameCount += p.frames.length;
+                });
+            }
+            entry.frameCount = frameCount;
+            entry.palletCount = entry.pallets ? entry.pallets.length : 0;
+            
+            HI[0] = entry;
+            localStorage.setItem('BOL_DATA', JSON.stringify(entry));
+            showToast("BOL saved!");
+        }
+
+        function loadBOL() {
+            var data = localStorage.getItem('BOL_DATA');
+            if (!data) {
+                showToast("No saved BOL found");
+                return;
+            }
+            
+            var entry = JSON.parse(data);
+            HI[0] = entry;
+            
+            document.getElementById('bolNum').value = entry.bolNum || "";
+            document.getElementById('date').value = entry.date || "";
+            document.getElementById('shipTo').value = entry.shipTo || "";
+            document.getElementById('carrier').value = entry.carrier || "";
+            document.getElementById('trailerNum').value = entry.trailerNum || "";
+            document.getElementById('truckNum').value = entry.truckNum || "";
+            document.getElementById('scac').value = entry.scac || "";
+            document.getElementById('proNum').value = entry.proNum || "";
+            document.getElementById('specInst').value = entry.specInst || "";
+            document.getElementById('ft').value = entry.ft || "prepaid";
+            
+            renderPallets();
+            showToast("BOL loaded!");
+        }
+
+        function resetBOL() {
+            if (confirm("Clear all data?")) {
+                HI = [{}];
+                document.getElementById('bolNum').value = "BNA-SHP-";
+                document.getElementById('date').valueAsDate = new Date();
+                document.getElementById('shipTo').value = "Nashville International Airport, 801 McGavock Pike, Nashville, TN 37217";
+                document.getElementById('carrier').value = "EGA";
+                document.getElementById('trailerNum').value = "";
+                document.getElementById('truckNum').value = "";
+                document.getElementById('scac').value = "";
+                document.getElementById('proNum').value = "";
+                document.getElementById('specInst').value = "";
+                document.getElementById('ft').value = "prepaid";
+                renderPallets();
+                showToast("Reset complete");
+            }
+        }
+
+        function showToast(msg) {
+            var toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(function() { toast.remove(); }, 3000);
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // MULTI-PAGE PDF GENERATION
+        // ════════════════════════════════════════════════════════════════════
+
+        function doPDF(){
+            var jsPDF = window.jspdf ? window.jspdf.jsPDF : null;
+            if(!jsPDF){
+                showToast("PDF library loading - try again");
+                return;
+            }
+            
+            saveBOL();
+            var entry = HI[0];
+            if(!entry || !entry.bolNum){
+                showToast("Please fill in BOL details first");
+                return;
+            }
+
+            var doc = new jsPDF({orientation:"portrait", unit:"mm", format:"letter"});
+            var pw = doc.internal.pageSize.getWidth();
+            var ph = doc.internal.pageSize.getHeight();
+            var m = 14;
+            var y = 12;
+
+            // Calculate total pages: 1 summary + 1 per pallet
+            var totalPages = 1 + (entry.pallets ? entry.pallets.length : 0);
+
+            // ════════════════════════════════════════════════════════════════
+            // PAGE 1: SUMMARY
+            // ════════════════════════════════════════════════════════════════
+            
+            // Title
+            doc.setFontSize(13);
+            doc.setFont("helvetica","bold");
+            doc.text("BILL OF LADING - SHORT FORM - NOT NEGOTIABLE", pw/2, y, {align:"center"});
+            y += 4;
+            doc.setFontSize(8);
+            doc.setFont("helvetica","normal");
+            doc.text("Page 1 of " + totalPages, pw/2, y, {align:"center"});
+            y += 5;
+
+            // Header sections
+            doc.setFontSize(8);
+            var cw = (pw - m*2) / 2;
+
+            // SHIP FROM / BOL Number
+            y = addHeaderSection(doc, m, y, "SHIP FROM", "Eastern Glass & Aluminum\n4274 Shackleford Rd., Norcross, GA 30093\n678-355-9010", "Bill of Lading Number: " + entry.bolNum + "\n\nDate: " + entry.date, cw);
+
+            // SHIP TO / Carrier
+            y = addHeaderSection(doc, m, y, "SHIP TO", entry.shipTo || "", "Carrier Name: " + (entry.carrier||"EGA") + "\nTrailer: " + (entry.trailerNum||"-") + "\nTruck: " + (entry.truckNum||"-"), cw);
+
+            // Freight charges
+            y = addHeaderSection(doc, m, y, "THIRD PARTY FREIGHT CHARGES BILL TO", "Eastern Glass & Aluminum\n4274 Shackleford Rd., Norcross, GA 30093\n678-355-9010", "SCAC: " + (entry.scac||"") + "\nPro Number: " + (entry.proNum||""), cw);
+
+            y += 3;
+
+            // Special instructions
+            if(entry.specInst){
+                doc.rect(m, y, pw-m*2, 6);
+                doc.setFont("helvetica","normal");
+                doc.setFontSize(8);
+                doc.text("Special Instructions: " + entry.specInst, m+2, y+4);
+                y += 6;
+            }
+
+            // Freight terms
+            doc.rect(m, y, pw-m*2, 6);
+            doc.setFont("helvetica","normal");
+            doc.text("Freight Charge Terms:  Prepaid [" + (entry.ft==="prepaid"?"X":" ") + "]   Collect [" + (entry.ft==="collect"?"X":" ") + "]   3rd Party [" + (entry.ft==="3rd"?"X":" ") + "]   Invoice [ ]", m+2, y+4);
+            y += 8;
+
+            // SHIPMENT SUMMARY
+            doc.setFillColor(200,200,200);
+            doc.rect(m, y, pw-m*2, 5, "F");
+            doc.setFont("helvetica","bold");
+            doc.setFontSize(9);
+            var tf = entry.frameCount || 0;
+            doc.text("SHIPMENT SUMMARY — " + entry.palletCount + " PALLET(S) | " + tf + " FRAME(S) | SEE NEXT PAGE(S) FOR DETAILS", m+2, y+3.5);
+            y += 5;
+
+            // Pallet summary table
+            var palletRows = [];
+            if(entry.pallets && entry.pallets.length){
+                entry.pallets.forEach(function(p, i){
+                    var frameList = p.frames && p.frames.length ? p.frames.join(", ") : "";
+                    var frameCount = p.frames ? p.frames.length : 0;
+                    palletRows.push([
+                        (i+1).toString(),
+                        p.num,
+                        "CW FRAMES: " + frameList,
+                        "1",
+                        "Pallet"
+                    ]);
+                });
+            }
+
+            doc.autoTable({
+                startY: y,
+                head: [["#", "Pallet ID", "Contents / Description", "Qty", "Type"]],
+                body: palletRows,
+                theme: "grid",
+                headStyles: {fillColor: [200, 200, 200], textColor: [0, 0, 0], fontSize: 8, fontStyle: "bold"},
+                bodyStyles: {fontSize: 8, cellPadding: 2},
+                columnStyles: {
+                    0: {cellWidth: 10, halign: "center"},
+                    1: {cellWidth: 30, halign: "center"},
+                    2: {cellWidth: "auto"},
+                    3: {cellWidth: 12, halign: "center"},
+                    4: {cellWidth: 20, halign: "center"}
+                },
+                margin: {left: m, right: m}
+            });
+
+            y = doc.lastAutoTable.finalY + 4;
+
+            // Carrier text
+            doc.setFontSize(7);
+            doc.setFont("helvetica","normal");
+            doc.text("RECEIVED by the carrier the property described above in apparent good order. Liability limitation may apply — See 49 U.S.C. §14706(c)(1)(A) and (B).", m, y);
+            y += 4;
+            doc.text("The carrier shall not make delivery without payment of all charges and lawful fees.", m, y);
+            y += 8;
+
+            // Signature section
+            var hw = (pw-m*2)/2;
+            doc.rect(m, y, hw-2, 28);
+            doc.rect(m+hw, y, hw-2, 28);
+            doc.setFontSize(8);
+            doc.setFont("helvetica","bold");
+            doc.text("SHIPPER SIGNATURE", m+2, y+4);
+            doc.setFont("helvetica","normal");
+            doc.text("Eastern Glass & Aluminum", m+2, y+9);
+            doc.line(m+2, y+20, m+hw-4, y+20);
+            doc.text("Signature / Date: " + entry.date, m+2, y+25);
+            
+            doc.setFont("helvetica","bold");
+            doc.text("DRIVER / CARRIER ACKNOWLEDGMENT", m+hw+2, y+4);
+            doc.setFont("helvetica","normal");
+            doc.text("Contents received in apparent good order", m+hw+2, y+9);
+            doc.line(m+hw+2, y+20, pw-m-2, y+20);
+            doc.text("Driver Signature", m+hw+2, y+25);
+
+            // ════════════════════════════════════════════════════════════════
+            // DETAIL PAGES: One per pallet
+            // ════════════════════════════════════════════════════════════════
+
+            if(entry.pallets && entry.pallets.length){
+                entry.pallets.forEach(function(pallet, palletIdx){
+                    doc.addPage();
+                    var pageNum = 2 + palletIdx;
+                    var yy = 12;
+
+                    // Page header
+                    doc.setFontSize(11);
+                    doc.setFont("helvetica","bold");
+                    doc.text("BNA-" + entry.bolNum.split("-")[2], pw/2, yy, {align:"center"});
+                    yy += 5;
+                    doc.setFontSize(8);
+                    doc.setFont("helvetica","normal");
+                    doc.text("Page " + pageNum + " of " + totalPages, pw/2, yy, {align:"center"});
+                    yy += 8;
+
+                    // Pallet detail
+                    doc.setFontSize(10);
+                    doc.setFont("helvetica","bold");
+                    doc.text("PROJECT NAME: BNA CONCOURSE A", m, yy);
+                    yy += 6;
+                    doc.setFontSize(9);
+                    doc.text("PALLET #: " + pallet.num, m, yy);
+                    yy += 6;
+                    doc.text("ELV / SYSTEM: See frame list below", m, yy);
+                    yy += 8;
+
+                    // Frames header
+                    doc.setFontSize(9);
+                    doc.setFont("helvetica","bold");
+                    doc.text("CURTAINWALL FRAMES ON THIS PALLET", m, yy);
+                    yy += 6;
+
+                    // List frames
+                    doc.setFontSize(8);
+                    doc.setFont("helvetica","normal");
+                    if(pallet.frames && pallet.frames.length){
+                        pallet.frames.forEach(function(frameId, idx){
+                            doc.text((idx+1) + ". " + frameId, m+4, yy);
+                            yy += 5;
+                        });
+                    } else {
+                        doc.text("No frames on this pallet", m+4, yy);
+                    }
+
+                    yy += 8;
+
+                    // Signature area
+                    doc.setFontSize(8);
+                    doc.line(m, yy, m+40, yy);
+                    doc.text("Warehouse Signature", m, yy+3);
+
+                    doc.line(pw-m-40, yy, pw-m, yy);
+                    doc.text("Driver Signature", pw-m-40, yy+3, {align:"left"});
+                });
+            }
+
+            // Save
+            var fname = entry.bolNum + (entry.date ? "-" + entry.date : "") + ".pdf";
+            doc.save(fname);
+            showToast("Downloaded: " + fname + " (" + totalPages + " pages)");
+
+            setTimeout(function(){ resetBOL(); }, 500);
+        }
+
+        function addHeaderSection(doc, m, y, title, left, right, cw) {
+            var lines = left.split('\n');
+            var rlines = right.split('\n');
+            var sh = Math.max(lines.length, rlines.length) * 4 + 4;
+            
+            doc.rect(m, y, cw, sh);
+            doc.rect(m+cw, y, cw, sh);
+            
+            doc.setFillColor(200, 200, 200);
+            doc.rect(m, y, cw, 5, "F");
+            doc.setFont("helvetica","bold");
+            doc.text(title, m+cw/2, y+3.5, {align:"center"});
+            
+            doc.setFont("helvetica","normal");
+            lines.forEach(function(t, i) {
+                if(t) doc.text(t, m+2, y+6+i*3.5);
+            });
+            
+            rlines.forEach(function(t, i) {
+                if(t) doc.text(t, m+cw+2, y+3+i*4);
+            });
+            
+            return y + sh;
+        }
+
+        // Initialize
+        renderPallets();
+    </script>
+</body>
+</html>
