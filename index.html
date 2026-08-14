@@ -913,7 +913,7 @@ function uploadPhotosWithRetry(frameId, insp, date, photos, attempt, cb){
   fetch(WH,{
     method:"POST",
     headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body:JSON.stringify({action:"photos",frameId:frameId,inspector:insp,date:date,photos:photos})
+    body:JSON.stringify({action:"packaging",frameId:frameId,inspector:insp,date:date,photos:photos})
   })
   .then(function(r){return r.json();})
   .then(function(data){
