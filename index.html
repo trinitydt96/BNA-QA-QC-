@@ -632,6 +632,11 @@ function uploadRetroPkgPhotos(frame){
     function(ok){
       if(ok){
         showToast(frame.id+" — photos uploaded");
+        fetch(WH, {
+  method: "POST",
+  headers: {"Content-Type": "text/plain;charset=utf-8"},
+  body: JSON.stringify({action:"packaging", frameId:frame.id, photos:retroPhotoFiles})
+});
         retroPhotoFiles=[];
         // Hide the entire photo section — clearly done, no confusion
         var photoSection=document.getElementById("retro-pb");
