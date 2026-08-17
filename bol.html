@@ -894,15 +894,39 @@ function saveBOL(){
   // Save to Google Sheets via GET (full data via POST)
   var palletNums=ST.pallets.map(function(p){return p.num;}).join(",");
   var itemsJson="";try{itemsJson=JSON.stringify(ST.items);}catch(e){}
-  // Send basic info via image beacon
+  // Always read latest form values before sending
+  function gv(id){var el=document.getElementById(id);return el?el.value.trim():"";}
+  var latestBolNum   = gv("bol-num")   ||ST.bolNum;
+  var latestDate     = gv("ship-date") ||ST.shipDate;
+  var latestShipTo   = gv("ship-to")  ||ST.shipTo;
+  var latestCarrier  = gv("carrier")  ||ST.carrier;
+  var latestDriver   = gv("driver")   ||ST.driver;
+  var latestTrailer  = gv("trailer-num")||ST.trailerNum;
+  var latestTruck    = gv("truck-num")||ST.truckNum;
+  var latestSpecInst = gv("spec-inst")||ST.specInst;
+
+  // Normalize pallet numbers before sending — match exactly what's in FRAME STATUS
+  var normalizedPalletNums=ST.pallets.map(function(p){
+    return String(p.num||"").replace(/ +/g,"").toUpperCase().replace(/PTL/g,"PLT");
+  }).join(",");
+
+  // Send via image beacon GET
   var img=new Image();
   img.src=WH+"?"+new URLSearchParams({
-    action:"bol",bolNum:ST.bolNum,shipDate:ST.shipDate,
-    shipTo:ST.shipTo,carrier:ST.carrier,driver:ST.driver,
-    truckNum:ST.truckNum,trailerNum:ST.trailerNum,
-    ft:ST.ft,specInst:ST.specInst,
-    palletCount:ST.pallets.length,frameCount:tf,
-    itemCount:ST.items.length,palletNums:palletNums,
+    action:"bol",
+    bolNum:latestBolNum,
+    shipDate:latestDate,
+    shipTo:latestShipTo,
+    carrier:latestCarrier,
+    driver:latestDriver,
+    truckNum:latestTruck,
+    trailerNum:latestTrailer,
+    ft:ST.ft,
+    specInst:latestSpecInst,
+    palletCount:ST.pallets.length,
+    frameCount:tf,
+    itemCount:ST.items.length,
+    palletNums:normalizedPalletNums,
     itemsJson:encodeURIComponent(itemsJson),
     status:"PENDING"
   }).toString();
