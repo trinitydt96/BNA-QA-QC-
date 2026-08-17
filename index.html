@@ -290,7 +290,7 @@ function showStatus(f,st){
       photoDiv.style.cssText="background:var(--s2);border:1px solid var(--bd2);border-radius:10px;padding:12px;margin-bottom:10px";
       var plabel=document.createElement("div");
       plabel.style.cssText="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:8px";
-      plabel.textContent="As-Built Photos";
+      plabel.textContent="Pallet Photos — "+(st.palletNum||"Pallet")+" (shared by all frames on this pallet)";
       var pbr=document.createElement("button");
       pbr.className="photo-btn";pbr.type="button";pbr.textContent="Take / Add Photos";
       var pfr=document.createElement("input");
@@ -365,7 +365,7 @@ function showStatus(f,st){
       +"<div class='fg' style='margin-bottom:8px'><div class='lbl'>Pack Date</div>"
       +"<input class='inp' id='pkg-d' type='date'></div>"
       
-      +"<div class='fg' style='margin-bottom:8px'><div class='lbl'>Pallet Photos <span style='color:#ff4d6a'>* 2 required</span></div></div>"
+      +"<div class='fg' style='margin-bottom:8px'><div class='lbl'>Pallet Photos <span style='color:#ff4d6a'>* 2 required</span></div><div style='font-family:var(--mono);font-size:9px;color:var(--mu);margin-top:2px'>Take 2 photos of the FULL packed pallet. All frames on this pallet share these 2 photos.</div></div>"
       +"<button class='photo-btn' id='pkg-pb' type='button'>&#128247; Take / Add Photos (0/2)</button>"
       +"<input type='file' id='pkg-pf' accept='image/*' capture='environment' multiple style='display:none'>"
       +"<div class='photo-thumbs' id='pkg-pt' style='margin-top:8px'></div>"
@@ -424,66 +424,64 @@ function showStatus(f,st){
     wrap.innerHTML=mkCard(bg,col,shipped?"[S]":"[B]",tt,sb,
       [["Frame ID",f.id],["Pallet",st.palletNum||"-"],["Packed By",st.packedBy||"-"],["Pack Date",st.packDate||"-"]]);
 
-    // Packaging Photos — add missing photos for already-packed pallet
+    // ── Pallet Photos section on Already Packed card ─────────────
     if (!shipped) {
       (function(){
-        // Check if photos already exist in FRAME STATUS (pkPhoto1 from status response)
-        var alreadyHasPhotos = !!(st.pkPhoto1 && st.pkPhoto1.length > 5);
+        var palletNum = st.palletNum || "";
+        var alreadyHasPhotos = !!(st.pkPhoto1 && String(st.pkPhoto1).length > 5);
 
-        var photoDiv=document.createElement("div");
-        photoDiv.style.cssText="background:var(--s2);border:1px solid var(--bd2);border-radius:10px;padding:12px;margin-top:10px";
+        var photoDiv = document.createElement("div");
+        photoDiv.style.cssText = "background:var(--s2);border:1px solid var(--bd2);border-radius:10px;padding:12px;margin-top:10px";
 
         // Header row
-        var headerRow=document.createElement("div");
-        headerRow.style.cssText="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px";
-        var plabel=document.createElement("div");
-        plabel.style.cssText="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu)";
-        plabel.textContent="Packaging Photos — "+(st.palletNum||"Pallet");
-        var pbadge=document.createElement("div");
-        pbadge.style.cssText="font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:12px;"
+        var headerRow = document.createElement("div");
+        headerRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;margin-bottom:10px";
+        var plabel = document.createElement("div");
+        plabel.style.cssText = "font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);line-height:1.6";
+        plabel.innerHTML = "Packaging Photos<br><span style='color:var(--tx);font-size:8px;text-transform:none;letter-spacing:0'>"+(palletNum||"Pallet")+" — shared by all frames on this pallet</span>";
+        var pbadge = document.createElement("div");
+        pbadge.style.cssText = "font-family:var(--mono);font-size:9px;font-weight:700;padding:3px 10px;border-radius:12px;flex-shrink:0;"
           +(alreadyHasPhotos
-            ?"background:rgba(0,208,132,.15);color:var(--gn)"
-            :"background:rgba(249,115,22,.15);color:var(--or)");
-        pbadge.textContent=alreadyHasPhotos?"2/2 Photos Done":"0/2 Photos Missing";
+            ?"background:rgba(0,208,132,.15);color:var(--gn);border:1px solid rgba(0,208,132,.3)"
+            :"background:rgba(249,115,22,.15);color:var(--or);border:1px solid rgba(249,115,22,.3)");
+        pbadge.textContent = alreadyHasPhotos ? "✓ 2/2 Done" : "0/2 Missing";
         headerRow.appendChild(plabel);headerRow.appendChild(pbadge);
         photoDiv.appendChild(headerRow);
 
         if (alreadyHasPhotos) {
-          // Already has photos — show locked state
-          var doneMsg=document.createElement("div");
-          doneMsg.style.cssText="font-family:var(--mono);font-size:10px;color:var(--gn);text-align:center;padding:10px 0";
-          doneMsg.textContent="Photos already submitted for this pallet";
-          var lockedBtn=document.createElement("button");
-          lockedBtn.className="photo-btn";lockedBtn.type="button";
-          lockedBtn.disabled=true;
-          lockedBtn.style.cssText="width:100%;opacity:0.4;cursor:not-allowed;background:var(--s3);color:var(--mu)";
-          lockedBtn.textContent="Photos Submitted — No Further Action Needed";
+          // LOCKED — photos already submitted
+          var doneMsg = document.createElement("div");
+          doneMsg.style.cssText = "font-family:var(--mono);font-size:10px;color:var(--gn);padding:8px 0 10px;line-height:1.7";
+          doneMsg.textContent = "✓ 2 pallet photos already on file. No further action needed.";
+          var lockedBtn = document.createElement("button");
+          lockedBtn.type = "button";lockedBtn.disabled = true;
+          lockedBtn.style.cssText = "width:100%;padding:10px;opacity:0.4;cursor:not-allowed;background:var(--s3);color:var(--gn);font-family:var(--mono);font-size:10px;border:1px solid rgba(0,208,132,.2);border-radius:8px";
+          lockedBtn.textContent = "✓ Photos Submitted — Locked";
           photoDiv.appendChild(doneMsg);photoDiv.appendChild(lockedBtn);
-        } else {
-          // Missing photos — show upload UI
-          var pbr=document.createElement("button");
-          pbr.className="photo-btn";pbr.type="button";pbr.textContent="Take / Add Photos (0/2)";
-          var pfr=document.createElement("input");
-          pfr.type="file";pfr.accept="image/*";pfr.setAttribute("capture","environment");
-          pfr.multiple=true;pfr.style.display="none";
-          var ptr=document.createElement("div");ptr.className="photo-thumbs";ptr.style.marginTop="8px";
-          var psr=document.createElement("div");
-          psr.style.cssText="font-family:var(--mono);font-size:10px;text-align:center;margin-top:6px;min-height:16px;color:var(--am)";
-          psr.textContent="2 photos of the full packed pallet required";
-          var ubtn=document.createElement("button");
-          ubtn.className="btn btn-sub";
-          ubtn.style.cssText="width:100%;margin-top:10px;display:none";
-          ubtn.textContent="Upload 2 Photos";
 
-          photoDiv.appendChild(pbr);photoDiv.appendChild(pfr);
-          photoDiv.appendChild(ptr);photoDiv.appendChild(psr);photoDiv.appendChild(ubtn);
+        } else {
+          // MISSING — show upload UI
+          var psr = document.createElement("div");
+          psr.style.cssText = "font-family:var(--mono);font-size:10px;color:var(--am);margin-bottom:10px;line-height:1.6";
+          psr.textContent = "Take 2 photos of the full packed pallet"+(palletNum?" "+palletNum:"")+" — all frames on this pallet share these 2 photos.";
+          photoDiv.appendChild(psr);
+
+          var pbr = document.createElement("button");
+          pbr.type = "button";
+          pbr.style.cssText = "width:100%;padding:10px;background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--tx);font-family:var(--mono);font-size:10px;cursor:pointer;margin-bottom:8px";
+          pbr.textContent = "📷 Take / Add Photos (0/2)";
+          var pfr = document.createElement("input");
+          pfr.type="file";pfr.accept="image/*";pfr.setAttribute("capture","environment");pfr.multiple=true;pfr.style.display="none";
+          var ptr = document.createElement("div");ptr.className="photo-thumbs";ptr.style.cssText="margin:8px 0";
+          var ubtn = document.createElement("button");
+          ubtn.type="button";
+          ubtn.style.cssText="width:100%;padding:11px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;display:none;margin-top:4px";
+          ubtn.textContent="Upload 2 Photos";
+          photoDiv.appendChild(pbr);photoDiv.appendChild(pfr);photoDiv.appendChild(ptr);photoDiv.appendChild(ubtn);
 
           var retroPhotos=[];
 
-          pbr.addEventListener("click",function(){
-            if(pbr.disabled)return;
-            pfr.click();
-          });
+          pbr.addEventListener("click",function(){if(!pbr.disabled)pfr.click();});
 
           pfr.addEventListener("change",function(){
             var files=this.files;if(!files||!files.length)return;
@@ -492,24 +490,19 @@ function showStatus(f,st){
               var reader=new FileReader();
               reader.onload=function(e){
                 retroPhotos.push(e.target.result);
-                // Render thumbs
                 ptr.innerHTML="";
                 retroPhotos.forEach(function(src){
                   var th=document.createElement("div");th.className="photo-thumb";
-                  var im=document.createElement("img");im.src=src;
-                  th.appendChild(im);ptr.appendChild(th);
+                  var im=document.createElement("img");im.src=src;th.appendChild(im);ptr.appendChild(th);
                 });
                 if(retroPhotos.length>=2){
-                  pbr.textContent="2/2 Photos Ready";
-                  pbr.disabled=true;pbr.style.opacity="0.5";
-                  ubtn.style.display="block";
-                  ubtn.textContent="Upload 2 Photos";
-                  psr.style.color="var(--gn)";psr.textContent="2 photos ready — tap Upload";
+                  pbr.textContent="✓ 2/2 Photos Ready";pbr.disabled=true;pbr.style.opacity="0.5";pbr.style.cursor="not-allowed";
+                  ubtn.style.display="block";ubtn.textContent="Upload 2 Photos";ubtn.style.background="linear-gradient(135deg,#059669,#047857)";
+                  psr.style.color="var(--gn)";psr.textContent="2 photos selected — tap Upload to save";
                 } else {
-                  pbr.textContent="Add 1 More Photo ("+(2-retroPhotos.length)+" remaining)";
-                  ubtn.style.display="block";
-                  ubtn.textContent="Upload "+retroPhotos.length+" Photo(s)";
-                  psr.style.color="var(--am)";psr.textContent=retroPhotos.length+"/2 — need 1 more";
+                  pbr.textContent="📷 Add 1 More Photo ("+retroPhotos.length+"/2)";
+                  ubtn.style.display="block";ubtn.textContent="Upload "+retroPhotos.length+" Photo (need 2)";ubtn.style.background="linear-gradient(135deg,#b45309,#92400e)";
+                  psr.style.color="var(--am)";psr.textContent=retroPhotos.length+"/2 photos — add 1 more before uploading";
                 }
               };
               reader.readAsDataURL(file);
@@ -519,38 +512,31 @@ function showStatus(f,st){
 
           ubtn.addEventListener("click",function(){
             if(!retroPhotos.length){showToast("No photos selected");return;}
-            if(retroPhotos.length<2){showToast("Need 2 photos — add 1 more");return;}
-            psr.style.color="var(--am)";
-            psr.textContent="Uploading... do not close app";
-            ubtn.disabled=true;ubtn.textContent="Uploading...";
+            if(retroPhotos.length<2){showToast("Need 2 photos — take 1 more");return;}
+            pbr.disabled=true;ubtn.disabled=true;
+            ubtn.textContent="Uploading... do not close app";ubtn.style.background="linear-gradient(135deg,#5a7090,#3a4f6a)";
+            psr.style.color="var(--mu)";psr.textContent="Saving to Drive... please wait";
             fetch(WH,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
-              body:JSON.stringify({action:"packagingPhotos",
-                frameId:st.palletNum||f.id,
-                palletNum:st.palletNum||"",
-                packedBy:st.packedBy||"",
-                date:st.packDate||new Date().toISOString().split("T")[0],
+              body:JSON.stringify({action:"packagingPhotos",frameId:palletNum||f.id,palletNum:palletNum,
+                packedBy:st.packedBy||"",date:st.packDate||new Date().toISOString().split("T")[0],
                 photos:retroPhotos,isPalletPhoto:true})
             })
             .then(function(r){return r.json();})
-            .then(function(res){
-              psr.style.color="var(--gn)";
-              psr.textContent="2 photos saved to Drive";
-              ubtn.textContent="Photos Submitted";
-              ubtn.disabled=true;ubtn.style.opacity="0.5";
-              pbr.textContent="Photos Submitted — Done";
-              pbr.disabled=true;pbr.style.cssText="width:100%;opacity:0.4;cursor:not-allowed;background:var(--s3);color:var(--mu)";
-              pbadge.textContent="2/2 Photos Done";
-              pbadge.style.background="rgba(0,208,132,.15)";pbadge.style.color="var(--gn)";
-              showToast("Pallet photos saved — "+( st.palletNum||f.id));
+            .then(function(){
+              psr.style.color="var(--gn)";psr.textContent="✓ 2 photos saved for "+(palletNum||"pallet");
+              ubtn.textContent="✓ Photos Submitted";ubtn.style.background="rgba(0,208,132,.15)";ubtn.style.color="var(--gn)";ubtn.style.border="1px solid rgba(0,208,132,.3)";ubtn.style.cursor="not-allowed";
+              pbr.textContent="✓ Photos Submitted — Locked";
+              pbr.style.cssText="width:100%;padding:10px;opacity:0.4;cursor:not-allowed;background:var(--s3);color:var(--gn);font-family:var(--mono);font-size:10px;border:1px solid rgba(0,208,132,.2);border-radius:8px;margin-bottom:8px";
+              pbadge.textContent="✓ 2/2 Done";pbadge.style.background="rgba(0,208,132,.15)";pbadge.style.color="var(--gn)";pbadge.style.border="1px solid rgba(0,208,132,.3)";
+              showToast("✓ Pallet photos saved — "+(palletNum||f.id));
             })
-            .catch(function(err){
-              psr.style.color="var(--rd)";
-              psr.textContent="Upload failed — check connection and retry";
-              ubtn.disabled=false;ubtn.textContent="Retry Upload";
+            .catch(function(){
+              psr.style.color="var(--rd)";psr.textContent="Upload failed — check connection and try again";
+              ubtn.disabled=false;ubtn.textContent="Retry Upload";ubtn.style.background="linear-gradient(135deg,#dc2626,#991b1b)";
+              pbr.disabled=false;pbr.style.opacity="1";pbr.style.cursor="pointer";
             });
           });
         }
-
         wrap.appendChild(photoDiv);
       })();
     }
@@ -681,12 +667,21 @@ function doSubmitPkg(){
 
   function finishPack(){
     if(ps){ps.className="sstbar ok";ps.textContent="Packed "+SF.id+" on "+rec.palletNum;}
+    // Lock the photo button immediately after success
+    var pkgPbDone=document.getElementById("pkg-pb");
+    var pkgPsDone=document.getElementById("pkg-ps");
+    if(pkgPbDone){
+      pkgPbDone.disabled=true;
+      pkgPbDone.textContent="✓ Photos Submitted — Locked";
+      pkgPbDone.style.cssText="width:100%;opacity:0.45;cursor:not-allowed;background:var(--s3);color:var(--gn);font-family:var(--mono);font-size:10px;border:1px solid rgba(0,208,132,.3);border-radius:8px;padding:10px";
+    }
+    if(pkgPsDone){pkgPsDone.style.color="var(--gn)";pkgPsDone.textContent="2 photos saved — pallet "+rec.palletNum;}
     showToast("Packed "+SF.id+" — "+rec.palletNum);
     setTimeout(function(){
       document.getElementById("si").value="";
-      document.getElementById("sa").innerHTML="<div style='text-align:center;padding:40px;color:var(--mu);font-family:var(--mono);font-size:11px;line-height:2'><span style='font-size:32px'>📦</span><br><b style='font-size:14px;color:#00d084'>"+SF.id+" PACKED</b><br><span style='color:var(--mu)'>Pallet: "+rec.palletNum+" / "+rec.packedBy+"</span><br><br>Search next frame</div>";
+      document.getElementById("sa").innerHTML="<div style='text-align:center;padding:40px;color:var(--mu);font-family:var(--mono);font-size:11px;line-height:2'><span style='font-size:32px'>📦</span><br><b style='font-size:14px;color:#00d084'>"+SF.id+" PACKED</b><br><span style='color:var(--mu)'>Pallet: "+rec.palletNum+" / "+rec.packedBy+"</span><br><span style='color:var(--gn);font-size:10px'>✓ 2 pallet photos submitted</span><br><br>Search next frame</div>";
       document.getElementById("bb-pkg").style.display="none";SF=null;window.pkgPhotos=[];
-    },2000);
+    },2500);
   }
   // Upload pallet photos to FRAME STATUS (C_PKP1/C_PKP2) before navigating
   var pkgPics=window.pkgPhotos||[];
