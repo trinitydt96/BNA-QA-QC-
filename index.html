@@ -504,6 +504,8 @@ function startQA(){
   });
   CK={};
   resetPhotos();
+  SAGE_GLASS_TYPE=null;
+  setTimeout(function(){toggleSageSection(false);},150);
   AL.forEach(function(item){
     var ci=document.getElementById("ci-"+item.id);if(ci)ci.className="ci";
     ["bp","bf","bn"].forEach(function(p){var b=document.getElementById(p+item.id);if(b)b.className="cb";});
@@ -703,6 +705,16 @@ function makeSecs(){
     sec.items.forEach(function(it){
       var nn=n<10?"0"+n:""+n;n++;
       var isPhotoCheck = (it.id === "c24");
+      var isGlassCheck = (it.id === "c14");
+      var glassUI = isGlassCheck
+        ? "<div style=\'margin-top:8px\'>"
+          +"<div style=\'font-family:var(--mono);font-size:9px;color:var(--mu);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em\'>Select glass type:</div>"
+          +"<div style=\'display:flex;gap:6px\'>"
+          +"<button id=\'gt-gl81\' onclick=\'selectGlassType(\"GL-8-1\")\'  style=\'flex:1;padding:6px 4px;border-radius:6px;font-family:var(--mono);font-size:10px;border:1px solid var(--bd2);background:var(--s2);color:var(--mu);cursor:pointer\'>GL-8-1</button>"
+          +"<button id=\'gt-gl82\' onclick=\'selectGlassType(\"GL-8-2\")\'  style=\'flex:1;padding:6px 4px;border-radius:6px;font-family:var(--mono);font-size:10px;border:1px solid rgba(13,71,161,.5);background:rgba(13,71,161,.1);color:#5C9DFF;cursor:pointer\'>GL-8-2<br><span style=\"font-size:8px;opacity:.8\">SageGlass</span></button>"
+          +"<button id=\'gt-gl83\' onclick=\'selectGlassType(\"GL-8-3\")\'  style=\'flex:1;padding:6px 4px;border-radius:6px;font-family:var(--mono);font-size:10px;border:1px solid var(--bd2);background:var(--s2);color:var(--mu);cursor:pointer\'>GL-8-3</button>"
+          +"</div></div>"
+        : "";
       var photoUI = isPhotoCheck
         ? "<div class='photo-row' id='pr-"+it.id+"'>"
           +"<button class='photo-btn' id='pb-"+it.id+"' type='button'>&#128247; Take / Add Photos</button>"
@@ -713,7 +725,7 @@ function makeSecs(){
       body+="<div class='ci' id='ci-"+it.id+"'>"
         +"<div class='ci-n'>"+nn+"</div>"
         +"<div class='ci-w'>"+(it.crit?"<div class='ci-crit'>CRITICAL</div>":"")
-        +"<div class='ci-txt'>"+it.text+"</div>"+photoUI+"</div>"
+        +"<div class='ci-txt'>"+it.text+"</div>"+(isGlassCheck?glassUI:"")+photoUI+"</div>"
         +"<div class='cbg'>"
         +"<button class='cb' id='bp"+it.id+"'>P</button>"
         +"<button class='cb' id='bf"+it.id+"'>F</button>"
@@ -1116,6 +1128,60 @@ function renderPhotoThumbs(){
   // Auto-mark as PASS once 4 photos are in (optional convenience)
   if(photoFiles.length>=4 && !CK["c24"]){
     doChk("c24","pass");
+  }
+}
+
+var SAGE_GLASS_TYPE=null;
+
+function selectGlassType(type){
+  SAGE_GLASS_TYPE=type;
+  var isSage=(type==="GL-8-2");
+  // Highlight selected button
+  var map={"GL-8-1":"gt-gl81","GL-8-2":"gt-gl82","GL-8-3":"gt-gl83"};
+  Object.keys(map).forEach(function(t){
+    var btn=document.getElementById(map[t]);
+    if(!btn)return;
+    if(t===type){
+      btn.style.border="2px solid "+(isSage?"#5C9DFF":"var(--gn)");
+      btn.style.background=isSage?"rgba(13,71,161,.25)":"rgba(0,208,132,.15)";
+      btn.style.color=isSage?"#5C9DFF":"var(--gn)";
+      btn.style.fontWeight="700";
+    }else{
+      btn.style.border="1px solid var(--bd2)";
+      btn.style.background="var(--s2)";
+      btn.style.color="var(--mu)";
+      btn.style.fontWeight="400";
+    }
+  });
+  // Auto-mark c14 PASS
+  if(!CK["c14"])doChk("c14","pass");
+  // Toggle sage section
+  toggleSageSection(isSage);
+}
+
+function toggleSageSection(active){
+  var sec=document.getElementById("s-sage");
+  if(!sec)return;
+  if(active){
+    sec.style.opacity="1";
+    sec.style.pointerEvents="auto";
+    ["c_sg1","c_sg2","c_sg3","c_sg4","c_sg5"].forEach(function(id){
+      ["bp","bf","bn"].forEach(function(pfx){
+        var b=document.getElementById(pfx+id);
+        if(b){b.disabled=false;b.style.opacity="1";}
+      });
+    });
+    showToast("Sage Glass checks activated");
+  }else{
+    sec.style.opacity="0.35";
+    sec.style.pointerEvents="none";
+    ["c_sg1","c_sg2","c_sg3","c_sg4","c_sg5"].forEach(function(id){
+      CK[id]="na";
+      ["bp","bf","bn"].forEach(function(pfx){
+        var b=document.getElementById(pfx+id);
+        if(b){b.disabled=true;b.style.opacity="0.3";}
+      });
+    });
   }
 }
 
