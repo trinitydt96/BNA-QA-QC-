@@ -568,7 +568,7 @@ function renderPkgThumbs(){
     el.appendChild(thumb);
   });
   var pb=document.getElementById("pkg-pb");
-  if(pb){pb.textContent=pkgPhotoFiles.length>=5?"5/5 photos added":"\u{1F4F7} Take / Add Photos ("+pkgPhotoFiles.length+"/5)";}
+  if(pb){pb.textContent=pkgPhotoFiles.length>=5?"5/5 photos added":"\u{1F4F7} Take / Add Photos ("+pkgPhotoFiles.length+"/2)";}
 }
 
 var retroPhotoFiles=[];
@@ -617,7 +617,7 @@ function renderRetroThumbs(frame){
     el.appendChild(thumb);
   });
   var pb=document.getElementById("retro-pb");
-  if(pb)pb.textContent=retroPhotoFiles.length>=5?"5/5 photos added":"\u{1F4F7} Add More Photos ("+retroPhotoFiles.length+"/5)";
+  if(pb)pb.textContent=retroPhotoFiles.length>=2?" photos added":"\u{1F4F7} Add More Photos ("+retroPhotoFiles.length+"/2)";
   if(msg)msg.textContent=retroPhotoFiles.length>0?retroPhotoFiles.length+" photo(s) ready to upload":"";
   if(submitBtn)submitBtn.style.display=retroPhotoFiles.length>0?"block":"none";
 }
