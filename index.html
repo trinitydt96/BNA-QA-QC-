@@ -545,7 +545,7 @@ function startQA(){
         });
       })
       .catch(function(e){console.log("getSectionSaves error:",e);});
-  }, 600); // wait 600ms for QA page DOM to fully render
+  }, 1000); // wait 1000ms for QA page DOM to fully render
 }
 
 function updPkgBtn(){
@@ -1053,17 +1053,27 @@ function saveSec(secId){
 function greyOutSectionByTitle(secTitle, inspector, ts){
   // Find section id from title
   var sec=SC.find(function(s){return s.title===secTitle;});
-  if(!sec)return;
+  if(!sec){console.log("Section not found:",secTitle);return;}
   // Show saved banner with original inspector and time
   var secEl=document.getElementById("s-"+sec.id);
-  if(!secEl)return;
+  if(!secEl){console.log("Section element not found: s-"+sec.id);return;}
+  // Format timestamp nicely
+  var displayTs=ts;
+  try{
+    var d=new Date(ts);
+    if(!isNaN(d.getTime())){
+      displayTs=d.toLocaleDateString([],{month:"2-digit",day:"2-digit",year:"numeric"})
+        +" "+d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+    }
+  }catch(e){}
+  console.log("Greying out:",secTitle,"by",inspector,"at",displayTs);
   var old=document.getElementById("saved-banner-"+sec.id);
   if(old)old.remove();
   var banner=document.createElement("div");
   banner.id="saved-banner-"+sec.id;
   banner.style.cssText="background:rgba(0,208,132,.08);border:1px solid rgba(0,208,132,.25);border-radius:8px;padding:8px 12px;margin:8px 0;display:flex;align-items:center;justify-content:space-between";
   banner.innerHTML="<span style='font-family:var(--mono);font-size:10px;color:var(--gn);font-weight:700'>✓ SAVED BY "+inspector.toUpperCase()+"</span>"
-    +"<span style='font-family:var(--mono);font-size:9px;color:var(--mu)'>"+ts+"</span>";
+    +"<span style='font-family:var(--mono);font-size:9px;color:var(--mu)'>"+displayTs+"</span>";
   var firstItem=secEl.querySelector(".ci");
   if(firstItem)secEl.insertBefore(banner,firstItem);
   // Dim check buttons
