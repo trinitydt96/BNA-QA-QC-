@@ -1279,8 +1279,18 @@ function selectGlassType(type){
   });
   // Auto-mark c14 PASS
   if(!CK["c14"])doChk("c14","pass");
-  // Toggle sage section
-  toggleSageSection(isSage);
+  // Only activate sage section if NOT already saved by someone
+  if(isSage){
+    var sageBanner=document.getElementById("saved-banner-sage");
+    if(sageBanner){
+      // Already saved by previous inspector — keep greyed, don't reactivate
+      showToast("Sage Glass already saved by previous inspector");
+    } else {
+      toggleSageSection(true);
+    }
+  } else {
+    toggleSageSection(false);
+  }
 }
 
 function toggleSageSection(active){
