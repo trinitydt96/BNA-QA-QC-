@@ -370,6 +370,17 @@ function showStatus(f,st){
   }
   sa.appendChild(wrap);
 
+  // Pre-fetch section saves so startQA can grey them immediately
+  PENDING_SECTION_SAVES={};
+  SECTION_SAVES_READY=false;
+  fetch(WH+"?action=getSectionSaves&frameId="+encodeURIComponent(f.id))
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data&&data.saves)PENDING_SECTION_SAVES=data.saves;
+    })
+    .then(function(){SECTION_SAVES_READY=true;})
+    .catch(function(){SECTION_SAVES_READY=true;});
+
   // Station tracking — fetch what this frame has already completed
   var stWrap = document.createElement("div");
   stWrap.style.cssText = "background:var(--s1);border:1px solid var(--bd2);border-radius:12px;padding:14px;margin-top:10px";
@@ -527,25 +538,23 @@ function startQA(){
     ["bp","bf","bn"].forEach(function(p){var b=document.getElementById(p+item.id);if(b)b.className="cb";});
   });
   updSecs();updOvr();updBtns();goPg("qa");
-  // Wait for DOM to render then fetch saved sections
-  var fid = SF.id;
-  setTimeout(function(){
-    fetch(WH+"?action=getSectionSaves&frameId="+encodeURIComponent(fid))
-      .then(function(r){return r.json();})
-      .then(function(data){
-        if(!data||!data.saves)return;
-        var keys=Object.keys(data.saves);
-        if(!keys.length)return;
-        // Apply with small stagger so DOM is ready
-        keys.forEach(function(secTitle, idx){
-          setTimeout(function(){
-            var save=data.saves[secTitle];
-            greyOutSectionByTitle(secTitle, save.inspector, save.ts);
-          }, idx*50);
-        });
-      })
-      .catch(function(e){console.log("getSectionSaves error:",e);});
-  }, 1000); // wait 1000ms for QA page DOM to fully render
+  // Apply pre-fetched section saves — wait if still loading
+  function applySaves(attempt){
+    if(SECTION_SAVES_READY || attempt > 20){
+      // Ready — apply all saved sections
+      var keys=Object.keys(PENDING_SECTION_SAVES);
+      keys.forEach(function(secTitle, idx){
+        setTimeout(function(){
+          var save=PENDING_SECTION_SAVES[secTitle];
+          greyOutSectionByTitle(secTitle, save.inspector, save.ts);
+        }, idx*150);
+      });
+    } else {
+      // Not ready yet — wait 200ms and retry
+      setTimeout(function(){applySaves(attempt+1);}, 200);
+    }
+  }
+  setTimeout(function(){applySaves(0);}, 300);
 }
 
 function updPkgBtn(){
@@ -1051,76 +1060,59 @@ function saveSec(secId){
 }
 
 function greyOutSectionByTitle(secTitle, inspector, ts){
-  // Find section id from title
   var sec=SC.find(function(s){return s.title===secTitle;});
-  if(!sec){console.log("Section not found:",secTitle);return;}
-  // Show saved banner with original inspector and time
+  if(!sec) return;
   var secEl=document.getElementById("s-"+sec.id);
-  if(!secEl){console.log("Section element not found: s-"+sec.id);return;}
-  // Format timestamp nicely
+  if(!secEl) return;
+  // Format timestamp
   var displayTs=ts;
   try{
     var d=new Date(ts);
     if(!isNaN(d.getTime())){
-      displayTs=d.toLocaleDateString([],{month:"2-digit",day:"2-digit",year:"numeric"})
-        +" "+d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+      displayTs=("0"+(d.getMonth()+1)).slice(-2)+"/"+("0"+d.getDate()).slice(-2)+"/"+d.getFullYear()
+        +" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);
     }
   }catch(e){}
-  console.log("Greying out:",secTitle,"by",inspector,"at",displayTs);
+  // Remove existing banner
   var old=document.getElementById("saved-banner-"+sec.id);
-  if(old)old.remove();
+  if(old) old.remove();
+  // Insert banner at top of section
   var banner=document.createElement("div");
   banner.id="saved-banner-"+sec.id;
-  banner.style.cssText="background:rgba(0,208,132,.08);border:1px solid rgba(0,208,132,.25);border-radius:8px;padding:8px 12px;margin:8px 0;display:flex;align-items:center;justify-content:space-between";
-  banner.innerHTML="<span style='font-family:var(--mono);font-size:10px;color:var(--gn);font-weight:700'>✓ SAVED BY "+inspector.toUpperCase()+"</span>"
+  banner.style.cssText="background:rgba(0,208,132,.1);border:1px solid rgba(0,208,132,.3);border-radius:8px;padding:8px 12px;margin:6px 0 8px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px";
+  banner.innerHTML="<span style='font-family:var(--mono);font-size:11px;color:var(--gn);font-weight:700'>&#10003; DONE — "+inspector.toUpperCase()+"</span>"
     +"<span style='font-family:var(--mono);font-size:9px;color:var(--mu)'>"+displayTs+"</span>";
-  var firstItem=secEl.querySelector(".ci");
-  if(firstItem)secEl.insertBefore(banner,firstItem);
-  // Dim check buttons
+  var firstCI=secEl.querySelector(".ci");
+  if(firstCI) secEl.insertBefore(banner, firstCI);
+  else secEl.appendChild(banner);
+  // Dim all check buttons in this section
   sec.items.forEach(function(it){
     ["bp","bf","bn"].forEach(function(pfx){
       var b=document.getElementById(pfx+it.id);
-      if(b){b.style.opacity="0.4";b.style.filter="grayscale(70%)";}
+      if(b){b.style.opacity="0.35";b.style.filter="grayscale(80%)";}
     });
   });
-  // Lock save button
+  // Lock SAVE button
   var btn=document.getElementById("ssb-"+sec.id);
-  if(btn){btn.style.background="rgba(0,208,132,.1)";btn.style.color="var(--gn)";
-    btn.style.borderColor="rgba(0,208,132,.3)";btn.textContent="✓ SAVED";btn.style.cursor="default";}
+  if(btn){
+    btn.style.background="rgba(0,208,132,.1)";
+    btn.style.color="var(--gn)";
+    btn.style.borderColor="rgba(0,208,132,.3)";
+    btn.textContent="&#10003; DONE";
+    btn.style.cursor="default";
+  }
   var msg2=document.getElementById("ssm-"+sec.id);
   if(msg2){msg2.style.color="var(--gn)";msg2.textContent=inspector;}
 }
 
 function greyOutSection(secId,inspector){
-  var secEl=document.getElementById("s-"+secId);
-  if(!secEl)return;
-  var sec=SC.find(function(s){return s.id===secId;});
-  if(!sec)return;
-  // Remove old banner if exists
-  var old=document.getElementById("saved-banner-"+secId);
-  if(old)old.remove();
-  // Add SAVED BY banner
-  var banner=document.createElement("div");
-  banner.id="saved-banner-"+secId;
-  banner.style.cssText="background:rgba(0,208,132,.1);border:1px solid rgba(0,208,132,.3);border-radius:8px;padding:8px 12px;margin:8px 0;display:flex;align-items:center;justify-content:space-between";
-  banner.innerHTML="<span style='font-family:var(--mono);font-size:10px;color:var(--gn);font-weight:700'>✓ SAVED BY "+inspector.toUpperCase()+"</span>"
-    +"<span style='font-family:var(--mono);font-size:9px;color:var(--mu)'>"+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})+"</span>";
-  var firstItem=secEl.querySelector(".ci");
-  if(firstItem)secEl.insertBefore(banner,firstItem);
-  // Dim check buttons
-  sec.items.forEach(function(it){
-    ["bp","bf","bn"].forEach(function(pfx){
-      var b=document.getElementById(pfx+it.id);
-      if(b){b.style.opacity="0.4";b.style.filter="grayscale(70%)";}
-    });
-  });
-  // Lock the SAVE button
-  var btn=document.getElementById("ssb-"+secId);
-  if(btn){btn.style.background="rgba(0,208,132,.1)";btn.style.color="var(--gn)";
-    btn.style.borderColor="rgba(0,208,132,.3)";btn.textContent="✓ SAVED";btn.style.cursor="default";}
-  var msg2=document.getElementById("ssm-"+secId);
-  if(msg2){msg2.style.color="var(--gn)";msg2.textContent=inspector;}
+  var ts=new Date().toLocaleString();
+  greyOutSectionByTitle(
+    (SC.find(function(s){return s.id===secId;})||{title:""}).title,
+    inspector, ts
+  );
 }
+
 function saveHist(){try{localStorage.setItem("bna-h8",JSON.stringify(HI.slice(0,80)));}catch(e){}}
 function loadHist(){
   try{
@@ -1256,6 +1248,8 @@ function renderPhotoThumbs(){
 }
 
 var SAGE_GLASS_TYPE=null;
+var PENDING_SECTION_SAVES={};
+var SECTION_SAVES_READY=false;
 
 function selectGlassType(type){
   SAGE_GLASS_TYPE=type;
@@ -1281,10 +1275,9 @@ function selectGlassType(type){
   if(!CK["c14"])doChk("c14","pass");
   // Only activate sage section if NOT already saved by someone
   if(isSage){
-    var sageBanner=document.getElementById("saved-banner-sage");
-    if(sageBanner){
-      // Already saved by previous inspector — keep greyed, don't reactivate
-      showToast("Sage Glass already saved by previous inspector");
+    var alreadySaved=PENDING_SECTION_SAVES["SAGE GLASS CHECK"];
+    if(alreadySaved){
+      showToast("Sage Glass already saved by "+alreadySaved.inspector);
     } else {
       toggleSageSection(true);
     }
