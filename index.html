@@ -1009,6 +1009,15 @@ function saveSec(secId){
   var insp=document.getElementById("f-insp").value.trim();
   if(!insp){showToast("Enter inspector name first");document.getElementById("f-insp").focus();return;}
   if(!SF){showToast("No frame selected");return;}
+  // Block if already saved by someone else
+  if(PENDING_SECTION_SAVES){
+    var sec=SC.find(function(s){return s.id===secId;});
+    if(sec && PENDING_SECTION_SAVES[sec.title]){
+      var existing=PENDING_SECTION_SAVES[sec.title];
+      showToast("Already saved by "+existing.inspector+" — cannot save again");
+      return;
+    }
+  }
   // Find items in this section
   var sec=SC.find(function(s){return s.id===secId;});
   if(!sec)return;
@@ -1045,6 +1054,11 @@ function saveSec(secId){
   if(btn){btn.style.background="rgba(0,208,132,.15)";btn.style.color="var(--gn)";btn.style.borderColor="rgba(0,208,132,.4)";btn.textContent="SAVED";}
   if(msg){msg.textContent=insp+" / "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}
   showToast("Section saved - "+sec.title);
+  // Add to PENDING_SECTION_SAVES to block same-session re-saves
+  var savedSec=SC.find(function(s){return s.id===secId;});
+  if(savedSec && PENDING_SECTION_SAVES){
+    PENDING_SECTION_SAVES[savedSec.title]={inspector:insp,ts:new Date().toISOString()};
+  }
   // Grey out the section so next inspector sees it is done
   setTimeout(function(){greyOutSection(secId,insp);},300);
 }
@@ -1119,14 +1133,18 @@ function greyOutSectionByTitle(secTitle, inspector, ts){
       if(b){b.style.opacity="0.35";b.style.filter="grayscale(80%)";}
     });
   });
-  // Lock SAVE button
+  // Lock SAVE button — disabled so it cannot be tapped again
   var btn=document.getElementById("ssb-"+sec.id);
   if(btn){
     btn.style.background="rgba(0,208,132,.1)";
     btn.style.color="var(--gn)";
     btn.style.borderColor="rgba(0,208,132,.3)";
-    btn.textContent="&#10003; DONE";
+    btn.textContent="✓ DONE";
     btn.style.cursor="default";
+    btn.disabled=true;
+    btn.onclick=null;
+    // Replace onclick with no-op so even if disabled attr is bypassed
+    btn.setAttribute("onclick","return false;");
   }
   var msg2=document.getElementById("ssm-"+sec.id);
   if(msg2){msg2.style.color="var(--gn)";msg2.textContent=inspector;}
