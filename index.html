@@ -505,12 +505,44 @@ function startQA(){
   CK={};
   resetPhotos();
   SAGE_GLASS_TYPE=null;
+  // Clear saved-by banners and reset section buttons for new frame
+  document.querySelectorAll("[id^='saved-banner-']").forEach(function(el){el.remove();});
+  if(typeof SC!=="undefined")SC.forEach(function(sec){
+    var btn=document.getElementById("ssb-"+sec.id);
+    if(btn){btn.style.background="var(--s3)";btn.style.color="var(--mu)";
+      btn.style.borderColor="rgba(255,255,255,.15)";btn.textContent="SAVE";
+      btn.style.cursor="pointer";}
+    var msg2=document.getElementById("ssm-"+sec.id);
+    if(msg2)msg2.textContent="";
+    sec.items.forEach(function(it){
+      ["bp","bf","bn"].forEach(function(pfx){
+        var b=document.getElementById(pfx+it.id);
+        if(b){b.style.opacity="1";b.style.filter="none";}
+      });
+    });
+  });
   setTimeout(function(){toggleSageSection(false);},150);
   AL.forEach(function(item){
     var ci=document.getElementById("ci-"+item.id);if(ci)ci.className="ci";
     ["bp","bf","bn"].forEach(function(p){var b=document.getElementById(p+item.id);if(b)b.className="cb";});
   });
   updSecs();updOvr();updBtns();goPg("qa");
+  // Fetch which sections already saved for this frame and grey them out
+  var fid = SF.id;
+  fetch(WH+"?action=getSectionSaves&frameId="+encodeURIComponent(fid))
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(!data||!data.saves)return;
+      Object.keys(data.saves).forEach(function(secTitle){
+        var save=data.saves[secTitle];
+        // Find matching section by title
+        var sec=SC.find(function(s){return s.title===secTitle;});
+        if(sec){
+          greyOutSectionByTitle(secTitle, save.inspector, save.ts);
+        }
+      });
+    })
+    .catch(function(){/* offline - no grey out */});
 }
 
 function updPkgBtn(){
@@ -1011,10 +1043,70 @@ function saveSec(secId){
   if(btn){btn.style.background="rgba(0,208,132,.15)";btn.style.color="var(--gn)";btn.style.borderColor="rgba(0,208,132,.4)";btn.textContent="SAVED";}
   if(msg){msg.textContent=insp+" / "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}
   showToast("Section saved - "+sec.title);
-  // Reset button style after 2s
-  setTimeout(function(){
-    if(btn){btn.style.background="var(--s3)";btn.style.color="var(--mu)";btn.style.borderColor="rgba(255,255,255,.15)";btn.textContent="SAVE";}
-  },2000);
+  // Grey out the section so next inspector sees it is done
+  setTimeout(function(){greyOutSection(secId,insp);},300);
+}
+
+function greyOutSectionByTitle(secTitle, inspector, ts){
+  // Find section id from title
+  var sec=SC.find(function(s){return s.title===secTitle;});
+  if(!sec)return;
+  // Show saved banner with original inspector and time
+  var secEl=document.getElementById("s-"+sec.id);
+  if(!secEl)return;
+  var old=document.getElementById("saved-banner-"+sec.id);
+  if(old)old.remove();
+  var banner=document.createElement("div");
+  banner.id="saved-banner-"+sec.id;
+  banner.style.cssText="background:rgba(0,208,132,.08);border:1px solid rgba(0,208,132,.25);border-radius:8px;padding:8px 12px;margin:8px 0;display:flex;align-items:center;justify-content:space-between";
+  banner.innerHTML="<span style='font-family:var(--mono);font-size:10px;color:var(--gn);font-weight:700'>✓ SAVED BY "+inspector.toUpperCase()+"</span>"
+    +"<span style='font-family:var(--mono);font-size:9px;color:var(--mu)'>"+ts+"</span>";
+  var firstItem=secEl.querySelector(".ci");
+  if(firstItem)secEl.insertBefore(banner,firstItem);
+  // Dim check buttons
+  sec.items.forEach(function(it){
+    ["bp","bf","bn"].forEach(function(pfx){
+      var b=document.getElementById(pfx+it.id);
+      if(b){b.style.opacity="0.4";b.style.filter="grayscale(70%)";}
+    });
+  });
+  // Lock save button
+  var btn=document.getElementById("ssb-"+sec.id);
+  if(btn){btn.style.background="rgba(0,208,132,.1)";btn.style.color="var(--gn)";
+    btn.style.borderColor="rgba(0,208,132,.3)";btn.textContent="✓ SAVED";btn.style.cursor="default";}
+  var msg2=document.getElementById("ssm-"+sec.id);
+  if(msg2){msg2.style.color="var(--gn)";msg2.textContent=inspector;}
+}
+
+function greyOutSection(secId,inspector){
+  var secEl=document.getElementById("s-"+secId);
+  if(!secEl)return;
+  var sec=SC.find(function(s){return s.id===secId;});
+  if(!sec)return;
+  // Remove old banner if exists
+  var old=document.getElementById("saved-banner-"+secId);
+  if(old)old.remove();
+  // Add SAVED BY banner
+  var banner=document.createElement("div");
+  banner.id="saved-banner-"+secId;
+  banner.style.cssText="background:rgba(0,208,132,.1);border:1px solid rgba(0,208,132,.3);border-radius:8px;padding:8px 12px;margin:8px 0;display:flex;align-items:center;justify-content:space-between";
+  banner.innerHTML="<span style='font-family:var(--mono);font-size:10px;color:var(--gn);font-weight:700'>✓ SAVED BY "+inspector.toUpperCase()+"</span>"
+    +"<span style='font-family:var(--mono);font-size:9px;color:var(--mu)'>"+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})+"</span>";
+  var firstItem=secEl.querySelector(".ci");
+  if(firstItem)secEl.insertBefore(banner,firstItem);
+  // Dim check buttons
+  sec.items.forEach(function(it){
+    ["bp","bf","bn"].forEach(function(pfx){
+      var b=document.getElementById(pfx+it.id);
+      if(b){b.style.opacity="0.4";b.style.filter="grayscale(70%)";}
+    });
+  });
+  // Lock the SAVE button
+  var btn=document.getElementById("ssb-"+secId);
+  if(btn){btn.style.background="rgba(0,208,132,.1)";btn.style.color="var(--gn)";
+    btn.style.borderColor="rgba(0,208,132,.3)";btn.textContent="✓ SAVED";btn.style.cursor="default";}
+  var msg2=document.getElementById("ssm-"+secId);
+  if(msg2){msg2.style.color="var(--gn)";msg2.textContent=inspector;}
 }
 function saveHist(){try{localStorage.setItem("bna-h8",JSON.stringify(HI.slice(0,80)));}catch(e){}}
 function loadHist(){
