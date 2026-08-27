@@ -142,7 +142,12 @@ select.inp option{background:var(--s2)}
   </div>
 </div>
 <div class="pg" id="p-qa">
-  <div class="box"><div class="lbl">Frame Details</div><div id="qa-specs" class="specs"></div></div>
+  <div class="box"><div class="lbl">Frame Details</div><div id="qa-specs" class="specs"></div>
+  <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+    <button id="load-saves-btn" onclick="loadSavedSections()" style="font-family:var(--mono);font-size:9px;padding:5px 10px;border-radius:6px;background:rgba(0,208,132,.1);border:1px solid rgba(0,208,132,.3);color:var(--gn);cursor:pointer;letter-spacing:.06em">&#8635; LOAD SAVED PROGRESS</button>
+    <div id="load-saves-msg" style="font-family:var(--mono);font-size:9px;color:var(--mu)"></div>
+  </div>
+</div>
   <div class="box">
     <div class="lbl" style="margin-bottom:8px">Inspection Details</div>
     <div class="g2">
@@ -538,23 +543,8 @@ function startQA(){
     ["bp","bf","bn"].forEach(function(p){var b=document.getElementById(p+item.id);if(b)b.className="cb";});
   });
   updSecs();updOvr();updBtns();goPg("qa");
-  // Apply pre-fetched section saves — wait if still loading
-  function applySaves(attempt){
-    if(SECTION_SAVES_READY || attempt > 20){
-      // Ready — apply all saved sections
-      var keys=Object.keys(PENDING_SECTION_SAVES);
-      keys.forEach(function(secTitle, idx){
-        setTimeout(function(){
-          var save=PENDING_SECTION_SAVES[secTitle];
-          greyOutSectionByTitle(secTitle, save.inspector, save.ts);
-        }, idx*150);
-      });
-    } else {
-      // Not ready yet — wait 200ms and retry
-      setTimeout(function(){applySaves(attempt+1);}, 200);
-    }
-  }
-  setTimeout(function(){applySaves(0);}, 300);
+  // Auto-load saved sections after short delay
+  setTimeout(function(){loadSavedSections();}, 500);
 }
 
 function updPkgBtn(){
@@ -1057,6 +1047,43 @@ function saveSec(secId){
   showToast("Section saved - "+sec.title);
   // Grey out the section so next inspector sees it is done
   setTimeout(function(){greyOutSection(secId,insp);},300);
+}
+
+function loadSavedSections(){
+  if(!SF){return;}
+  var btn=document.getElementById("load-saves-btn");
+  var msg=document.getElementById("load-saves-msg");
+  if(btn)btn.textContent="Loading...";
+  if(msg)msg.textContent="";
+  fetch(WH+"?action=getSectionSaves&frameId="+encodeURIComponent(SF.id))
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(!data||!data.saves){
+        if(msg)msg.textContent="No saved progress found";
+        if(btn)btn.textContent="&#8635; LOAD SAVED PROGRESS";
+        return;
+      }
+      var keys=Object.keys(data.saves);
+      if(!keys.length){
+        if(msg)msg.textContent="No saved progress found";
+        if(btn)btn.textContent="&#8635; LOAD SAVED PROGRESS";
+        return;
+      }
+      keys.forEach(function(secTitle,idx){
+        setTimeout(function(){
+          var save=data.saves[secTitle];
+          greyOutSectionByTitle(secTitle, save.inspector, save.ts);
+        }, idx*200);
+      });
+      if(msg)msg.textContent=keys.length+" section(s) loaded";
+      if(btn)btn.textContent="&#10003; LOADED";
+      PENDING_SECTION_SAVES=data.saves;
+      SECTION_SAVES_READY=true;
+    })
+    .catch(function(e){
+      if(msg)msg.textContent="Error loading — check connection";
+      if(btn)btn.textContent="&#8635; RETRY";
+    });
 }
 
 function greyOutSectionByTitle(secTitle, inspector, ts){
