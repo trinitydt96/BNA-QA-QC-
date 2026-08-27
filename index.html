@@ -527,22 +527,25 @@ function startQA(){
     ["bp","bf","bn"].forEach(function(p){var b=document.getElementById(p+item.id);if(b)b.className="cb";});
   });
   updSecs();updOvr();updBtns();goPg("qa");
-  // Fetch which sections already saved for this frame and grey them out
+  // Wait for DOM to render then fetch saved sections
   var fid = SF.id;
-  fetch(WH+"?action=getSectionSaves&frameId="+encodeURIComponent(fid))
-    .then(function(r){return r.json();})
-    .then(function(data){
-      if(!data||!data.saves)return;
-      Object.keys(data.saves).forEach(function(secTitle){
-        var save=data.saves[secTitle];
-        // Find matching section by title
-        var sec=SC.find(function(s){return s.title===secTitle;});
-        if(sec){
-          greyOutSectionByTitle(secTitle, save.inspector, save.ts);
-        }
-      });
-    })
-    .catch(function(){/* offline - no grey out */});
+  setTimeout(function(){
+    fetch(WH+"?action=getSectionSaves&frameId="+encodeURIComponent(fid))
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(!data||!data.saves)return;
+        var keys=Object.keys(data.saves);
+        if(!keys.length)return;
+        // Apply with small stagger so DOM is ready
+        keys.forEach(function(secTitle, idx){
+          setTimeout(function(){
+            var save=data.saves[secTitle];
+            greyOutSectionByTitle(secTitle, save.inspector, save.ts);
+          }, idx*50);
+        });
+      })
+      .catch(function(e){console.log("getSectionSaves error:",e);});
+  }, 600); // wait 600ms for QA page DOM to fully render
 }
 
 function updPkgBtn(){
