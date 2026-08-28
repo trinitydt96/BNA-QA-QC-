@@ -261,7 +261,7 @@ function showStatus(f,st){
   var pk=st.packStatus||"UNPACKED";
   sa.innerHTML="";
   var wrap=document.createElement("div");
-  if(qa==="PENDING"){
+  if(qa==="PENDING"||qa==="HOLD"){
     wrap.innerHTML=mkCard("#0f1e30","#3b82f6","[?]","PENDING QA/QC","Not yet inspected.",
       [["Frame ID",f.id],["System",f.sys+(f.lv?" / "+f.lv:"")],["Size","W:"+f.mdw+"\" x H:"+f.mdh+"\""],["Jamb",f.jamb]]);
     var b=document.createElement("button");
