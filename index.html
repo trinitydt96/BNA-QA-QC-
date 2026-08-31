@@ -1116,13 +1116,21 @@ function saveSec(secId){
   var insp=document.getElementById("f-insp").value.trim();
   if(!insp){showToast("Enter inspector name first");document.getElementById("f-insp").focus();return;}
   if(!SF){showToast("No frame selected");return;}
-  // Block if already saved by someone else
+  // Block only if already saved TODAY (same calendar day)
   if(PENDING_SECTION_SAVES){
-    var sec=SC.find(function(s){return s.id===secId;});
-    if(sec && PENDING_SECTION_SAVES[sec.title]){
-      var existing=PENDING_SECTION_SAVES[sec.title];
-      showToast("Already saved by "+existing.inspector+" — cannot save again");
-      return;
+    var _sec0=SC.find(function(s){return s.id===secId;});
+    if(_sec0 && PENDING_SECTION_SAVES[_sec0.title]){
+      var _existing=PENDING_SECTION_SAVES[_sec0.title];
+      var _savedDate=new Date(_existing.ts);
+      var _today=new Date();
+      var _sameDay=_savedDate.getFullYear()===_today.getFullYear()&&
+                   _savedDate.getMonth()===_today.getMonth()&&
+                   _savedDate.getDate()===_today.getDate();
+      if(_sameDay){
+        showToast("Already saved today by "+_existing.inspector);
+        return;
+      }
+      // Different day — allow re-save (new inspection session)
     }
   }
   // Find items in this section
