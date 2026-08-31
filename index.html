@@ -416,6 +416,7 @@ function showStatus(f,st){
   // Pre-fetch section saves so startQA can grey them immediately
   PENDING_SECTION_SAVES={};
   SECTION_SAVES_READY=false;
+  SESSION_SAVES={};
   fetch(WH+"?action=getSectionSaves&frameId="+encodeURIComponent(f.id))
     .then(function(r){return r.json();})
     .then(function(data){
@@ -576,6 +577,13 @@ function startQA(){
     });
   });
   setTimeout(function(){toggleSageSection(false);},150);
+  // Re-apply sections saved in this session
+  setTimeout(function(){
+    Object.keys(SESSION_SAVES).forEach(function(t){
+      var s=SESSION_SAVES[t];
+      greyOutSectionByTitle(t,s.inspector,s.ts);
+    });
+  },200);
   AL.forEach(function(item){
     var ci=document.getElementById("ci-"+item.id);if(ci)ci.className="ci";
     ["bp","bf","bn"].forEach(function(p){var b=document.getElementById(p+item.id);if(b)b.className="cb";});
@@ -1176,8 +1184,10 @@ function saveSec(secId){
   showToast("Section saved - "+sec.title);
   // Add to PENDING_SECTION_SAVES to block same-session re-saves
   var savedSec=SC.find(function(s){return s.id===secId;});
-  if(savedSec && PENDING_SECTION_SAVES){
-    PENDING_SECTION_SAVES[savedSec.title]={inspector:insp,ts:new Date().toISOString()};
+  if(savedSec){
+    var _saveEntry={inspector:insp,ts:new Date().toISOString()};
+    if(PENDING_SECTION_SAVES) PENDING_SECTION_SAVES[savedSec.title]=_saveEntry;
+    SESSION_SAVES[savedSec.title]=_saveEntry;
   }
   // Grey out the section so next inspector sees it is done
   setTimeout(function(){greyOutSection(secId,insp);},300);
