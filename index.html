@@ -592,35 +592,48 @@ function loadPalletDropdown(){
     .then(function(r){return r.json();})
     .then(function(data){
       var pallets=data.pallets||[];
+      // Build a set of existing pallet numbers
+      var usedNums={};
+      pallets.forEach(function(p){
+        var m=String(p.num).match(/(\d+)$/);
+        if(m)usedNums[parseInt(m[1])]=p.frames.length;
+      });
+      // Find next available pallet number
+      var maxN=0;
+      Object.keys(usedNums).forEach(function(n){maxN=Math.max(maxN,parseInt(n));});
+
       sel.innerHTML="";
-      // Default prompt
       var def=document.createElement("option");
       def.value="";def.textContent="-- Select Pallet --";
       sel.appendChild(def);
-      // Show clean pallet numbers with frame counts
+
+      // Show all existing pallets with full BNA-PLT-XXX format and frame count
       pallets.forEach(function(p){
         var opt=document.createElement("option");
         opt.value=p.num;
-        var label=p.num.replace(/^BNA-PLT-0*/,"PLT ")+" — "+p.frames.length+" frame(s)";
-        opt.textContent=label;
+        opt.textContent=p.num+" — "+p.frames.length+" frame(s)";
         sel.appendChild(opt);
       });
-      // Auto-generate next pallet number
-      var maxN=0;
-      pallets.forEach(function(p){
-        var m=String(p.num).match(/(\d+)$/);
-        if(m)maxN=Math.max(maxN,parseInt(m[1]));
-      });
+
+      // Add next new pallet as the last option
       var nextNum="BNA-PLT-"+String(maxN+1).padStart(3,"0");
       var newOpt=document.createElement("option");
       newOpt.value=nextNum;
-      newOpt.textContent="+ New: "+nextNum;
+      newOpt.textContent=nextNum+" — New Pallet";
       sel.appendChild(newOpt);
     })
     .catch(function(){
-      sel.innerHTML="<option value='__new__'>Cannot load — type below</option>";
-      var ni=document.getElementById("pkg-pnew");
-      if(ni)ni.style.display="block";
+      // Offline fallback — pre-populate 001 to 150
+      sel.innerHTML="";
+      var def=document.createElement("option");
+      def.value="";def.textContent="-- Select Pallet --";
+      sel.appendChild(def);
+      for(var i=1;i<=150;i++){
+        var num="BNA-PLT-"+String(i).padStart(3,"0");
+        var opt=document.createElement("option");
+        opt.value=num;opt.textContent=num;
+        sel.appendChild(opt);
+      }
     });
 }
 
