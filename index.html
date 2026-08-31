@@ -592,38 +592,31 @@ function loadPalletDropdown(){
     .then(function(r){return r.json();})
     .then(function(data){
       var pallets=data.pallets||[];
-      // Build a set of existing pallet numbers
+      // Map existing pallet numbers to frame counts
       var usedNums={};
       pallets.forEach(function(p){
         var m=String(p.num).match(/(\d+)$/);
         if(m)usedNums[parseInt(m[1])]=p.frames.length;
       });
-      // Find next available pallet number
-      var maxN=0;
-      Object.keys(usedNums).forEach(function(n){maxN=Math.max(maxN,parseInt(n));});
-
       sel.innerHTML="";
       var def=document.createElement("option");
       def.value="";def.textContent="-- Select Pallet --";
       sel.appendChild(def);
-
-      // Show all existing pallets with full BNA-PLT-XXX format and frame count
-      pallets.forEach(function(p){
+      // Show ALL 150 pallets — existing ones show frame count, unused show as available
+      for(var i=1;i<=150;i++){
+        var num="BNA-PLT-"+String(i).padStart(3,"0");
         var opt=document.createElement("option");
-        opt.value=p.num;
-        opt.textContent=p.num+" — "+p.frames.length+" frame(s)";
+        opt.value=num;
+        if(usedNums[i]!==undefined){
+          opt.textContent=num+" — "+usedNums[i]+" frame(s)";
+        } else {
+          opt.textContent=num;
+        }
         sel.appendChild(opt);
-      });
-
-      // Add next new pallet as the last option
-      var nextNum="BNA-PLT-"+String(maxN+1).padStart(3,"0");
-      var newOpt=document.createElement("option");
-      newOpt.value=nextNum;
-      newOpt.textContent=nextNum+" — New Pallet";
-      sel.appendChild(newOpt);
+      }
     })
     .catch(function(){
-      // Offline fallback — pre-populate 001 to 150
+      // Offline fallback — same full list
       sel.innerHTML="";
       var def=document.createElement("option");
       def.value="";def.textContent="-- Select Pallet --";
