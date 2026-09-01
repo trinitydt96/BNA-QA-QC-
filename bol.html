@@ -1166,7 +1166,9 @@ function saveBOL(){
   var palletNums=ST.pallets.map(function(p){return p.num||"";}).join(",");
   var params=new URLSearchParams({action:"bol",bolNum:ST.bolNum,shipDate:ST.shipDate,
     shipTo:ST.shipTo,carrier:ST.carrier,driver:ST.driver,
-    palletCount:ST.pallets.length,frameCount:tf,
+    truckNum:ST.truckNum||"",trailerNum:ST.trailerNum||"",
+    ft:ST.ft||"prepaid",specInst:ST.specInst||"",
+    palletCount:ST.pallets.length,frameCount:tf,itemCount:ST.items.length,
     pallets:palletNums,status:"PENDING"});
   fetch(WH+"?"+params.toString(),{method:"GET",mode:"no-cors"})
     .catch(function(e){console.warn("BOL log fetch error:",e);});
