@@ -1162,13 +1162,14 @@ function saveBOL(){
     sig:ST.sig,status:"PENDING",ts:new Date().toISOString()};
   HI.unshift(entry);
   try{localStorage.setItem("ega-bol-hist",JSON.stringify(HI));}catch(e){}
-  // Send to Google Sheets for cross-device persistence
+  // Send to Google Sheets via fetch (GET with no-cors — avoids URL length limits)
+  var palletNums=ST.pallets.map(function(p){return p.num||"";}).join(",");
   var params=new URLSearchParams({action:"bol",bolNum:ST.bolNum,shipDate:ST.shipDate,
     shipTo:ST.shipTo,carrier:ST.carrier,driver:ST.driver,
     palletCount:ST.pallets.length,frameCount:tf,
-    pallets:JSON.stringify(ST.pallets.map(function(p){return p.num||p.id||"";})),
-    status:"PENDING"});
-  var img=new Image();img.src=WH+"?"+params.toString();
+    pallets:palletNums,status:"PENDING"});
+  fetch(WH+"?"+params.toString(),{method:"GET",mode:"no-cors"})
+    .catch(function(e){console.warn("BOL log fetch error:",e);});
 }
 
 function doPDF(){
