@@ -198,35 +198,51 @@ function selectFrame(f){
   document.getElementById("done-btn").disabled = false;
   card.scrollIntoView({behavior:"smooth",block:"center"});
 
-  // Fetch completed stations for this frame and check if current station already done
+  // Fetch completed stations — auto-jump to next incomplete station
   fetch(WH+"?action=stationstatus&frameId="+encodeURIComponent(f.id),{method:"GET",mode:"cors"})
     .then(function(r){return r.json();})
     .then(function(data){
-      var done = data.done || [];
-      var stationOrder = ["ASSEMBLY","GLAZING","FACE CAP"];
-      var msg = document.getElementById("status-msg");
+      var done      = (data.done || []).map(function(d){return d.toUpperCase();});
+      var stOrder   = ["ASSEMBLY","GLAZING","FACE CAP"];
+      var stIds     = ["assembly","glazing","facecap"];
+      var msg       = document.getElementById("status-msg");
+      var sub       = document.getElementById("fc-sub");
 
-      // Check if current station already done
-      var curName = selStation ? selStation.name.toUpperCase() : "";
-      var alreadyDone = done.some(function(d){ return d.toUpperCase() === curName; });
-
-      if (alreadyDone) {
-        msg.style.color = "var(--am)";
-        msg.textContent = "⚠ " + selStation.name + " already recorded for this frame";
-        document.getElementById("done-btn").disabled = true;
+      // Find next incomplete station
+      var nextIdx = -1;
+      for (var i = 0; i < stOrder.length; i++) {
+        var isDone = done.some(function(d){ return d === stOrder[i] || d.indexOf(stOrder[i].split(" ")[0]) >= 0; });
+        if (!isDone) { nextIdx = i; break; }
       }
 
-      // Show which stations are complete as chips below frame info
-      var sub = document.getElementById("fc-sub");
+      if (nextIdx < 0) {
+        // All stations done
+        msg.style.color = "#1A5E20";
+        msg.textContent = "✓ All stations complete for this frame";
+        document.getElementById("done-btn").disabled = true;
+      } else {
+        // Auto-select the next incomplete station
+        var nextSt = STATIONS[nextIdx];
+        if (nextSt && selStation && nextSt.id !== selStation.id) {
+          selectStation(nextSt);
+          // Update card colors to match new station
+          var card = document.getElementById("frame-card");
+          card.style.cssText = "border-radius:14px;padding:20px;margin-bottom:12px;text-align:center;display:block;background:"+nextSt.bg+";border:2px solid "+nextSt.bd;
+          document.getElementById("fc-id").style.color = nextSt.color;
+        }
+        msg.style.color = "var(--tx2)";
+        msg.textContent = "→ Next station: " + STATIONS[nextIdx].name;
+        document.getElementById("done-btn").disabled = false;
+      }
+
+      // Show completed station chips
       var stChips = done.map(function(d){
         return '<span style="display:inline-block;margin:3px 4px;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;background:#E8F5E9;color:#1A5E20;border:1px solid #A5D6A7;">✓ '+d+'</span>';
       }).join("");
-      if (stChips) {
-        sub.innerHTML = f.sys + (f.lv?' / '+f.lv:'') + ' / W:'+f.mdw+'" H:'+f.mdh+'"'
-          + '<br><span style="font-size:11px;">Completed: </span>' + stChips;
-      }
+      sub.innerHTML = f.sys+(f.lv?' / '+f.lv:'')+' / W:'+f.mdw+'" H:'+f.mdh+'"'
+        +(stChips ? '<br><span style="font-size:11px;color:var(--tx2);">Done: </span>'+stChips : '');
     })
-    .catch(function(e){ console.warn("Station status fetch error:", e); });
+    .catch(function(e){ console.warn("Station status fetch:", e); });
 }
 
 function markDone(){
