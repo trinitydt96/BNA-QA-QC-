@@ -471,14 +471,16 @@ function renderStationBtns(f, done){
   var el = document.getElementById("st-btns");
   if(!el) return;
   el.innerHTML = "";
+  // Normalize done list to uppercase for reliable comparison
+  var doneUpper = (done||[]).map(function(d){return d.toUpperCase();});
   // Find the next undone station
   var nextIdx = -1;
   ST_LIST.forEach(function(st, i){
-    if(nextIdx < 0 && done.indexOf(st.name) < 0) nextIdx = i;
+    if(nextIdx < 0 && doneUpper.indexOf(st.name.toUpperCase()) < 0) nextIdx = i;
   });
 
   ST_LIST.forEach(function(st, i){
-    var isDone = done.indexOf(st.name) >= 0;
+    var isDone = doneUpper.indexOf(st.name.toUpperCase()) >= 0;
     var isNext = i === nextIdx;
     var btn = document.createElement("button");
 
@@ -526,8 +528,8 @@ function markStation(f, st, doneSoFar){
   };
   HI.unshift({action:"station",frameId:f.id,station:st.name,overall:st.name,ts:new Date().toISOString()});
   saveHist();
-  var img = new Image();
-  img.src = WH+"?"+new URLSearchParams(rec).toString();
+  fetch(WH+"?"+new URLSearchParams(rec).toString(), {method:"GET", mode:"no-cors"})
+    .catch(function(e){ console.warn("Station save error:", e); });
   setTimeout(function(){
     // Update done list and re-render buttons
     var newDone = doneSoFar.concat([st.name]);
