@@ -609,7 +609,7 @@ function addCustomPallet(){
       date:new Date().toISOString().split("T")[0],desc:data.desc,source:"manual"};
     savePallet(custom);
     ST.pallets.push(custom);
-    loadPalletsLocal();
+    loadPalletsLocal(document.getElementById("plt-select-list"));
     renderSelPallets();
     showToast("Added: "+data.num+(data.frames.length?" ("+data.frames.length+" frames)":""));
   });
@@ -631,7 +631,7 @@ function editCustomPallet(num){
       var idx=ST.pallets.findIndex(function(p){return p.num===num;});
       if(idx>=0)ST.pallets[idx]=updated;
     }catch(e){}
-    loadPalletsLocal();
+    loadPalletsLocal(document.getElementById("plt-select-list"));
     renderSelPallets();
     showToast("Updated: "+data.num);
   });
@@ -645,7 +645,7 @@ function deleteCustomPallet(num){
     localStorage.setItem("ega-bol-pallets",JSON.stringify(stored));
   }catch(e){}
   ST.pallets=ST.pallets.filter(function(p){return p.num!==num;});
-    loadPalletsLocal();
+    loadPalletsLocal(document.getElementById("plt-select-list"));
     renderSelPallets();
     showToast("Deleted: "+num);
   });
