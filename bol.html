@@ -604,73 +604,51 @@ function togglePallet(p,key){
 }
 
 function addCustomPallet(){
-  var num=prompt("Pallet number:\n(e.g. BNA-PLT-001 or BNA-PLT-ACC-01)");
-  if(!num||!num.trim())return;
-  num=num.trim().toUpperCase();
-
-  var desc=prompt("Description:\n(e.g. ACCESSORIES LV1+LV2 or FRAMES CW1.1)")||"";
-
-  var frameInput=prompt("Frame IDs on this pallet:\n(comma separated, or leave blank)\ne.g. CW1.1-F1L1, CW1.1-F2L1, CW1.1-F3L1")||"";
-  var frames=frameInput?frameInput.split(",").map(function(f){return f.trim();}).filter(function(f){return f.length>0;})
-:[];
-
-  var custom={num:num,frames:frames,by:"Manual",date:new Date().toISOString().split("T")[0],desc:desc,source:"manual"};
-
-  // Save to storage so it persists
-  savePallet(custom);
-  ST.pallets.push(custom);
-
-  // Rebuild full pallet list so edit/delete buttons appear
-  loadPalletsLocal();
-  renderSelPallets();
-  showToast("Added: "+num+(frames.length?" ("+frames.length+" frames)":""));
+  showPalletModal(null, function(data){
+    var custom={num:data.num,frames:data.frames,by:"Manual",
+      date:new Date().toISOString().split("T")[0],desc:data.desc,source:"manual"};
+    savePallet(custom);
+    ST.pallets.push(custom);
+    loadPalletsLocal();
+    renderSelPallets();
+    showToast("Added: "+data.num+(data.frames.length?" ("+data.frames.length+" frames)":""));
+  });
 }
 
 function editCustomPallet(num){
-  // Find the pallet in local storage
   var plt=null;
-  try{
-    var stored=JSON.parse(localStorage.getItem("ega-bol-pallets")||"{}");
-    plt=stored[num]||null;
-  }catch(e){}
+  try{var s=localStorage.getItem("ega-pallets");if(s){var arr=JSON.parse(s);plt=arr.find(function(p){return p.num===num;})||null;}}catch(e){}
   if(!plt){showToast("Pallet not found: "+num);return;}
 
-  var newNum=prompt("Pallet number:",plt.num);
-  if(!newNum||!newNum.trim())return;
-  newNum=newNum.trim().toUpperCase();
-
-  var newDesc=prompt("Description:",plt.desc||"");
-  var newFrames=prompt("Frame IDs (comma separated):",(plt.frames||[]).join(", "))||"";
-  var frames=newFrames?newFrames.split(",").map(function(f){return f.trim();}).filter(Boolean):[];
-
-  // Remove old, save new
-  try{
-    var stored2=JSON.parse(localStorage.getItem("ega-bol-pallets")||"{}");
-    delete stored2[num];
-    var updated={num:newNum,frames:frames,by:"Manual",date:plt.date,desc:newDesc,source:"manual"};
-    stored2[newNum]=updated;
-    localStorage.setItem("ega-bol-pallets",JSON.stringify(stored2));
-    // Update ST.pallets
-    var idx=ST.pallets.findIndex(function(p){return p.num===num;});
-    if(idx>=0)ST.pallets[idx]=updated;
-  }catch(e){}
-
-  loadPalletsLocal();
-  renderSelPallets();
-  showToast("Updated: "+newNum);
+  showPalletModal(plt, function(data){
+    try{
+      var saved=[];
+      try{var s2=localStorage.getItem("ega-pallets");if(s2)saved=JSON.parse(s2);}catch(e){}
+      saved=saved.filter(function(p){return p.num!==num;});
+      var updated={num:data.num,frames:data.frames,by:"Manual",date:plt.date,desc:data.desc,source:"manual"};
+      saved.push(updated);
+      localStorage.setItem("ega-pallets",JSON.stringify(saved));
+      var idx=ST.pallets.findIndex(function(p){return p.num===num;});
+      if(idx>=0)ST.pallets[idx]=updated;
+    }catch(e){}
+    loadPalletsLocal();
+    renderSelPallets();
+    showToast("Updated: "+data.num);
+  });
 }
 
 function deleteCustomPallet(num){
-  if(!confirm("Delete pallet "+num+"?"))return;
+  showConfirmModal("Delete pallet "+num+"?", function(){
   try{
     var stored=JSON.parse(localStorage.getItem("ega-bol-pallets")||"{}");
     delete stored[num];
     localStorage.setItem("ega-bol-pallets",JSON.stringify(stored));
   }catch(e){}
   ST.pallets=ST.pallets.filter(function(p){return p.num!==num;});
-  loadPalletsLocal();
-  renderSelPallets();
-  showToast("Deleted: "+num);
+    loadPalletsLocal();
+    renderSelPallets();
+    showToast("Deleted: "+num);
+  });
 }
 
 function renderSelPallets(){
@@ -1594,5 +1572,79 @@ function showToast(msg){
 }
 
 </script>
-</body>
+
+<!-- Pallet Modal -->
+<div id="plt-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;overflow-y:auto;padding:20px;box-sizing:border-box">
+  <div style="background:var(--s2);border:1px solid var(--bd2);border-radius:14px;padding:24px;max-width:480px;margin:40px auto">
+    <div style="font-family:var(--head);font-size:16px;font-weight:700;color:var(--tx);margin-bottom:20px" id="plt-modal-title">Add Manual Pallet</div>
+    <div style="margin-bottom:14px">
+      <label style="font-family:var(--mono);font-size:10px;color:var(--mu);letter-spacing:.08em;display:block;margin-bottom:6px">PALLET NUMBER</label>
+      <input id="plt-modal-num" type="text" placeholder="e.g. BNA-PLT-ACC-01" style="width:100%;padding:10px 14px;background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--tx);font-family:var(--mono);font-size:13px;box-sizing:border-box">
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-family:var(--mono);font-size:10px;color:var(--mu);letter-spacing:.08em;display:block;margin-bottom:6px">DESCRIPTION</label>
+      <input id="plt-modal-desc" type="text" placeholder="e.g. ACCESSORIES LV1+LV2" style="width:100%;padding:10px 14px;background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--tx);font-family:var(--mono);font-size:13px;box-sizing:border-box">
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="font-family:var(--mono);font-size:10px;color:var(--mu);letter-spacing:.08em;display:block;margin-bottom:6px">FRAME IDs (comma separated, optional)</label>
+      <textarea id="plt-modal-frames" placeholder="e.g. CW1.1-F1L1, CW1.1-F2L1" rows="3" style="width:100%;padding:10px 14px;background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--tx);font-family:var(--mono);font-size:12px;box-sizing:border-box;resize:vertical"></textarea>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="closePalletModal()" style="flex:1;padding:12px;background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--mu);font-family:var(--mono);font-size:12px;cursor:pointer">CANCEL</button>
+      <button onclick="submitPalletModal()" style="flex:2;padding:12px;background:var(--bl);border:none;border-radius:8px;color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer">SAVE PALLET</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div id="confirm-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;padding:20px;box-sizing:border-box">
+  <div style="background:var(--s2);border:1px solid var(--bd2);border-radius:14px;padding:24px;max-width:360px;margin:120px auto;text-align:center">
+    <div style="font-family:var(--head);font-size:15px;color:var(--tx);margin-bottom:20px" id="confirm-modal-msg"></div>
+    <div style="display:flex;gap:10px">
+      <button onclick="closeConfirmModal()" style="flex:1;padding:12px;background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--mu);font-family:var(--mono);font-size:12px;cursor:pointer">CANCEL</button>
+      <button onclick="confirmModalOK()" style="flex:1;padding:12px;background:var(--rd);border:none;border-radius:8px;color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer">DELETE</button>
+    </div>
+  </div>
+</div>
+<script>
+var _palletModalCb = null;
+function showPalletModal(plt, cb){
+  _palletModalCb = cb;
+  document.getElementById("plt-modal-title").textContent = plt ? "Edit Pallet" : "Add Manual Pallet";
+  document.getElementById("plt-modal-num").value   = plt ? plt.num  : "";
+  document.getElementById("plt-modal-desc").value  = plt ? (plt.desc||"") : "";
+  document.getElementById("plt-modal-frames").value= plt ? (plt.frames||[]).join(", ") : "";
+  document.getElementById("plt-modal").style.display = "block";
+  setTimeout(function(){ document.getElementById("plt-modal-num").focus(); }, 100);
+}
+function closePalletModal(){
+  document.getElementById("plt-modal").style.display = "none";
+  _palletModalCb = null;
+}
+function submitPalletModal(){
+  var num = document.getElementById("plt-modal-num").value.trim().toUpperCase();
+  if(!num){ showToast("Pallet number required"); return; }
+  var desc   = document.getElementById("plt-modal-desc").value.trim();
+  var raw    = document.getElementById("plt-modal-frames").value.trim();
+  var frames = raw ? raw.split(",").map(function(f){return f.trim();}).filter(Boolean) : [];
+  closePalletModal();
+  if(_palletModalCb) _palletModalCb({num:num, desc:desc, frames:frames});
+}
+
+var _confirmModalCb = null;
+function showConfirmModal(msg, cb){
+  _confirmModalCb = cb;
+  document.getElementById("confirm-modal-msg").textContent = msg;
+  document.getElementById("confirm-modal").style.display = "block";
+}
+function closeConfirmModal(){
+  document.getElementById("confirm-modal").style.display = "none";
+  _confirmModalCb = null;
+}
+function confirmModalOK(){
+  var cb = _confirmModalCb;
+  closeConfirmModal();
+  if(cb) cb();
+}
+</script></body>
 </html>
