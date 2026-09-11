@@ -1310,8 +1310,11 @@ function doPDF(){
   entry.pallets.forEach(function(p){
     // Filter out MANUAL placeholder from frames
     var realFrames=(p.frames||[]).filter(function(f){return f!=="MANUAL"&&f!=="";});
+    var isManual=!realFrames.length||(p.source==="manual")||
+      ((p.frames||[]).some(function(f){return f==="MANUAL";}));
+    var descNote=isManual&&p.desc?" — "+p.desc:"";
     var frameList=realFrames.length
-      ?"FRAMES ("+realFrames.length+"): "+realFrames.join(", ")+(p.desc?" | "+p.desc:"")
+      ?"FRAMES ("+realFrames.length+"): "+realFrames.join(", ")+descNote
       :(p.desc||"ACCESSORIES / TRIMS PALLET");
     rows.push([n++,p.num,frameList,1,"Pallet","",""]);
   });
