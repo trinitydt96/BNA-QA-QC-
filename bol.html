@@ -612,13 +612,29 @@ function togglePallet(p,key){
 
 function addCustomPallet(){
   showPalletModal(null, function(data){
-    var custom={num:data.num,frames:data.frames,by:"Manual",
-      date:new Date().toISOString().split("T")[0],desc:data.desc,source:"manual"};
-    savePallet(custom);
+    // Save to Google Sheets so it persists across devices
+    var params=new URLSearchParams({
+      action:"manualPallet",
+      action2:"add",
+      palletNum:data.num,
+      desc:data.desc,
+      by:INSPECTOR||"Manual"
+    });
+    fetch(WH+"?"+params.toString(),{method:"GET",mode:"no-cors"})
+      .catch(function(e){console.warn("Manual pallet save error:",e);});
+
+    // Also add to current session
+    var custom={num:data.num,frames:data.frames||[],by:INSPECTOR||"Manual",
+      date:new Date().toISOString().split("T")[0],desc:data.desc,
+      source:"manual",status:"PACKED"};
     ST.pallets.push(custom);
-    loadPalletsLocal(document.getElementById("plt-select-list"));
-    renderSelPallets();
-    showToast("Added: "+data.num+(data.frames.length?" ("+data.frames.length+" frames)":""));
+
+    // Reload from Sheets after short delay so new pallet appears
+    showToast("Saving "+data.num+"...");
+    setTimeout(function(){
+      loadPallets();
+      renderSelPallets();
+    }, 1500);
   });
 }
 
@@ -652,8 +668,10 @@ function deleteCustomPallet(num){
     localStorage.setItem("ega-bol-pallets",JSON.stringify(stored));
   }catch(e){}
   ST.pallets=ST.pallets.filter(function(p){return p.num!==num;});
-    loadPalletsLocal(document.getElementById("plt-select-list"));
-    renderSelPallets();
+    // Delete from Sheets
+    fetch(WH+"?"+new URLSearchParams({action:"manualPallet",action2:"delete",palletNum:num}).toString(),
+      {method:"GET",mode:"no-cors"}).catch(function(){});
+    setTimeout(function(){loadPallets();renderSelPallets();},1500);
     showToast("Deleted: "+num);
   });
 }
