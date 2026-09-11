@@ -1297,7 +1297,9 @@ function doPDF(){
   y+=6;
 
   // Shipment summary header
-  var totalFrames=entry.pallets.reduce(function(s,p){return s+(p.frames?p.frames.length:0);},0);
+  var totalFrames=entry.pallets.reduce(function(s,p){
+    return s+((p.frames||[]).filter(function(f){return f!=="MANUAL"&&f!=="";}).length);
+  },0);
   doc.setFillColor(200,200,200);doc.rect(m,y,pw-m*2,6,"F");
   doc.setFont("helvetica","bold");doc.setFontSize(8);
   doc.text("SHIPMENT SUMMARY — "+entry.pallets.length+" PALLET(S) | "+totalFrames+" FRAME(S) | SEE NEXT PAGE(S) FOR DETAILS",pw/2,y+4,{align:"center"});
@@ -1306,8 +1308,10 @@ function doPDF(){
   // Pallet summary table
   var rows=[];var n=1;
   entry.pallets.forEach(function(p){
-    var frameList=p.frames&&p.frames.length
-      ?"FRAMES ("+p.frames.length+"): "+p.frames.join(", ")+(p.desc?" | "+p.desc:"")
+    // Filter out MANUAL placeholder from frames
+    var realFrames=(p.frames||[]).filter(function(f){return f!=="MANUAL"&&f!=="";});
+    var frameList=realFrames.length
+      ?"FRAMES ("+realFrames.length+"): "+realFrames.join(", ")+(p.desc?" | "+p.desc:"")
       :(p.desc||"ACCESSORIES / TRIMS PALLET");
     rows.push([n++,p.num,frameList,1,"Pallet","",""]);
   });
@@ -1389,8 +1393,9 @@ function doPDF(){
     py+=12;
 
     // Frame list
-    if(pallet.frames&&pallet.frames.length){
-      pallet.frames.forEach(function(frameId,fi){
+    var realPalletFrames=(pallet.frames||[]).filter(function(f){return f!=="MANUAL"&&f!=="";});
+    if(realPalletFrames.length){
+      realPalletFrames.forEach(function(frameId,fi){
         doc.setFont("helvetica","normal");doc.setFontSize(11);
         var bg=fi%2===0?"#F8F9FA":"#FFFFFF";
         doc.setFillColor(fi%2===0?245:255,fi%2===0?247:255,fi%2===0?250:255);
@@ -1401,7 +1406,7 @@ function doPDF(){
       });
     } else {
       doc.setFont("helvetica","italic");doc.setFontSize(10);
-      doc.text("No frames listed",m+6,py);py+=8;
+      doc.text(pallet.desc||"Accessories / Trims Pallet",m+6,py);py+=8;
     }
 
     // Page footer
