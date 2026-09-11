@@ -552,8 +552,30 @@ function renderPalletCards(el, pltList){
       var info=document.createElement("div");info.className="plt-info";
       info.textContent="Open · "+(fmtDate(p.date)||"-")+(p.desc?" · "+p.desc:"");
       card.appendChild(num);card.appendChild(info);
+
+      // Edit / Delete buttons for manual pallets
+      if(p.source==="manual"){
+        var btnRow=document.createElement("div");
+        btnRow.style.cssText="display:flex;gap:6px;margin-top:8px";
+        var editBtn=document.createElement("button");
+        editBtn.textContent="✏ Edit";
+        editBtn.style.cssText="flex:1;padding:4px 10px;background:var(--s3);border:1px solid var(--bd2);border-radius:5px;color:var(--bl);font-family:var(--mono);font-size:9px;cursor:pointer";
+        var delBtn2=document.createElement("button");
+        delBtn2.textContent="✕ Delete";
+        delBtn2.style.cssText="padding:4px 10px;background:var(--s3);border:1px solid rgba(255,77,106,.3);border-radius:5px;color:var(--rd);font-family:var(--mono);font-size:9px;cursor:pointer";
+        (function(pNum){
+          editBtn.addEventListener("click",function(e){e.stopPropagation();editCustomPallet(pNum);});
+          delBtn2.addEventListener("click",function(e){e.stopPropagation();deleteCustomPallet(pNum);});
+        })(key);
+        btnRow.appendChild(editBtn);btnRow.appendChild(delBtn2);
+        card.appendChild(btnRow);
+      }
+
       (function(plt,k){
-        card.addEventListener("click",function(){togglePallet(plt,k);});
+        card.addEventListener("click",function(e){
+          if(e.target.tagName==="BUTTON")return;
+          togglePallet(plt,k);
+        });
       })(p,key);
       el.appendChild(card);
     });
@@ -598,24 +620,57 @@ function addCustomPallet(){
   savePallet(custom);
   ST.pallets.push(custom);
 
-  // Add card to UI
-  var el=document.getElementById("plt-select-list");
-  var card=document.createElement("div");
-  card.className="plt-card sel";card.id="plt-manual-"+num;
-  var pnum=document.createElement("div");pnum.className="plt-num";pnum.textContent=num;
-  var info=document.createElement("div");info.className="plt-info";
-  info.textContent=(frames.length?frames.length+" frames":"Custom")+(desc?" / "+desc:"");
-  if(frames.length){
-    var fr=document.createElement("div");
-    fr.style.cssText="font-size:11px;color:var(--tx);margin-top:3px";
-    fr.textContent=frames.join(", ");
-    card.appendChild(pnum);card.appendChild(info);card.appendChild(fr);
-  }else{
-    card.appendChild(pnum);card.appendChild(info);
-  }
-  el.appendChild(card);
+  // Rebuild full pallet list so edit/delete buttons appear
+  loadPalletsLocal();
   renderSelPallets();
   showToast("Added: "+num+(frames.length?" ("+frames.length+" frames)":""));
+}
+
+function editCustomPallet(num){
+  // Find the pallet in local storage
+  var plt=null;
+  try{
+    var stored=JSON.parse(localStorage.getItem("ega-bol-pallets")||"{}");
+    plt=stored[num]||null;
+  }catch(e){}
+  if(!plt){showToast("Pallet not found: "+num);return;}
+
+  var newNum=prompt("Pallet number:",plt.num);
+  if(!newNum||!newNum.trim())return;
+  newNum=newNum.trim().toUpperCase();
+
+  var newDesc=prompt("Description:",plt.desc||"");
+  var newFrames=prompt("Frame IDs (comma separated):",(plt.frames||[]).join(", "))||"";
+  var frames=newFrames?newFrames.split(",").map(function(f){return f.trim();}).filter(Boolean):[];
+
+  // Remove old, save new
+  try{
+    var stored2=JSON.parse(localStorage.getItem("ega-bol-pallets")||"{}");
+    delete stored2[num];
+    var updated={num:newNum,frames:frames,by:"Manual",date:plt.date,desc:newDesc,source:"manual"};
+    stored2[newNum]=updated;
+    localStorage.setItem("ega-bol-pallets",JSON.stringify(stored2));
+    // Update ST.pallets
+    var idx=ST.pallets.findIndex(function(p){return p.num===num;});
+    if(idx>=0)ST.pallets[idx]=updated;
+  }catch(e){}
+
+  loadPalletsLocal();
+  renderSelPallets();
+  showToast("Updated: "+newNum);
+}
+
+function deleteCustomPallet(num){
+  if(!confirm("Delete pallet "+num+"?"))return;
+  try{
+    var stored=JSON.parse(localStorage.getItem("ega-bol-pallets")||"{}");
+    delete stored[num];
+    localStorage.setItem("ega-bol-pallets",JSON.stringify(stored));
+  }catch(e){}
+  ST.pallets=ST.pallets.filter(function(p){return p.num!==num;});
+  loadPalletsLocal();
+  renderSelPallets();
+  showToast("Deleted: "+num);
 }
 
 function renderSelPallets(){
