@@ -374,24 +374,31 @@ function genBolNum(){
 }
 
 // PALLETS
+function getManualPallets(){
+  try{var s=localStorage.getItem("ega-pallets");return s?JSON.parse(s):[];}catch(e){return[];}
+}
+
 function loadPallets(){
   var el=document.getElementById("plt-select-list");
   el.innerHTML="<div class='ld'><div class='spin'></div>Loading pallets from Google Sheets...</div>";
 
-  // Fetch FRAME STATUS from Google Sheets live
-  // This works on ANY device - coordinator computer, phone, tablet
   fetch(WH+"?action=pallets")
     .then(function(r){return r.json();})
     .then(function(data){
-      if(data.pallets&&data.pallets.length){
-        renderPalletCards(el, data.pallets);
+      var sheetPallets=data.pallets&&data.pallets.length?data.pallets:[];
+      // Always merge manual pallets — they never come from Sheets
+      var manuals=getManualPallets();
+      var sheetNums=sheetPallets.map(function(p){return p.num;});
+      manuals.forEach(function(m){
+        if(sheetNums.indexOf(m.num)<0) sheetPallets.push(m);
+      });
+      if(sheetPallets.length){
+        renderPalletCards(el, sheetPallets);
       }else{
-        // No data from sheets yet - fall back to local + manual
         loadPalletsLocal(el);
       }
     })
     .catch(function(){
-      // Network error - fall back to local storage
       loadPalletsLocal(el);
     });
 }
@@ -446,8 +453,8 @@ function fmtDate(d){
 function renderPalletCards(el, pltList){
   el.innerHTML="";
   // Filter to show PACKED pallets first, then OPEN ones
-  var packed=pltList.filter(function(p){return p.status==="PACKED"||( p.frames&&p.frames.length>0);});
-  var open=pltList.filter(function(p){return p.status==="OPEN"&&(!p.frames||!p.frames.length);});
+  var packed=pltList.filter(function(p){return p.status==="PACKED"||(p.frames&&p.frames.length>0);});
+  var open=pltList.filter(function(p){return !p.status||p.status==="OPEN"||(p.source==="manual"&&(!p.frames||!p.frames.length));}).filter(function(p){return packed.indexOf(p)<0;});
 
   var hdr=document.createElement("div");
   hdr.style.cssText="font-family:var(--mono);font-size:9px;color:var(--gn);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center";
